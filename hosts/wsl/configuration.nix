@@ -102,7 +102,7 @@
     settings = {
       trusted-users = [username];
       accept-flake-config = true;
-      auto-optimise-store = true;
+      auto-optimise-store = false;
     };
 
     registry = {
@@ -122,6 +122,7 @@
 
     gc = {
       automatic = true;
+      dates = "weekly";
       options = "--delete-older-than 7d";
     };
   };
