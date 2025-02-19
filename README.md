@@ -1,4 +1,4 @@
-# Jonatan's nixos-wsl-starter
+# Jonatan's nixos-config
 
 This project is based on [LGUG2Z's nixos-wsl-starter](https://github.com/LGUG2Z/nixos-wsl-starter) and
 [ankarhem's nix-config](https://github.com/ankarhem/nix-config/).
@@ -151,7 +151,7 @@ Read more on how to set up your YubiKey:
 **Bind the YubiKey USB-port to usbip and attach to WSL**
 - Install [usbipd](https://github.com/dorssel/usbipd-win) in Windows
 - Look up BUSID
-- Change usbip.autoAttach in [wsl configurations](.\hosts\wsl\configuration.nix)
+- Change `usbip.autoAttach` in [wsl configurations](.\hosts\wsl\configuration.nix)
 - Bind BUSID
   - The USB will auto-attach to WSL
 
@@ -216,14 +216,14 @@ A customized WSL is necessary to make the YubiKey passthrough to work.
 
 _watch the walkthrough video from the original [nixos-wsl-starter](https://github.com/LGUG2Z/nixos-wsl-starter) project._
 
-- Fork or copy the [JHilmarch/nixos-wsl-starter](https://github.com/JHilmarch/nixos-wsl-starter) repository
+- Fork or copy the [JHilmarch/nixos-config](https://github.com/JHilmarch/nixos-config) repository
 - walk through the files and customize your nix configuration
 - Push to GitHub and let the build action complete
 - Get the latest build artifact or release
 - Install it (tweak the command to your desired paths):
 
 ```powershell
-wsl --import NixOS .\NixOS\ .\nixos-wsl.tar.gz --version 2
+wsl --import NixOS .\NixOS\ .\nixos.wsl --version 2
 ```
 
 - Enter the distro:
@@ -235,9 +235,11 @@ wsl -d NixOS
 - Clone the repository in your WSL home directory:
 
 ```bash
-git clone https://github.com/JHilmarch/nixos-wsl-starter.git /configuration
+git clone https://github.com/JHilmarch/nixos-config.git /configuration
 cd /configuration
 ```
+
+:information_source: `rebuild` is an alias for `nix flake update --commit-lock-file`.
 
 - Install `win32yank` with `scoop`/`winget` and add it to your `$PATH` in NixOS
 - Apply the configuration and shutdown the WSL2 VM
@@ -246,7 +248,7 @@ cd /configuration
   - Optionally; update your flake with the `rebuild` command
 
 ```bash
-sudo nixos-rebuild switch --flake /configuration && sudo shutdown -h now
+sudo nixos-rebuild switch --flake ~/configuration#wsl && sudo shutdown -h now
 ```
 
 - Reconnect to the WSL2 VM
