@@ -180,12 +180,28 @@ If you don't have an SSH key, you can create a new key-pair with this command:
 ssh-keygen -t ed25519-sk -O resident -O application=ssh:github.com -O verify-required -C "YubiKey 5C NFC 12345678"
 ```
 
-In WSL, with the YubiKey connected: Go to your home ssh folder and recreate the SSH keys:
+The configuration creates a symlink to your .ssh folder in Windows. If you don't want to share .ssh-
+keys; expand the following collapsible section.
 
-```bash
-cd ~/.ssh/
-ssh-keygen -K
-```
+---
+
+<details>
+  <summary>Optional: Recreate SSH keys</summary>
+  
+  TODO: Test and add documentation about file permission (owner error message).
+
+  - Uncomment ssh symlink configuration in [home.nix](.\hosts\wsl\home.nix)
+  - In WSL, with the YubiKey connected: Go to your home ssh folder and recreate the SSH keys
+
+  ```bash
+  cd ~
+  mkdir .ssh
+  cd .ssh
+  ssh-keygen -K
+  ```
+</details>
+
+---
 
 The name on your private keys should correspond to the identity files configured in [ssh.nix](.\hosts\wsl\modules\ssh.nix).
 

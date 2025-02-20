@@ -41,6 +41,12 @@ in {
     sessionVariables.SHELL = "/etc/profiles/per-user/${username}/bin/fish";
   };
 
+  # Create a symlink to the Windows SSH directory. Change source or uncomment.
+  home.file.".ssh" = {
+    source = "/mnt/c/Users/Jonat/.ssh";
+    target = "link";
+  };
+
   home.packages =
     stable-packages
     ++ unstable-packages
