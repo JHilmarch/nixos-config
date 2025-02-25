@@ -22,6 +22,8 @@
     # https://github.com/LGUG2Z/JeezyVim#extending
     jeezyvim  # JeezyVim is a declarative NeoVim configuration built with NixVim.
     gh        # GitHub CLI
+
+    tree-sitter
   ];
 
 in {
