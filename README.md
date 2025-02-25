@@ -37,7 +37,7 @@ Contains NixOS configurations for the following targets:
 Target WSL
 
 ```bash
-cd ~/configuration
+cd ~/nixos-config
 sudo nixos-rebuild switch --flake .#wsl && sudo shutdown -h now
 ```
 
@@ -127,14 +127,14 @@ Change `time.timeZone`.
   [`broot`](https://github.com/Canop/broot) are integrated into `fish` by
   default
   - These can all be disabled easily by setting `enable = false` in
-    [home.nix](.\hosts\wsl\home.nix), or just removing the lines all together
+    [home.nix](./hosts/wsl/home.nix), or just removing the lines all together
 - [`direnv`](https://github.com/direnv/direnv) is integrated into `fish` by
   default
-- `git` config is generated in [home.nix](.\hosts\wsl\home.nix) by the [git module](.\modules\git\default.nix)
-- `gpg` config is generated in [home.nix](.\hosts\wsl\home.nix) by the [gpg module](.\modules\gpg\default.nix)
+- `git` config is generated in [home.nix](./hosts/wsl/home.nix) by the [git module](./modules/git/default.nix)
+- `gpg` config is generated in [home.nix](./hosts/wsl/home.nix) by the [gpg module](./modules/gpg/default.nix)
 - The default shell is `fish`.
-  Configuration is generated in [home.nix](.\hosts\wsl\home.nix) by the [fish module](.\modules\fish\default.nix)
-- Identity keys are configured in [ssh.nix](.\hosts\wsl\modules\ssh.nix).
+  Configuration is generated in [home.nix](./hosts/wsl/home.nix) by the [fish module](./modules/fish/default.nix)
+- Identity keys are configured in [ssh.nix](./hosts/wsl/modules/ssh.nix).
 
 #### YubiKey passthrough
 
@@ -151,7 +151,7 @@ Read more on how to set up your YubiKey:
 **Bind the YubiKey USB-port to usbip and attach to WSL**
 - Install [usbipd](https://github.com/dorssel/usbipd-win) in Windows
 - Look up BUSID
-- Change `usbip.autoAttach` in [wsl configurations](.\hosts\wsl\configuration.nix)
+- Change `usbip.autoAttach` in [wsl configurations](./hosts/wsl/configuration.nix)
 - Bind BUSID
   - The USB will auto-attach to WSL
 
@@ -187,7 +187,7 @@ cd ~/.ssh/
 ssh-keygen -K
 ```
 
-The name on your private keys should correspond to the identity files configured in [ssh.nix](.\hosts\wsl\modules\ssh.nix).
+The name on your private keys should correspond to the identity files configured in [ssh.nix](./hosts/wsl/modules/ssh.nix).
 
 If the public key is uploaded to GitHub you can test your connection like this:
 
@@ -235,8 +235,8 @@ wsl -d NixOS
 - Clone the repository in your WSL home directory:
 
 ```bash
-git clone https://github.com/JHilmarch/nixos-config.git /configuration
-cd /configuration
+git clone git@github.com:JHilmarch/nixos-config.git
+cd /nixos-config
 ```
 
 :information_source: `rebuild` is an alias for `nix flake update --commit-lock-file`.
@@ -248,7 +248,7 @@ cd /configuration
   - Optionally; update your flake with the `rebuild` command
 
 ```bash
-sudo nixos-rebuild switch --flake ~/configuration#wsl && sudo shutdown -h now
+sudo nixos-rebuild switch --flake ~/nixos-config#wsl && sudo shutdown -h now
 ```
 
 - Reconnect to the WSL2 VM
