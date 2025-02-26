@@ -1,7 +1,7 @@
 # Jonatan's nixos-config
 
-This project is based on [LGUG2Z's nixos-wsl-starter](https://github.com/LGUG2Z/nixos-wsl-starter) and
-[ankarhem's nix-config](https://github.com/ankarhem/nix-config/).
+This project is based on [LGUG2Z's nixos-wsl-starter](https://github.com/LGUG2Z/nixos-wsl-starter),
+[nix-communit NixOS-WSL](https://github.com/nix-community/NixOS-WSL) and [ankarhem's nix-config](https://github.com/ankarhem/nix-config/).
 
 The initial purpose of the project is to set up a mixed develop environment in Windows 11 and
 Windows Subsystem for Linux, a.k.a WSL2. I am slowly learning about NixOS, so the repository will grow with more hosts.
@@ -207,32 +207,53 @@ ssh -T git@github.com
 Fork the [custom-wsl2-linux-kernel](https://github.com/LGUG2Z/custom-wsl2-linux-kernel), read the documentation, edit what you want and push the changes.
 The GitHub build action will create an artifact with the kernel. An alternative is to
 [download latest build artifact](https://github.com/JHilmarch/custom-wsl2-linux-kernel/actions/workflows/build.yml) directly from **my fork**.
+Remeber to create or update the [.wslconfig](https://github.com/JHilmarch/custom-wsl2-linux-kernel/blob/master/.wslconfig) file in your Windows home directory.
 
 A customized WSL is necessary to make the YubiKey passthrough to work.
 
 ### Install NixOS on WSL
 
-[![Watch the walkthrough video](https://img.youtube.com/vi/ZuVQds2hncs/hqdefault.jpg)](https://www.youtube.com/watch?v=ZuVQds2hncs)
-
-_watch the walkthrough video from the original [nixos-wsl-starter](https://github.com/LGUG2Z/nixos-wsl-starter) project._
-
-- Fork or copy the [JHilmarch/nixos-config](https://github.com/JHilmarch/nixos-config) repository
-- walk through the files and customize your nix configuration
-- Push to GitHub and let the build action complete
-- Get the latest build artifact or release
+- Get the latest [24.11 release of NixOS-WSL](https://github.com/nix-community/NixOS-WSL/releases/tag/2411.6.0)
 - Install it (tweak the command to your desired paths):
 
 ```powershell
 wsl --import NixOS .\NixOS\ .\nixos.wsl --version 2
 ```
 
-- Enter the distro:
+- Enter the distro
 
 ```powershell
 wsl -d NixOS
 ```
 
-- Clone the repository in your WSL home directory:
+- Download this repository or your fork and copy it via Windows Explorer to your home directory `\\wsl.localhost\NixOS\home\nixos`
+- Step in to the the flake configuration folder and update flake
+
+```bash
+cd ~/nixos-config-main
+```
+
+- Apply the configuration and shutdown the WSL2 VM
+
+```bash
+nix flake update --commit-lock-file --extra-experimental-features nix-command --extra-experimental-features flakes && sudo shutdown -h now
+```
+
+- Reconnect to the WSL2 VM
+
+```bash
+wsl -d NixOS
+```
+
+:information_source: You can optionally set a default wsl: `wsl --set-default NixOS`.
+
+- Delete the nix-config folder
+
+```bash
+rm nixos-config-main/ --recursive
+```
+
+- Clone the repository in your WSL home directory
 
 ```bash
 git clone git@github.com:JHilmarch/nixos-config.git
