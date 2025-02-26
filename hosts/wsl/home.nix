@@ -24,6 +24,8 @@
     gh        # GitHub CLI
 
     tree-sitter
+
+    alejandra # nix linter
   ];
 
 in {

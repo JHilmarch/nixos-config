@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "ms-vscode-remote.remote-wsl",
-        "jnoortheen.nix-ide"
+        "jnoortheen.nix-ide",
+        "kamadorueda.alejandra"
     ]
 }
