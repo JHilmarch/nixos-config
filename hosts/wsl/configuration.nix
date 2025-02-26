@@ -74,8 +74,8 @@
     defaultUser = username;
     startMenuLaunchers = true;
 
-    # Enable integration with Docker Desktop (needs to be installed)
-    docker-desktop.enable = false;
+    # Docker Desktop (needs to be installed)
+    docker-desktop.enable = true;
 
     # ATTACH YUBIKEY TO WSL
     # In Windows Terminal: Run `usbipd list` to get the correct BUSID

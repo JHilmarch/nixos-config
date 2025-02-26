@@ -119,7 +119,7 @@ then apply the changes.
 Change `time.timeZone`.
 
 - The default editor is [JeezyVim](https://github.com/LGUG2Z/JeezyVim)
-- Native `docker` (ie. Linux, not Windows) is enabled by default
+- Native `docker` is enabled by default
 - The prompt is [Starship](https://starship.rs/)
 - [`fzf`](https://github.com/junegunn/fzf),
   [`lsd`](https://github.com/lsd-rs/lsd),
