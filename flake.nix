@@ -24,7 +24,7 @@
     jeezyvim.url = "github:LGUG2Z/JeezyVim";
   };
 
-  outputs = inputs @ { self, ... }: {
+  outputs = inputs @ {self, ...}: {
     nixosConfigurations = let
       nixpkgsConfig = {
         config.allowUnfree = true;
@@ -51,7 +51,7 @@
             })
           ];
         };
-        
+
         specialArgs = {
           pkgs-unstable = import inputs.nixpkgs-unstable {
             inherit system;
@@ -62,23 +62,24 @@
           username = "nixos";
           hostname = "wsl";
         };
-      in inputs.nixpkgs.lib.nixosSystem {
-        inherit system specialArgs;
-        pkgs = nixpkgsWithOverlays;
+      in
+        inputs.nixpkgs.lib.nixosSystem {
+          inherit system specialArgs;
+          pkgs = nixpkgsWithOverlays;
 
-        modules = [
-          inputs.nixos-wsl.nixosModules.wsl
-          ./hosts/wsl/configuration.nix
-          inputs.home-manager.nixosModules.home-manager
-          {
-            home-manager.extraSpecialArgs = specialArgs;
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.backupFileExtension = "hm-backup";
-            home-manager.users.${specialArgs.username} = import ./hosts/${specialArgs.hostname}/home.nix;
-          }
-        ];
-      };
+          modules = [
+            inputs.nixos-wsl.nixosModules.wsl
+            ./hosts/wsl/configuration.nix
+            inputs.home-manager.nixosModules.home-manager
+            {
+              home-manager.extraSpecialArgs = specialArgs;
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.backupFileExtension = "hm-backup";
+              home-manager.users.${specialArgs.username} = import ./hosts/${specialArgs.hostname}/home.nix;
+            }
+          ];
+        };
     };
 
     formatter.x86_64-linux = inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
