@@ -236,7 +236,7 @@ cd ~/nixos-config-main
 - Apply the configuration and shutdown the WSL2 VM
 
 ```bash
-nix flake update --commit-lock-file --extra-experimental-features nix-command --extra-experimental-features flakes && sudo shutdown -h now
+sudo nixos-rebuild switch --flake ~/nixos-config-main#ws && sudo shutdown -h now
 ```
 
 - Reconnect to the WSL2 VM
@@ -253,6 +253,7 @@ wsl -d NixOS
 rm nixos-config-main/ --recursive
 ```
 
+- Add SSH keys
 - Clone the repository in your WSL home directory
 
 ```bash
