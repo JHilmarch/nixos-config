@@ -29,10 +29,10 @@
   ];
 in {
   imports = [
-    ../../modules/starship/default.nix
+    ./modules/starship/default.nix
     ../../modules/gpg/default.nix
-    ../../modules/fish/default.nix
-    ./modules/ssh.nix
+    ./modules/fish/default.nix
+    ../../modules/ssh.nix
     ../../modules/git/default.nix
   ];
 
