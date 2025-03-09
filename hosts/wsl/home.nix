@@ -32,7 +32,7 @@ in {
     ./modules/starship/default.nix
     ../../modules/gpg/default.nix
     ./modules/fish/default.nix
-    ../../modules/ssh.nix
+    ../../modules/ssh/default.nix
     ../../modules/git/default.nix
   ];
 
