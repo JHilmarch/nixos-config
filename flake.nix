@@ -17,7 +17,7 @@
     };
 
     nix-index-database = {
-      url = "github:Mic92/nix-index-database";
+      url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -70,6 +70,54 @@
           modules = [
             inputs.nixos-wsl.nixosModules.wsl
             ./hosts/wsl/configuration.nix
+            inputs.home-manager.nixosModules.home-manager
+            {
+              home-manager.extraSpecialArgs = specialArgs;
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.backupFileExtension = "hm-backup";
+              home-manager.users.${specialArgs.username} = import ./hosts/${specialArgs.hostname}/home.nix;
+            }
+          ];
+        };
+
+      nixos-orion-7000 = let
+        system = "x86_64-linux";
+        nixpkgsWithOverlays = import inputs.nixpkgs {
+          inherit system;
+          config = {
+            allowUnfree = true;
+            permittedInsecurePackages = [
+              # Add any insecure packages you absolutely need here
+            ];
+          };
+          overlays = [
+            (_final: prev: {
+              unstable = import inputs.nixpkgs-unstable {
+                inherit (prev) system;
+                inherit (prev.config) allowUnfree;
+              };
+            })
+          ];
+        };
+
+        specialArgs = {
+          pkgs-unstable = import inputs.nixpkgs-unstable {
+            inherit system;
+            config = nixpkgsConfig;
+          };
+
+          inherit inputs;
+          username = "jonatan";
+          hostname = "nixos-orion-7000";
+        };
+      in
+        inputs.nixpkgs.lib.nixosSystem {
+          inherit system specialArgs;
+          pkgs = nixpkgsWithOverlays;
+
+          modules = [
+            ./hosts/nixos-orion-7000/configuration.nix
             inputs.home-manager.nixosModules.home-manager
             {
               home-manager.extraSpecialArgs = specialArgs;

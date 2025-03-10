@@ -1,4 +1,4 @@
-# Orion 7000 dual boot host
+# NixOS on Orion 7000, dual boot host
 
 Configuration and documentation for NixOS dual boot with Windows 11 on Acer Predator Orion 7000.
 
@@ -9,11 +9,11 @@ _**Work in progress...**_
 ## Logbook
 
 > **2025-03-05**
-> 
+>
 > Using MiniTool Partition Wizard Free 12.9
 > - Shrunk C drive, leaving 400 GB unallocated space
 > - Expanded the ESP partition to 1,5 GB (changes loaded and performed before next boot)
-> 
+>
 > My original plan was to use on ESP boot partition on the disk, also for NixOS boot, but I ended up with two. It's not
 > ideally, but the dual boot works for now so I'm not touching it.
 >
@@ -22,21 +22,21 @@ _**Work in progress...**_
 > - Partition scheme GPT
 > - Check device for blocks
 > - Everything else default (FAT32)
-> 
+>
 > Alternative tools for creating the bootable USB are for example balenaEtcher and Ventoy.
 > The partition schema doesn't need to be GPT,
 > and download the "Minimal ISO" instead of the GUI alternatives. The GUI installation doesn't work and hangs on 46 %.
-> 
+>
 > In Windows
 > - Disabled the hibernation feature (fast boot)
-> 
+>
 > I read that this is recommended.
-> 
+>
 > In UEFI ("BIOS")
 > - Disabled secure boot
-> 
+>
 > I hope I can find configuration, so I can enable secure boot again.
-> 
+>
 > Installation
 > - Rebooted into NixOS installation USB
 > - Closed down installation GUI wizard

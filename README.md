@@ -12,7 +12,7 @@
 
 Contains NixOS configurations for the following targets:
 - [wsl](./hosts/wsl/README-wsl.md)
-- [orion-7000-dual-boot](./hosts/orion-7000-dual-boot/README-orion-7000-dual-boot.md)
+- [nixos-orion-7000](./hosts/nixos-orion-7000/README-nixos-orion-7000.md)
 
 How to target a host:
 
@@ -21,7 +21,7 @@ cd ~/nixos-config
 sudo nixos-rebuild switch --flake .#wsl && sudo shutdown -h now
 ```
 
-Change `wsl` to the host you want to target. See the nix [flake](./flake.nix) for details. 
+Change `wsl` to the host you want to target. See the nix [flake](./flake.nix) for details.
 
 ## Modules
 

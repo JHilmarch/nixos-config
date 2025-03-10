@@ -1,0 +1,178 @@
+{
+  config,
+  hostname,
+  lib,
+  username,
+  pkgs,
+  inputs,
+  ...
+}: {
+
+  # Run `timedatectl list-timezones` to list timezones"
+  time.timeZone = "Europe/Stockholm";
+
+  hardware = {
+    cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+    graphics.enable = true;
+    nvidia.open = true;
+  };
+
+  boot = {
+    supportedFilesystems = [ "ntfs" ];
+    loader = {
+        systemd-boot.enable = true;
+        efi.canTouchEfiVariables = true;
+    };
+
+    initrd = {
+      availableKernelModules = [ "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "uas" "sd_mod" ];
+      kernelModules = [ ];
+    };
+
+    kernelModules = [ "kvm-intel" ];
+    extraModulePackages = [ ];
+  };
+
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/NIXROOT";
+    fsType = "btrfs";
+  };
+
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-label/NIXBOOT";
+    fsType = "vfat";
+    options = [ "fmask=0022" "dmask=0022" ];
+  };
+
+  swapDevices = [
+    { device = "/dev/disk/by-label/NIXSWAP"; }
+  ];
+
+  fileSystems."/mnt/samsung-ssd-870-evo-1tb-usb" = {
+    device = "/dev/disk/by-label/samsung-ssd-870-evo-1tb-usb";
+    fsType = "ntfs";
+  };
+
+  networking = {
+    hostName = "${hostname}";
+    networkmanager.enable = true;
+    useDHCP = lib.mkDefault true;
+  };
+
+  environment = {
+
+    enableAllTerminfo = true;
+
+    systemPackages = with pkgs; [
+      yubikey-manager
+      libfido2
+      gnupg
+      firefox
+      vim
+    ];
+  };
+
+  services = {
+
+    # X11 windowing system
+    xserver = {
+      enable = true;
+      xkb.layout = "se";
+
+      # Enable the GNOME Desktop Environment.
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
+
+      videoDrivers = [ "nvidia" ];
+    };
+
+    udev = {
+      enable = true;
+      packages = [pkgs.yubikey-personalization];
+    };
+
+    openssh.enable = true;
+
+    # Enable CUPS to print documents.
+    printing.enable = true;
+
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+    };
+  };
+
+  programs = {
+
+    gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+      pinentryPackage = pkgs.pinentry-curses;
+      settings = {
+        default-cache-ttl = 600;
+        max-cache-ttl = 7200;
+      };
+    };
+
+    nix-ld = {
+      enable = true;
+    };
+  };
+
+  security = {
+    sudo.wheelNeedsPassword = true;
+    rtkit.enable = true;
+  };
+
+  users.users.${username} = {
+    isNormalUser = true;
+    extraGroups = [
+      "wheel"
+    ];
+    packages = with pkgs; [
+      tree
+    ];
+
+    openssh.authorizedKeys.keys = [
+    ];
+  };
+
+  home-manager.users.${username} = {
+    imports = [
+      ./home.nix
+    ];
+  };
+
+  nix = {
+    settings = {
+      trusted-users = [username];
+      accept-flake-config = true;
+      auto-optimise-store = false;
+    };
+
+    registry = {
+      nixpkgs = {
+        flake = inputs.nixpkgs;
+      };
+    };
+
+    nixPath = [
+      "nixpkgs=${inputs.nixpkgs.outPath}"
+      "nixos-config=/etc/nixos/configuration.nix"
+      "/nix/var/nix/profiles/per-user/root/channels"
+    ];
+
+    package = pkgs.nixVersions.stable;
+    extraOptions = ''experimental-features = nix-command flakes'';
+
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 7d";
+    };
+  };
+
+  system.stateVersion = "24.11";
+}
