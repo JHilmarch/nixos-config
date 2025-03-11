@@ -39,7 +39,7 @@
   };
 
   fileSystems."/boot" = {
-    device = "/dev/disk/by-label/NIXBOOT";
+    device = "/dev/disk/by-label/ESP";
     fsType = "vfat";
     options = [ "fmask=0022" "dmask=0022" ];
   };
