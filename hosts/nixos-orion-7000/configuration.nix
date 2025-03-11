@@ -69,6 +69,7 @@
       firefox
       vim
       fdisk
+      ripgrep
     ];
   };
 
