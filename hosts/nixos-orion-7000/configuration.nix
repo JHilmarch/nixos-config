@@ -68,7 +68,7 @@
       libfido2
       firefox
       vim
-      fdisk
+      util-linux
       ripgrep
     ];
   };
