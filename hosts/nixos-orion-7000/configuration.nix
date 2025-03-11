@@ -68,6 +68,7 @@
       libfido2
       firefox
       vim
+      fdisk
     ];
   };
 
