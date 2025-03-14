@@ -161,12 +161,6 @@
       };
     };
 
-    nixPath = [
-      "nixpkgs=${inputs.nixpkgs.outPath}"
-      "nixos-config=/etc/nixos/configuration.nix"
-      "/nix/var/nix/profiles/per-user/root/channels"
-    ];
-
     package = pkgs.nixVersions.stable;
     extraOptions = ''experimental-features = nix-command flakes'';
 
