@@ -66,7 +66,6 @@
     systemPackages = with pkgs; [
       yubikey-manager
       libfido2
-      gnupg
       firefox
       vim
     ];
@@ -108,16 +107,6 @@
   };
 
   programs = {
-
-    gnupg.agent = {
-      enable = true;
-      enableSSHSupport = true;
-      pinentryPackage = pkgs.pinentry-curses;
-      settings = {
-        default-cache-ttl = 600;
-        max-cache-ttl = 7200;
-      };
-    };
 
     nix-ld = {
       enable = true;
