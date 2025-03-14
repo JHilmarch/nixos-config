@@ -24,6 +24,7 @@
     pinentry-gnome3
     jetbrains.rider
     jetbrains.webstorm
+    spotify
   ];
 in {
   imports = [
