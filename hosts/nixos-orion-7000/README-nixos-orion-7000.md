@@ -95,3 +95,13 @@ _**Work in progress...**_
 >
 > The boot hangs sometimes and I need to hard restart. Another bad thing is that the time in Windows keep getting out of
 > sync. I think I need to merge the two EFI boot partitions into one.
+
+> **2025-03-11**
+>
+> MERGING BOOT PARTITIONS
+>
+> - Moved EFI-files from NIXBOOT partition to Windows ESP partition
+> - In Windows: Changed boot manager with terminal command
+> `bcdedit /set "{bootmgr}" path "\EFI\systemd\systemd-bootx64.efi"`
+> - Fix time issue:
+> `reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /d 1 /t REG_DWORD /f`
