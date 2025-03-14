@@ -12,9 +12,25 @@
   time.timeZone = "Europe/Stockholm";
 
   hardware = {
-    cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+    enableAllFirmware = true;
+    enableRedistributableFirmware = true;
     graphics.enable = true;
     nvidia.open = true;
+    bluetooth = {
+      enable = true;
+      powerOnBoot = false;
+      settings = {
+        General = {
+          Name = "NixOS-Orion-7000-Bluetooth";
+          ControllerMode = "dual";
+          FastConnectable = true;
+          Experimental = true;
+        };
+        Policy = {
+          AutoEnable = true;
+        };
+      };
+    };
   };
 
   boot = {
@@ -29,7 +45,7 @@
       kernelModules = [ ];
     };
 
-    kernelModules = [ "kvm-intel" ];
+    kernelModules = [ "kvm-intel" "btusb" "btintel" ];
     extraModulePackages = [ ];
   };
 
@@ -70,6 +86,10 @@
       vim
       util-linux
       ripgrep
+      pipewire
+      bluez
+      usbutils
+      pciutils
     ];
   };
 
