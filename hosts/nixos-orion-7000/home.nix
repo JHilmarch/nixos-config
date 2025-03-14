@@ -22,6 +22,8 @@
     tree-sitter
     alejandra # nix linter
     pinentry-gnome3
+    jetbrains.rider
+    jetbrains.webstorm
   ];
 in {
   imports = [
