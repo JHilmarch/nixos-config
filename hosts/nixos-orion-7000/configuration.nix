@@ -109,7 +109,6 @@
   };
 
   programs = {
-
     nix-ld = {
       enable = true;
     };
@@ -130,12 +129,6 @@
     ];
 
     openssh.authorizedKeys.keys = [
-    ];
-  };
-
-  home-manager.users.${username} = {
-    imports = [
-      ./home.nix
     ];
   };
 

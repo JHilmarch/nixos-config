@@ -21,6 +21,7 @@
     gh # GitHub CLI
     tree-sitter
     alejandra # nix linter
+    pinentry-gnome3
   ];
 in {
   imports = [
@@ -70,6 +71,13 @@ in {
     direnv = {
       enable = true;
       nix-direnv.enable = true;
+    };
+  };
+
+  services = {
+    gpg-agent = {
+      enable = true;
+      pinentryPackage = pkgs.pinentry-gnome3;
     };
   };
 }
