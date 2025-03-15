@@ -72,7 +72,6 @@
   networking = {
     hostName = "${hostname}";
     networkmanager.enable = true;
-    useDHCP = lib.mkDefault true;
   };
 
   environment = {
