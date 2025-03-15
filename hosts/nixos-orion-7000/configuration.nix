@@ -88,6 +88,18 @@
       pciutils
     ];
 
+    gnome.excludePackages = (with pkgs; [
+      # evince # document viewer
+      # gnome-characters
+
+      epiphany # web browser
+      # geary # email reader
+      gnome-music # music player
+      gnome-tour # GNOME Greeter & Tour
+      totem # video player
+      yelp # Help view
+    ]);
+
     shells = [ pkgs.fish ];
   };
 
