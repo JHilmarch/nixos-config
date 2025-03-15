@@ -21,11 +21,13 @@ cd ~/nixos-config
 sudo nixos-rebuild switch --flake .#wsl && sudo shutdown -h now
 ```
 
-How to remove old generations:
+How to clean up and remove old generations:
 
 ```bash
 sudo nix-env --list-generations --profile /nix/var/nix/profiles/system
-sudo nix-env --delete-generations --profile /nix/var/nix/profiles/system 8 9 10
+sudo nix-env --delete-generations --profile /nix/var/nix/profiles/system +2
+cd [to the nixos-config directory]
+sudo nixos-rebuild boot --flake .
 ```
 
 Change `wsl` to the host you want to target. See the nix [flake](./flake.nix) for details.
