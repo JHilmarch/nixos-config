@@ -33,6 +33,7 @@
     gitleaks # Scan git repos (or files) for secrets
     vlc # Media player and streaming server
     dconf-editor # GSettings editor for GNOME
+    dconf2nix # Convert dconf files to Nix, as expected by Home Manager
   ];
 in {
   imports = [
@@ -41,6 +42,7 @@ in {
     ../../modules/ssh/default.nix
     ../../modules/git/default.nix
     inputs.nix-index-database.hmModules.nix-index
+    ./dconf.nix
   ];
 
   home = {
