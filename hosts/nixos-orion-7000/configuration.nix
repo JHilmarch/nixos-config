@@ -80,9 +80,6 @@
     enableAllTerminfo = true;
 
     systemPackages = with pkgs; [
-      yubikey-manager
-      libfido2
-      firefox
       vim
       util-linux
       ripgrep
