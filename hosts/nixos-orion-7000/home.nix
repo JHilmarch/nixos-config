@@ -34,6 +34,7 @@
     vlc # Media player and streaming server
     dconf-editor # GSettings editor for GNOME
     dconf2nix # Convert dconf files to Nix, as expected by Home Manager
+    _1password-gui # Password manager
   ];
 in {
   imports = [
@@ -50,15 +51,32 @@ in {
     username = "${username}";
     homeDirectory = "/home/${username}";
     sessionVariables.EDITOR = "vim";
-  };
 
-  home.packages =
-    stable-packages
-    ++ unstable-packages
-    ++ [
-      # pkgs.some-package
-      # pkgs.unstable.some-other-package
-    ];
+    packages =
+      stable-packages
+      ++ unstable-packages
+      ++ [
+        # pkgs.some-package
+        # pkgs.unstable.some-other-package
+      ];
+
+    # Start 1Password minimized
+    file.".config/autostart/onepassword.desktop" = {
+      enable = true;
+      text = ''
+        [Desktop Entry]
+        Name=1Password
+        Exec=1password --silent %U
+        Terminal=false
+        Type=Application
+        Icon=1password
+        StartupWMClass=1Password
+        Comment=Password manager and secure wallet
+        MimeType=x-scheme-handler/onepassword;
+        Categories=Office;
+      '';
+    };
+  };
 
   programs = {
     home-manager.enable = true;
