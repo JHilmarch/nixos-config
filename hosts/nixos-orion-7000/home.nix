@@ -31,6 +31,7 @@ in {
     ../../modules/gpg/default.nix
     ../../modules/ssh/default.nix
     ../../modules/git/default.nix
+    inputs.nix-index-database.hmModules.nix-index
   ];
 
   home = {
@@ -50,6 +51,12 @@ in {
 
   programs = {
     home-manager.enable = true;
+
+    nix-index-database = {
+      comma.enable = true;
+    };
+
+    nix-index.enable = true;
 
     fzf = {
       enable = true;
