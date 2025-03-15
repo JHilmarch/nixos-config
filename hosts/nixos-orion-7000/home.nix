@@ -31,6 +31,7 @@
     grc # Generic text colouriser
     element-desktop # A feature-rich client for Matrix.org
     gitleaks # Scan git repos (or files) for secrets
+    vlc # Media player and streaming server
   ];
 in {
   imports = [
