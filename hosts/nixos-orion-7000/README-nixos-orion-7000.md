@@ -101,7 +101,24 @@ _**Work in progress...**_
 > MERGING BOOT PARTITIONS
 >
 > - Moved EFI-files from NIXBOOT partition to Windows ESP partition
+> - Removed old NIXBOOT partition
 > - In Windows: Changed boot manager with terminal command
 > `bcdedit /set "{bootmgr}" path "\EFI\systemd\systemd-bootx64.efi"`
-> - Fix time issue:
+> - In Windows: Fixed time issue:
 > `reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /d 1 /t REG_DWORD /f`
+
+> **2025-03-15**
+>
+> FIXING ISSUES AND ENABLING BLUETOOTH
+>
+> - Using fish as shell
+> - Fixed GPG configuration, by moving it to home.
+> - Removed double load of home.nix, causing errors
+> - Enabled Bluetooth. Use `bluetoothctl` to follow live logs. If the controller isn't available, try:
+> ```bash
+> sudo modprobe -r btusb
+> sudo modprobe -r btintel
+> sudo modprobe btusb
+> sudo modprobe btintel
+> ```
+> - Active kernel modules can be verified by `lsmod | grep bluetooth`
