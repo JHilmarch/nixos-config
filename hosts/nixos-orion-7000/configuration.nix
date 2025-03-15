@@ -72,6 +72,14 @@
   networking = {
     hostName = "${hostname}";
     networkmanager.enable = true;
+
+    firewall = {
+      enable = true;
+
+      # Local discovery for Spotify Connect
+      allowedTCPPorts = [ 57621 ];
+      allowedUDPPorts = [ 5353 ];
+    };
   };
 
   environment = {
