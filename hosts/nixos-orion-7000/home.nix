@@ -29,6 +29,7 @@
     spotify
     firefox
     grc # Generic text colouriser
+    element-desktop # A feature-rich client for Matrix.org
   ];
 in {
   imports = [
