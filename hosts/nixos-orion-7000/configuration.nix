@@ -91,6 +91,8 @@
       usbutils
       pciutils
     ];
+
+    shells = [ pkgs.fish ];
   };
 
   services = {
@@ -129,6 +131,7 @@
   };
 
   programs = {
+    fish.enable = true;
     nix-ld = {
       enable = true;
     };
@@ -139,6 +142,7 @@
     rtkit.enable = true;
   };
 
+  users.defaultUserShell = pkgs.fish;
   users.users.${username} = {
     isNormalUser = true;
     extraGroups = [

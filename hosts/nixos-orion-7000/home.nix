@@ -28,6 +28,7 @@
   ];
 in {
   imports = [
+    ../../modules/fish/default.nix
     ../../modules/gpg/default.nix
     ../../modules/ssh/default.nix
     ../../modules/git/default.nix
@@ -58,29 +59,33 @@ in {
 
     nix-index.enable = true;
 
-    fzf = {
-      enable = true;
-      enableBashIntegration = true;
-    };
-
     lsd = {
       enable = true;
       enableAliases = true;
     };
 
+    programs.fzf = {
+      enable = true;
+      enableFishIntegration = true;
+    };
+
     zoxide = {
       enable = true;
-      enableBashIntegration = true;
+      enableFishIntegration = true;
     };
 
     broot = {
       enable = true;
-      enableBashIntegration = true;
+      enableFishIntegration = true;
     };
 
     direnv = {
       enable = true;
       nix-direnv.enable = true;
+    };
+
+    starship = {
+      enable = true;
     };
   };
 
