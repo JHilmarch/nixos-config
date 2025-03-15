@@ -30,6 +30,7 @@
     firefox
     grc # Generic text colouriser
     element-desktop # A feature-rich client for Matrix.org
+    gitleaks # Scan git repos (or files) for secrets
   ];
 in {
   imports = [
