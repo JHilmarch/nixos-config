@@ -28,6 +28,7 @@
     libfido2 # Provides library functionality for FIDO 2.0, including communication with a device over USB.
     spotify
     firefox
+    grc # Generic text colouriser
   ];
 in {
   imports = [
