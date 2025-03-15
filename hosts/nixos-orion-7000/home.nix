@@ -59,23 +59,6 @@ in {
         # pkgs.some-package
         # pkgs.unstable.some-other-package
       ];
-
-    # Start 1Password minimized
-    file.".config/autostart/onepassword.desktop" = {
-      enable = true;
-      text = ''
-        [Desktop Entry]
-        Name=1Password
-        Exec=1password --silent %U
-        Terminal=false
-        Type=Application
-        Icon=1password
-        StartupWMClass=1Password
-        Comment=Password manager and secure wallet
-        MimeType=x-scheme-handler/onepassword;
-        Categories=Office;
-      '';
-    };
   };
 
   programs = {
