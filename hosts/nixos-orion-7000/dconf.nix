@@ -73,15 +73,6 @@ let
       translate = true;
     };
 
-    "org/gnome/desktop/input-sources" = {
-      sources = [
-        (mkTuple [ "xkb" "se" ])
-        (mkTuple [ "xkb" "no" ])
-        (mkTuple [ "xkb" "gb" ])
-      ];
-      xkb-options = [ "terminate:ctrl_alt_bksp" ];
-    };
-
     "org/gnome/desktop/notifications" = {
       application-children = [
         "firefox"
@@ -148,11 +139,6 @@ let
       initial-size = mkTuple [ 890 550 ];
     };
 
-    "org/gnome/settings-daemon/plugins/color" = {
-      night-light-enabled = true;
-      night-light-schedule-automatic = true;
-    };
-
     "org/gnome/settings-daemon/plugins/power" = {
       power-button-action = "interactive";
       sleep-inactive-ac-type = "nothing";
@@ -184,6 +170,24 @@ let
     };
   };
 
+  inputSources = {
+    "org/gnome/desktop/input-sources" = {
+      sources = [
+        (mkTuple [ "xkb" "se" ])
+        (mkTuple [ "xkb" "no" ])
+        (mkTuple [ "xkb" "gb" ])
+      ];
+      xkb-options = [ "terminate:ctrl_alt_bksp" ];
+    };
+  };
+
+  nightLight = {
+    "org/gnome/settings-daemon/plugins/color" = {
+      night-light-enabled = true;
+      night-light-schedule-automatic = true;
+    };
+  };
+
   customKeybindings = {
     "org/gnome/settings-daemon/plugins/media-keys" = {
       custom-keybindings = [
@@ -199,6 +203,8 @@ let
   };
 in {
   dconf.settings = lib.foldl lib.recursiveUpdate baseLine [
+    inputSources
+    nightLight
     configureMediaKeys
     customKeybindings
   ];
