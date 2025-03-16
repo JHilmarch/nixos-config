@@ -1,8 +1,9 @@
 { lib, username, ... }:
 
 with lib.hm.gvariant;
-{
-  dconf.settings = {
+let
+  # Unsorted dconf settings
+  baseLine = {
     "apps/seahorse/listing" = {
       keyrings-selected = [ "openssh:///home/${username}/.ssh" ];
     };
@@ -166,4 +167,39 @@ with lib.hm.gvariant;
       locations = [];
     };
   };
+
+  configureMediaKeys = {
+    "org/gnome/settings-daemon/plugins/media-keys" = {
+      play = [ "<Super>KP_Add" ];
+      pause = [ "<Super>XF86AudioMute" ];
+      stop = [ "<Super>KP_Subtract" ];
+      next = [ "<Super>XF86AudioRaiseVolume" ];
+      previous = [ "<Super>XF86AudioLowerVolume" ];
+      volume-up = [ "XF86AudioRaiseVolume" ];
+      volume-down = [ "XF86AudioLowerVolume" ];
+      volume-mute = [ "XF86AudioMute" ];
+      media = [ "<Super>XF86Calculator" ];
+      mic-mute = [ "<Super>KP_Multiply" ];
+      eject = [ "<Super>KP_Divide" ];
+    };
+  };
+
+  customKeybindings = {
+    "org/gnome/settings-daemon/plugins/media-keys" = {
+      custom-keybindings = [
+        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
+      ];
+    };
+
+    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
+      name = "Spotify";
+      command = "spotify";
+      binding = "<Super><Alt>XF86Calculator";
+    };
+  };
+in {
+  dconf.settings = lib.foldl lib.recursiveUpdate baseLine [
+    configureMediaKeys
+    customKeybindings
+  ];
 }
