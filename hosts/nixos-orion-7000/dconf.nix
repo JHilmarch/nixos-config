@@ -152,6 +152,8 @@ let
     "org/gnome/shell/world-clocks" = {
       locations = [];
     };
+
+    "org/gnome/desktop/interface".color-scheme = "prefer-dark";
   };
 
   configureMediaKeys = {
