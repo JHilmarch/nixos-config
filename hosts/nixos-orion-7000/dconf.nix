@@ -1,4 +1,4 @@
-{ lib, username, ... }:
+{ pkgs, lib, username, ... }:
 
 with lib.hm.gvariant;
 let
@@ -8,31 +8,56 @@ let
       keyrings-selected = [ "openssh:///home/${username}/.ssh" ];
     };
 
-    "apps/seahorse/windows/key-manager" = {
-      height = 476;
-      width = 600;
-    };
-
-    "org/gnome/Console" = {
-      last-window-maximised = false;
-      last-window-size = mkTuple [ 2548 1393 ];
-    };
-
     "org/gnome/calendar" = {
       active-view = "month";
-      window-maximized = false;
-      window-size = mkTuple [ 1863 1063 ];
+    };
+
+    "org/gnome/clocks" = {
+      world-clocks = [
+        ([
+          (mkDictionaryEntry ["location" (mkVariant (mkTuple [
+            (mkUint32 2)
+            (mkVariant (mkTuple [
+              "Coordinated Universal Time (UTC)"
+              "@UTC"
+              false
+              [(mkTuple [(51.4769280000000000) (0.0005450000000000)])]
+              [(mkTuple [(51.4769280000000000) (0.0005450000000000)])]
+            ]))
+          ]))])
+        ])
+        ([
+          (mkDictionaryEntry ["location" (mkVariant (mkTuple [
+            (mkUint32 2)
+            (mkVariant (mkTuple [
+              "Stockholm"
+              "ESSB"
+              true
+              [(mkTuple [(1.0358529110586345) (0.31328660073298215)])]
+              [(mkTuple [(1.0355620170322046) (0.31503192998497648)])]
+            ]))
+          ]))])
+        ])
+      ];
+    };
+
+    "org/gnome/shell/world-clocks" = {
+      locations = [
+        (mkVariant (mkTuple [
+          (mkUint32 2)
+          (mkVariant (mkTuple [
+            "Stockholm"
+            "ESSB"
+            true
+            [(mkTuple [(1.0358529110586345) (0.31328660073298215)])]
+            [(mkTuple [(1.0355620170322046) (0.31503192998497648)])]
+          ]))
+        ]))
+      ];
     };
 
     "org/gnome/clocks/state/window" = {
-      maximized = false;
       panel-id = "timer";
-      size = mkTuple [ 870 690 ];
-    };
-
-    "org/gnome/control-center" = {
-      last-panel = "bluetooth";
-      window-state = mkTuple [ 1557 1066 false ];
     };
 
     "org/gnome/desktop/app-folders" = {
@@ -135,41 +160,25 @@ let
       search-filter-time-type = "last_modified";
     };
 
-    "org/gnome/nautilus/window-state" = {
-      initial-size = mkTuple [ 890 550 ];
-    };
-
     "org/gnome/settings-daemon/plugins/power" = {
       power-button-action = "interactive";
       sleep-inactive-ac-type = "nothing";
     };
 
     "org/gnome/shell" = {
+      disable-user-extensions = false;
       last-selected-power-profile = "performance";
       welcome-dialog-last-shown-version = "47.2";
+      enabled-extensions = [
+        "tilingshell@ferrarodomenico.com"
+      ];
     };
 
-    "org/gnome/shell/world-clocks" = {
-      locations = [];
+    "org/gtk/settings/file-chooser" = {
+      clock-format = "24h";
     };
 
     "org/gnome/desktop/interface".color-scheme = "prefer-dark";
-  };
-
-  configureMediaKeys = {
-    "org/gnome/settings-daemon/plugins/media-keys" = {
-      play = [ "<Super>KP_Add" ];
-      pause = [ "<Super>XF86AudioMute" ];
-      stop = [ "<Super>KP_Subtract" ];
-      next = [ "<Super>XF86AudioRaiseVolume" ];
-      previous = [ "<Super>XF86AudioLowerVolume" ];
-      volume-up = [ "XF86AudioRaiseVolume" ];
-      volume-down = [ "XF86AudioLowerVolume" ];
-      volume-mute = [ "XF86AudioMute" ];
-      media = [ "<Super>XF86Calculator" ];
-      mic-mute = [ "<Super>KP_Multiply" ];
-      eject = [ "<Super>KP_Divide" ];
-    };
   };
 
   inputSources = {
@@ -190,24 +199,136 @@ let
     };
   };
 
+  workspaceSettings = {
+    "org/gnome/mutter" = {
+      dynamic-workspaces = false;
+      workspaces-only-on-primary = true;
+    };
+
+    "org/gnome/desktop/wm/preferences" = {
+      num-workspaces = 5;
+      workspace-names = [ "Main" "Dev" "Social" "Media" "Free" ];
+    };
+  };
+
+  configureMediaKeys = {
+    "org/gnome/settings-daemon/plugins/media-keys" = {
+      play = [ "<Super>KP_Add" ];
+      pause = [ "<Super>XF86AudioMute" ];
+      stop = [ "<Super>KP_Subtract" ];
+      next = [ "<Super>XF86AudioRaiseVolume" ];
+      previous = [ "<Super>XF86AudioLowerVolume" ];
+      volume-up = [ "XF86AudioRaiseVolume" ];
+      volume-down = [ "XF86AudioLowerVolume" ];
+      volume-mute = [ "XF86AudioMute" ];
+      media = [ "<Super>XF86Calculator" ];
+      mic-mute = [ "<Super>KP_Multiply" ];
+      eject = [ "<Super>KP_Divide" ];
+    };
+  };
+
   customKeybindings = {
     "org/gnome/settings-daemon/plugins/media-keys" = {
       custom-keybindings = [
-        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
+        # For Spotify
+        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/start-spotify/"
+
+        # For starting up workspaces
+        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/goto-workspace-1/"
+        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/goto-workspace-2/"
+        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/goto-workspace-3/"
+        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/goto-workspace-4/"
       ];
     };
+  };
 
-    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
-      name = "Spotify";
+  openMainWorkspaceScript = import ./open-main-workspace.nix { pkgs = pkgs; };
+  openDevWorkspaceScript = import ./open-dev-workspace.nix { pkgs = pkgs; };
+  openSocialWorkspaceScript = import ./open-social-workspace.nix { pkgs = pkgs; };
+  openMediaWorkspaceScript = import ./open-media-workspace.nix { pkgs = pkgs; };
+
+  workspaceShortcuts = {
+    # Clear default Super bindings
+    "org/gnome/shell/keybindings" = {
+      switch-to-application-1 = [];
+      switch-to-application-2 = [];
+      switch-to-application-3 = [];
+      switch-to-application-4 = [];
+      switch-to-application-5 = [];
+    };
+
+    "org/gnome/desktop/wm/keybindings" = {
+      switch-to-workspace-1 = [ "<Super>1" ];
+      switch-to-workspace-2 = [ "<Super>2" ];
+      switch-to-workspace-3 = [ "<Super>3" ];
+      switch-to-workspace-4 = [ "<Super>4" ];
+      switch-to-workspace-5 = [ "<Super>5" ];
+
+      move-to-workspace-1 = [ "<Super><Shift>1" ];
+      move-to-workspace-2 = [ "<Super><Shift>2" ];
+      move-to-workspace-3 = [ "<Super><Shift>3" ];
+      move-to-workspace-4 = [ "<Super><Shift>4" ];
+      move-to-workspace-5 = [ "<Super><Shift>5" ];
+    };
+
+    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/goto-workspace-1" = {
+      name = "Go to Workspace 1 and launch Main apps";
+      command = "${openMainWorkspaceScript}";
+      binding = "<Super><Alt>1";
+    };
+
+    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/goto-workspace-2" = {
+      name = "Go to Workspace 2 and launch Dev apps";
+      command = "${openDevWorkspaceScript}";
+      binding = "<Super><Alt>2";
+    };
+
+    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/goto-workspace-3" = {
+      name = "Go to Workspace 3 and launch Social apps";
+      command = "${openSocialWorkspaceScript}";
+      binding = "<Super><Alt>3";
+    };
+
+    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/goto-workspace-4" = {
+      name = "Go to Workspace 4 and launch Media apps";
+      command = "${openMediaWorkspaceScript}";
+      binding = "<Super><Alt>4";
+    };
+  };
+
+  spotifyShortcuts = {
+    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/start-spotify" = {
+      name = "Start Spotify";
       command = "spotify";
       binding = "<Super><Alt>XF86Calculator";
+    };
+  };
+
+  tilingShellSettings = {
+    "org/gnome/shell/extensions/tilingshell" = {
+      layouts-json = builtins.readFile ./tilingshell-layouts.json;
+      selected-layouts = [
+        ["Horizontal 22 56 22"]
+        ["Horizontal 22 56 22"]
+        ["Horizontal 22 56 22"]
+        ["Horizontal 22 56 22"]
+        ["Horizontal 22-22 56 22-22"]
+      ];
+      window-gap = 16;
+      outer-gap = 8;
+      snap-assistant-threshold = 52;
+      enable-autotiling = true;
     };
   };
 in {
   dconf.settings = lib.foldl lib.recursiveUpdate baseLine [
     inputSources
     nightLight
+    workspaceSettings
     configureMediaKeys
     customKeybindings
+    workspaceShortcuts
+    spotifyShortcuts
+    tilingShellSettings
   ];
 }

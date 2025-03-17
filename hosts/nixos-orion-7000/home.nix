@@ -35,6 +35,11 @@
     dconf-editor # GSettings editor for GNOME
     dconf2nix # Convert dconf files to Nix, as expected by Home Manager
     _1password-gui # Password manager
+    gnomeExtensions.tiling-shell # Tiling window manager
+    wmctrl
+    gnome-calendar
+    gnome-terminal
+    gnome-system-monitor
   ];
 in {
   imports = [
