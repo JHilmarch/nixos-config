@@ -4,6 +4,7 @@ pkgs.writeShellScript "social-workspace-script" ''
   # Switch to workspace 3 (Social)
   wmctrl -s 2
 
-  # Launch Element
+  # Launch Element & Slack
   ${pkgs.element-desktop}/bin/element-desktop &
+  ${pkgs.slack}/bin/slack &
 ''
