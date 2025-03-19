@@ -5,7 +5,7 @@ pkgs.writeShellScript "dev-workspace-script" ''
   wmctrl -s 1
 
   # Launch Rider, Console, and Firefox
-  ${pkgs.jetbrains.rider}/bin/rider && sleep 0.2 &
-  ${pkgs.gnome-terminal}/bin/gnome-terminal && sleep 0.2 &
+  ${pkgs.jetbrains.rider}/bin/rider && sleep 0.3 &
+  ${pkgs.gnome-terminal}/bin/gnome-terminal && sleep 0.3 &
   ${pkgs.firefox}/bin/firefox --new-window &
 ''

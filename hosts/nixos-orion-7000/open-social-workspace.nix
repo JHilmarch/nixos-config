@@ -5,6 +5,6 @@ pkgs.writeShellScript "social-workspace-script" ''
   wmctrl -s 2
 
   # Launch Element & Slack
-  ${pkgs.element-desktop}/bin/element-desktop &
+  ${pkgs.element-desktop}/bin/element-desktop && sleep 0.3 &
   ${pkgs.slack}/bin/slack &
 ''
