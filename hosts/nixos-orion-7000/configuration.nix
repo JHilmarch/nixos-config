@@ -203,5 +203,9 @@
     };
   };
 
+  fonts.fonts = with pkgs; [
+    corefonts
+  ];
+
   system.stateVersion = "24.11";
 }

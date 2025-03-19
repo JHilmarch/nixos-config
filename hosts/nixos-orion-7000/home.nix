@@ -41,6 +41,7 @@
     gnome-calendar
     gnome-terminal
     gnome-system-monitor
+    onlyoffice-desktopeditors # Office suite that combines text, spreadsheet and presentation editors
   ];
 in {
   imports = [
