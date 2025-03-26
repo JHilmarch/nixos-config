@@ -6,15 +6,19 @@ _: {
     mutableTrust = false;
     publicKeys = [
       {
-        source = ./public-keys/jonatan.pub;
+        source = ./public-keys/jonatan.asc;
         trust = 5;
       }
       {
-        source = ./public-keys/jakob.pub;
+        source = ./public-keys/jonatan.pm.me.asc;
+        trust = 5;
+      }
+      {
+        source = ./public-keys/jakob.asc;
         trust = 3;
       }
       {
-        source = ./public-keys/william.pub;
+        source = ./public-keys/william.asc;
         trust = 2;
       }
     ];
