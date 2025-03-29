@@ -1,27 +1,40 @@
-_: {
+{ lib, pkgs, ... }:
+
+with lib;
+
+let
+  keyDir = ./public-keys;
+  trustedUltimateDir = keyDir + "/personal";
+  trustedFullDir = keyDir + "/fully-trusted";
+  trustedMarginallyDir = keyDir + "/marginally-trusted";
+
+  listFilesInDir =
+    dir:
+    let
+      dirAttr = builtins.readDir dir;
+    in
+      builtins.filter (n: dirAttr.${n} == "regular") (builtins.attrNames dirAttr);
+in
+{
   programs.gpg = {
     enable = true;
 
     mutableKeys = false;
     mutableTrust = false;
     publicKeys = [
-      {
-        source = ./public-keys/jonatan.asc;
-        trust = 5;
-      }
-      {
-        source = ./public-keys/jonatan.pm.me.asc;
-        trust = 5;
-      }
-      {
-        source = ./public-keys/jakob.asc;
-        trust = 4;
-      }
-      {
-        source = ./public-keys/william.asc;
-        trust = 3;
-      }
-    ];
+    ]
+    ++ (builtins.map (file: {
+      source = trustedUltimateDir + "/${file}";
+      trust = "ultimate";
+    }) (listFilesInDir trustedUltimateDir))
+    ++ (builtins.map (file: {
+      source = trustedFullDir + "/${file}";
+      trust = "full";
+    }) (listFilesInDir trustedFullDir))
+    ++ (builtins.map (file: {
+      source = trustedMarginallyDir + "/${file}";
+      trust = "marginal";
+    }) (listFilesInDir trustedMarginallyDir));
 
     # https://raw.githubusercontent.com/drduh/config/master/gpg.conf
     settings = {
@@ -45,6 +58,13 @@ _: {
       armor = true;
       use-agent = true;
       throw-keyids = true;
+    };
+  };
+
+  services = {
+    gpg-agent = {
+      enable = true;
+      pinentryPackage = pkgs.pinentry-gnome3;
     };
   };
 }

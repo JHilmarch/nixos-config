@@ -46,10 +46,10 @@
   ];
 in {
   imports = [
-    ../../modules/fish/default.nix
-    ../../modules/gpg/default.nix
-    ../../modules/ssh/default.nix
-    ../../modules/git/default.nix
+    ../../modules/fish
+    ../../modules/gpg
+    ../../modules/ssh
+    ../../modules/git
     inputs.nix-index-database.hmModules.nix-index
     ./dconf.nix
   ];
@@ -105,13 +105,6 @@ in {
 
     starship = {
       enable = true;
-    };
-  };
-
-  services = {
-    gpg-agent = {
-      enable = true;
-      pinentryPackage = pkgs.pinentry-gnome3;
     };
   };
 }
