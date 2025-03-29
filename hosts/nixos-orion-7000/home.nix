@@ -31,6 +31,7 @@
     grc # Generic text colouriser
     element-desktop # A feature-rich client for Matrix.org
     slack # Desktop client for Slack
+    signal-desktop # Desktop client for Signal
     gitleaks # Scan git repos (or files) for secrets
     vlc # Media player and streaming server
     dconf-editor # GSettings editor for GNOME
