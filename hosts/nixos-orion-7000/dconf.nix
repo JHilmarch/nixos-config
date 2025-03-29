@@ -171,6 +171,8 @@ let
       welcome-dialog-last-shown-version = "47.2";
       enabled-extensions = [
         "tilingshell@ferrarodomenico.com"
+        "apps-menu@gnome-shell-extensions.gcampax.github.com"
+        "places-menu@gnome-shell-extensions.gcampax.github.com"
       ];
     };
 
