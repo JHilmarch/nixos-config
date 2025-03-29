@@ -15,11 +15,11 @@ _: {
       }
       {
         source = ./public-keys/jakob.asc;
-        trust = 3;
+        trust = 4;
       }
       {
         source = ./public-keys/william.asc;
-        trust = 2;
+        trust = 3;
       }
     ];
 
