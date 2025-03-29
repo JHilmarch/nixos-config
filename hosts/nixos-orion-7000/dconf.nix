@@ -60,6 +60,41 @@ let
       panel-id = "timer";
     };
 
+    "org/gnome/Weather" = {
+      locations = [
+        (mkVariant (mkTuple [
+          (mkUint32 2)
+          (mkVariant (mkTuple [
+            "Göteborg-Landvetter Airport"
+            "ESGG"
+            false
+            [(mkTuple [(1.0064732078011609) (0.21467549799530256)])]
+            [(mkTuple [(1.0064732078011609) (0.21467549799530256)])]
+          ]))
+        ]))
+      ];
+    };
+
+    "org/gnome/GWeather4" = {
+      temperature-units = "centigrade";
+    };
+
+    "org/gnome/shell/weather" = {
+      automatic-location = true;
+      locations = [
+        (mkVariant (mkTuple [
+          (mkUint32 2)
+          (mkVariant (mkTuple [
+            "Göteborg-Landvetter Airport"
+            "ESGG"
+            false
+            [(mkTuple [(1.0064732078011609) (0.21467549799530256)])]
+            [(mkTuple [(1.0064732078011609) (0.21467549799530256)])]
+          ]))
+        ]))
+      ];
+    };
+
     "org/gnome/desktop/app-folders" = {
       folder-children = [ "Utilities" "YaST" "Pardus" ];
     };
