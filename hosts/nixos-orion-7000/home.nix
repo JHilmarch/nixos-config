@@ -44,6 +44,7 @@
     gnome-terminal
     gnome-system-monitor
     onlyoffice-desktopeditors # Office suite that combines text, spreadsheet and presentation editors
+    geary # Mail client for GNOME 3
   ];
 in {
   imports = [

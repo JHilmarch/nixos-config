@@ -106,6 +106,7 @@
       gnome-tour # GNOME Greeter & Tour
       totem # video player
       yelp # Help view
+      geary # Mail client for GNOME 3
     ]);
 
     shells = [ pkgs.fish ];
