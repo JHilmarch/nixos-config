@@ -347,7 +347,7 @@ let
       selected-layouts = [
         ["Horizontal 22 56 22"]
         ["Horizontal 22 56 22"]
-        ["Horizontal 22 56 22"]
+        ["Horizontal 22-22 56 22"]
         ["Horizontal 22 56 22"]
         ["Horizontal 22-22 56 22-22"]
       ];
