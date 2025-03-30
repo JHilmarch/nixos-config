@@ -45,6 +45,9 @@
     gnome-system-monitor
     onlyoffice-desktopeditors # Office suite that combines text, spreadsheet and presentation editors
     geary # Mail client for GNOME 3
+    sops # Simple and flexible tool for managing secrets
+    age # Modern encryption tool with small explicit keys
+    age-plugin-yubikey # YubiKey plugin for age
   ];
 in {
   imports = [
