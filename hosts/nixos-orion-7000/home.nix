@@ -48,6 +48,7 @@
     sops # Simple and flexible tool for managing secrets
     age # Modern encryption tool with small explicit keys
     age-plugin-yubikey # YubiKey plugin for age
+    cosign # Container Signing CLI with support for ephemeral keys and Sigstore signing
   ];
 in {
   imports = [
