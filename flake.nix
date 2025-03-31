@@ -22,6 +22,11 @@
     };
 
     jeezyvim.url = "github:LGUG2Z/JeezyVim";
+
+    sops-nix = {
+      url = "github:JHilmarch/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ {self, ...}: {
@@ -118,6 +123,7 @@
 
           modules = [
             ./hosts/nixos-orion-7000/configuration.nix
+            inputs.sops-nix.nixosModules.sops
             inputs.home-manager.nixosModules.home-manager
             {
               home-manager.extraSpecialArgs = specialArgs;
