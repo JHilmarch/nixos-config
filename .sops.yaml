@@ -1,0 +1,8 @@
+keys:
+  - &users:
+    - &jonatan age1yubikey1q0uurmnvmdn7x49z84r369t4hv0y7njypwhhzzdwnzxqnst6lcnucvtsl8n
+creation_rules:
+  - path_regex: secrets.(yaml|yml|json|env|ini)$
+    key_groups:
+      - age:
+          - *jonatan

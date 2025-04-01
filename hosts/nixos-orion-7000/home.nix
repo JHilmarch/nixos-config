@@ -49,7 +49,7 @@
     age # Modern encryption tool with small explicit keys
     age-plugin-yubikey # YubiKey plugin for age
     cosign # Container Signing CLI with support for ephemeral keys and Sigstore signing
-    go
+    go # Go Programming language
   ];
 in {
   imports = [
