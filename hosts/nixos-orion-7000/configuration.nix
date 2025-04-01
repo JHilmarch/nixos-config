@@ -1,9 +1,9 @@
 {
   config,
+  pkgs,
   hostname,
   lib,
   username,
-  pkgs,
   inputs,
   ...
 }:
@@ -43,6 +43,10 @@ let
   };
 in
 {
+
+  imports = [
+    ./modules/sops.nix
+  ];
 
   # Run `timedatectl list-timezones` to list timezones"
   time.timeZone = "Europe/Stockholm";

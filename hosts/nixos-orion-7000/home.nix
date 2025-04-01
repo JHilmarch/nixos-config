@@ -7,6 +7,9 @@
   unstable-packages = with pkgs.unstable; [
     git # A distributed version control system
     gh # GitHub CLI
+    sops # Simple and flexible tool for managing secrets
+    age # Modern encryption tool with small explicit keys
+    age-plugin-yubikey # YubiKey plugin for age
   ];
 
   stable-packages = with pkgs; [
@@ -60,7 +63,9 @@ in {
     stateVersion = "24.11"; # https://nix-community.github.io/home-manager/
     username = "${username}";
     homeDirectory = "/home/${username}";
-    sessionVariables.EDITOR = "vim";
+    sessionVariables = {
+      EDITOR = "vim";
+    };
 
     packages =
       stable-packages
