@@ -7,6 +7,10 @@
   unstable-packages = with pkgs.unstable; [
     git # A distributed version control system
     gh # GitHub CLI
+
+    sops # Simple and flexible tool for managing secrets
+    age # Modern encryption tool with small explicit keys
+    age-plugin-yubikey # YubiKey plugin for age
   ];
 
   stable-packages = with pkgs; [
@@ -45,11 +49,10 @@
     gnome-system-monitor
     onlyoffice-desktopeditors # Office suite that combines text, spreadsheet and presentation editors
     geary # Mail client for GNOME 3
-    sops # Simple and flexible tool for managing secrets
-    age # Modern encryption tool with small explicit keys
-    age-plugin-yubikey # YubiKey plugin for age
     cosign # Container Signing CLI with support for ephemeral keys and Sigstore signing
     go # Go Programming language
+    #samba # Standard Windows interoperability suite of programs for Linux and Unix
+    #cifs-utils # Tools for managing Linux CIFS client filesystems
   ];
 in {
   imports = [
@@ -65,7 +68,9 @@ in {
     stateVersion = "24.11"; # https://nix-community.github.io/home-manager/
     username = "${username}";
     homeDirectory = "/home/${username}";
-    sessionVariables.EDITOR = "vim";
+    sessionVariables = {
+      EDITOR = "vim";
+    };
 
     packages =
       stable-packages

@@ -1,12 +1,17 @@
 {
+  self,
   config,
+  pkgs,
   hostname,
   lib,
   username,
-  pkgs,
   inputs,
   ...
-}: {
+}:{
+
+  imports = [
+    ./modules/sops.nix
+  ];
 
   # Run `timedatectl list-timezones` to list timezones"
   time.timeZone = "Europe/Stockholm";
@@ -68,6 +73,23 @@
     device = "/dev/disk/by-label/samsung-ssd-870-evo-1tb-usb";
     fsType = "ntfs";
   };
+
+#  fileSystems."/mnt/share/FILESHARE" = {
+#    device = config.sops.secrets.fileshare_smb_path.path;
+#    fsType = "cifs";
+#    options = [
+#      "username=${config.sops.secrets.fileshare_smb_username.path}"
+#      "password=${config.sops.secrets.fileshare_smb_password.path}"
+#      "x-systemd.automount"
+#      "noauto"
+#      "x-systemd.idle-timeout=60"
+#      "x-systemd.device-timeout=5s"
+#      "x-systemd.mount-timeout=5s"
+#      "rw"
+#      "uid=${builtins.toString config.users.users.${username}.uid}"
+#      "gid=${builtins.toString config.users.groups.users.gid}"
+#    ];
+#  };
 
   networking = {
     hostName = "${hostname}";

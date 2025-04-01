@@ -23,13 +23,13 @@
 
     jeezyvim.url = "github:LGUG2Z/JeezyVim";
 
-    custom-sops = {
-      url = "path:./derivations/sops";
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = inputs @ {self, custom-sops, ...}: {
+  outputs = inputs @ {self, ...}: {
     nixosConfigurations = let
       nixpkgsConfig = {
         config.allowUnfree = true;
@@ -102,7 +102,6 @@
                 inherit (prev) system;
                 inherit (prev.config) allowUnfree;
               };
-              sops = inputs.custom-sops.packages.${prev.system}.default;
             })
           ];
         };
@@ -124,6 +123,7 @@
 
           modules = [
             ./hosts/nixos-orion-7000/configuration.nix
+            inputs.sops-nix.nixosModules.sops
             inputs.home-manager.nixosModules.home-manager
             {
               home-manager.extraSpecialArgs = specialArgs;

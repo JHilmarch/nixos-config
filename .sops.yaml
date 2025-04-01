@@ -1,8 +1,11 @@
 keys:
   - &users:
-    - &jonatan age1yubikey1q0uurmnvmdn7x49z84r369t4hv0y7njypwhhzzdwnzxqnst6lcnucvtsl8n
+    - &jonatan-yubikey-23839166 age1yubikey1q0uurmnvmdn7x49z84r369t4hv0y7njypwhhzzdwnzxqnst6lcnucvtsl8n
+  - &hosts:
+    - &local age1ajuq008mvrtgwema97yxm670jl98yyz0fcwe788te33rc8jp53asm59qr5
 creation_rules:
-  - path_regex: secrets.(yaml|yml|json|env|ini)$
+  - path_regex: secrets/nixos-orion-7000/[^/]+\.(yaml|yml|json|env|ini)$
     key_groups:
       - age:
-          - *jonatan
+          - *jonatan-yubikey-23839166
+          - *local
