@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "custom-sops": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1,
+        "narHash": "sha256-P4Gs9NYKUYqL4DH5V38C4+Cf0elqBkfXneUKryVlG0s=",
+        "path": "./derivations/sops",
+        "type": "path"
+      },
+      "original": {
+        "path": "./derivations/sops",
+        "type": "path"
+      }
+    },
     "devshell": {
       "inputs": {
         "nixpkgs": [
@@ -463,11 +480,11 @@
         "treefmt-nix": "treefmt-nix_2"
       },
       "locked": {
-        "lastModified": 1743425677,
-        "narHash": "sha256-xrFChmbpswC/5Bd4qAFNyKzst7WjSg6QO8QdsC060K0=",
+        "lastModified": 1743474402,
+        "narHash": "sha256-iyBXWJcraljGp2K/loNaPFgWPpejfIzZpJxt0VOkXZk=",
         "owner": "nix-community",
         "repo": "NUR",
-        "rev": "842f278180cd918bf42ce17bc6b9d65d715702fb",
+        "rev": "730e31fc3a3dad66c7c239b4c4d17c80132c4b13",
         "type": "github"
       },
       "original": {
@@ -502,34 +519,14 @@
     },
     "root": {
       "inputs": {
+        "custom-sops": "custom-sops",
         "home-manager": "home-manager",
         "jeezyvim": "jeezyvim",
         "nix-index-database": "nix-index-database",
         "nixos-wsl": "nixos-wsl",
         "nixpkgs": "nixpkgs_3",
         "nixpkgs-unstable": "nixpkgs-unstable",
-        "nur": "nur",
-        "sops-nix": "sops-nix"
-      }
-    },
-    "sops-nix": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1743422188,
-        "narHash": "sha256-bLTAqORBJYQA5Njrj+hGqEmQw455/F5HxQMGnZWmoFM=",
-        "owner": "JHilmarch",
-        "repo": "sops-nix",
-        "rev": "afbcc39a9f8fe58b3af19ac5e25ca7feb0cecd5f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "JHilmarch",
-        "repo": "sops-nix",
-        "type": "github"
+        "nur": "nur"
       }
     },
     "systems": {
