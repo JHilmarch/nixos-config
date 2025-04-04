@@ -6,7 +6,31 @@
   pkgs,
   inputs,
   ...
-}: {
+}:
+let
+  ports = {
+    # Discover Google Cast and other Spotify Connect devices (TCP)
+    spotify-localDiscovery-casting = 5353;
+    # Sync local tracks with mobile in the same network (TCP+UDP)
+    spotify-localDiscovery-mobileSync = 57621;
+
+    fileSystem-nfs4-nfsdService = 2049; # (TCP)
+  };
+
+  udpPorts = [
+    ports.spotify-localDiscovery-mobileSync
+  ];
+
+  tcpOnlyPorts = builtins.filter (port: !builtins.elem port udpPorts) (builtins.attrValues ports);
+
+  firewallOptions = {
+    allowedPorts = {
+      udp = udpPorts;
+      tcp = tcpOnlyPorts ++ [ ports.spotify-localDiscovery-mobileSync ];
+    };
+  };
+in
+{
 
   # Run `timedatectl list-timezones` to list timezones"
   time.timeZone = "Europe/Stockholm";
@@ -42,7 +66,8 @@
 
     initrd = {
       availableKernelModules = [ "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "uas" "sd_mod" ];
-      kernelModules = [ ];
+      supportedFilesystems = [ "nfs" ];
+      kernelModules = [ "nfs" ];
     };
 
     kernelModules = [ "kvm-intel" "btusb" "btintel" ];
@@ -69,6 +94,26 @@
     fsType = "ntfs";
   };
 
+  fileSystems."/mnt/FILESHARE_SHARE" = {
+    device = "fileshare.local:/volume2/SHARE";
+    fsType = "nfs";
+    options = [
+      "nfsvers=4.2"
+      "x-systemd.automount"
+      "noauto"
+    ];
+  };
+
+  fileSystems."/mnt/FILESHARE_JONATAN_ARKIV" = {
+    device = "fileshare.local:/volume2/Jonatan arkiv";
+    fsType = "nfs";
+    options = [
+      "nfsvers=4.2"
+      "x-systemd.automount"
+      "noauto"
+    ];
+  };
+
   networking = {
     hostName = "${hostname}";
     networkmanager.enable = true;
@@ -76,9 +121,12 @@
     firewall = {
       enable = true;
 
-      # Local discovery for Spotify Connect
-      allowedTCPPorts = [ 57621 ];
-      allowedUDPPorts = [ 5353 ];
+      allowedTCPPorts = firewallOptions.allowedPorts.tcp;
+      allowedUDPPorts = firewallOptions.allowedPorts.udp;
+    };
+
+    hosts = {
+      "192.168.2.103" = ["fileshare.local"];
     };
   };
 
