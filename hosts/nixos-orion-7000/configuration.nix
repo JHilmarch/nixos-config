@@ -29,6 +29,18 @@ let
       tcp = tcpOnlyPorts ++ [ ports.spotify-localDiscovery-mobileSync ];
     };
   };
+
+  nfsShareOptions = [
+    "nfsvers=4"
+    "x-systemd.automount"
+    "noauto"
+  ];
+
+  # TODO: create mount points on boot, if not exist.
+  fileshareOptions = {
+    mountSharePath = "/mnt/FILESHARE_SHARE";
+    mountJonatanArkivPath = "/mnt/FILESHARE_JONATAN_ARKIV";
+  };
 in
 {
 
@@ -94,24 +106,16 @@ in
     fsType = "ntfs";
   };
 
-  fileSystems."/mnt/FILESHARE_SHARE" = {
+  fileSystems."${fileshareOptions.mountSharePath}" = {
     device = "fileshare.local:/volume2/SHARE";
     fsType = "nfs";
-    options = [
-      "nfsvers=4.2"
-      "x-systemd.automount"
-      "noauto"
-    ];
+    options = nfsShareOptions;
   };
 
-  fileSystems."/mnt/FILESHARE_JONATAN_ARKIV" = {
+  fileSystems."${fileshareOptions.mountJonatanArkivPath}" = {
     device = "fileshare.local:/volume2/Jonatan arkiv";
     fsType = "nfs";
-    options = [
-      "nfsvers=4.2"
-      "x-systemd.automount"
-      "noauto"
-    ];
+    options = nfsShareOptions;
   };
 
   networking = {
