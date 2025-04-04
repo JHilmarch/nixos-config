@@ -123,10 +123,19 @@ _**Work in progress...**_
 > ```
 > - Active kernel modules can be verified by `lsmod | grep bluetooth`
 
-
 > **2025-03-17**
 >
 > TILING WINDOWS
 >
 > I've struggeling a lot with a tiling window setup. I couldn't get Hyprland to work, so I have to come back to that
 > at a later point. I'm now using the GNOME extension tiling-shell, with shortcuts for opening workspaces and apps.
+
+> **2025-04-04**
+>
+> MOUNTING SHARES
+>
+> I wanted to mount my Synology DiskStation SMB/CIFS shares without success. As an alternative I activated NFS.
+>
+> Note: The directories for the mounting point is not created by the nix flake setup. Ideally, I want the folders
+> to be created in an early boot stage.
+>
