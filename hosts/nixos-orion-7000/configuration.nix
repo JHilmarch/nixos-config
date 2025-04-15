@@ -55,7 +55,10 @@ in
     enableAllFirmware = true;
     enableRedistributableFirmware = true;
     graphics.enable = true;
-    nvidia.open = true;
+    nvidia = {
+      open = true;
+      nvidiaSettings = true;
+    };
     bluetooth = {
       enable = true;
       powerOnBoot = false;
