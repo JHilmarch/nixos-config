@@ -32,6 +32,18 @@ cd [to the nixos-config directory]
 sudo nixos-rebuild boot --flake .
 ```
 
+If `nixos-rebuild` hangs/crashes, because of a full boot partition:
+
+```bash
+sudo nix-store --gc
+nix-collect-garbage -d
+sudo nix-store --verify --check-contents --repair
+nix flake update --commit-lock-file
+sudo nixos-rebuild boot --flake .
+```
+
+Don't forget to stage, commit or stash your changes before running `nix flake update`.
+
 ## Modules
 
 ### git
