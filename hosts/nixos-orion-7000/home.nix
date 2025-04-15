@@ -48,6 +48,8 @@
     gnome-system-monitor
     onlyoffice-desktopeditors # Office suite that combines text, spreadsheet and presentation editors
     geary # Mail client for GNOME 3
+    openrazer-daemon # Entirely open source user-space daemon that allows you to manage your Razer peripherals
+    polychromatic # Graphical front-end and tray applet for configuring Razer peripherals
   ];
 in {
   imports = [

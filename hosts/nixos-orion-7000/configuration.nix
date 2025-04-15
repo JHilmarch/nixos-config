@@ -74,6 +74,7 @@ in
         };
       };
     };
+    openrazer.enable = true;
   };
 
   boot = {
@@ -231,6 +232,7 @@ in
     extraGroups = [
       "wheel"
       "networkmanager"
+      "openrazer"
     ];
     packages = with pkgs; [
       tree
