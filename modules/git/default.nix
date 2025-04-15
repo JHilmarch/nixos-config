@@ -27,6 +27,7 @@
       commit = {
         gpgsign = true;
       };
+      core.editor = "vim";
     };
   };
 }
