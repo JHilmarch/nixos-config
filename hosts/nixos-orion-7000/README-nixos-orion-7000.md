@@ -138,4 +138,10 @@ _**Work in progress...**_
 >
 > Note: The directories for the mounting point is not created by the nix flake setup. Ideally, I want the folders
 > to be created in an early boot stage.
+
+
+> **2025-04-16**
 >
+> NVIDIA
+>
+> The Nvidia drivers are not handling 'suspend' as expected, so I disabled the function.
