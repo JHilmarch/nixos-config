@@ -2,9 +2,86 @@
 
 Configuration and documentation for NixOS dual boot with Windows 11 on Acer Predator Orion 7000.
 
----
-
 _**Work in progress...**_
+
+## Handle secrets
+
+### Deploying secrets
+
+The package `sops-nix` is storing secrets decrypted in /nix/store is OK. This is OK for NixOS on my personal machines,
+with only one user. This is the package, currently used for decrypt and deploy secrets encrypted with `sops` and `age`.
+During the activation stage of *nixos-rebuild*, an age standard access key is used to decrypt the secrets and
+[sops-nix](https://github.com/Mic92/sops-nix) is copying them to the /nix/store.
+
+With another related package called [agenix](https://github.com/ryantm/agenix), we can mount the secrets to known paths.
+Preferable one path per usage or application, with a strict permission policy. For remote machines or critical
+application I plan to use identities derived from SSH-keys and `agenix`, together with a vault to handle secrets.
+
+### Encrypt & decrypt secrets using sops, age & YubiKey
+
+The [YubiKey plugin](https://github.com/str4d/age-plugin-yubikey) for [age](https://github.com/FiloSottile/age), called
+`age-plugin-yubikey`, let us generate and export an identity, stored on the YubiKey, under the PIV section:
+
+```bash
+ykman piv change-pin
+ykman piv change-puk
+ykman piv access change-management-key --generate --protect
+age-plugin-yubikey --generate
+age-plugin-yubikey --identity > \
+~/.config/sops/age/id_jonatan.txt
+age-plugin-yubikey --list
+ykman piv info
+```
+
+The YubiKey identity will contain a reference to the hardware key and can be stored openly.
+
+The identity of the age standard access key contains a private key/secret. We should encrypt it with the YubiKey and a
+strong password as a backup:
+
+```bash
+cd ~/.config/sops/age/
+age-keygen -o id_local.txt
+age-keygen -y -o r_local.txt id_local.txt
+cat id_jonatan.txt >> keys.txt
+cat id_local.txt >> keys.txt
+# yank or copy YubiKey public key manually to r_jonatan.txt
+cat r_local.txt >> recipients.txt
+cat r_jonatan.txt >> recipients.txt
+age -R recipients.txt id_local.txt > id_local.age
+age -R recipients.txt keys.txt > keys.age
+rm id_local.txt
+rm keys.txt
+# Before development session
+age -d -i id_jonatan.txt -o keys.txt keys.age
+# Before build
+# Uncomment the YubiKey identity in keys.txt. sops-nix will not
+# interact with the user and fail the build otherwise.
+# After development session
+rm keys.txt
+```
+
+The file `keys.txt` in the home age configuration folder is used to lookup age identities.
+
+After keys in .sops.yaml changed, we re-**encrypt** the secret files:
+
+```bash
+sops updatekeys secrets/nixos-orion-7000/secrets.yml
+```
+
+[sops](https://github.com/getsops/sops) keys and creation rules allow both the user 'jonatan-yubikey-23839166' and the
+host 'local' to **decrypt** secrets under secrets/nixos-orion-7000:
+
+```bash
+sops secrets/nixos-orion-7000/secrets.yml
+```
+
+To check the secret in the nix store after rebuild:
+
+```bash
+sudo cat /run/secrets/secret1
+```
+
+---
 
 ## Logbook
 
