@@ -88,6 +88,19 @@ in
       availableKernelModules = [ "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "uas" "sd_mod" ];
       supportedFilesystems = [ "nfs" ];
       kernelModules = [ "nfs" ];
+
+      luks = {
+        devices = {
+
+          encrypted-nix-swap = {
+            device = "/dev/disk/by-label/NIXSWAP";
+            keyFile = "/dev/urandom";
+            keyFileSize = 256;
+            allowDiscards = true;
+          };
+
+        };
+      };
     };
 
     kernelModules = [ "kvm-intel" "btusb" "btintel" "coretemp" "nct6775" ];
@@ -105,9 +118,7 @@ in
     options = [ "fmask=0022" "dmask=0022" ];
   };
 
-  swapDevices = [
-    { device = "/dev/disk/by-label/NIXSWAP"; }
-  ];
+  swapDevices = [ { device = "/dev/disk/by-label/NIXSWAP"; } ];
 
   fileSystems."/mnt/samsung-ssd-870-evo-1tb-usb" = {
     device = "/dev/disk/by-label/samsung-ssd-870-evo-1tb-usb";
