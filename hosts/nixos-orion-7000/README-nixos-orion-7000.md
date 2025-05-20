@@ -222,3 +222,15 @@ sudo cat /run/secrets/secret1
 > NVIDIA
 >
 > The Nvidia drivers are not handling 'suspend' as expected, so I disabled the function.
+
+> **2025-05-20**
+>
+> NEW MOTHERBOARD - FAN CONTROL
+>
+> I fucked up the motherboard by hard reset during ME firmware update and had to buy a new motherboard.
+> No spare parts was available, so I ordered and installed a Asus Prime Z790-P Wifi board. A header is missing to
+> control a fan or led.
+>
+> Installed and configured CoolerControl. Here is documentation of how to restore the backup:
+> https://docs.coolercontrol.org/wiki/config-files.html#backup-import
+
