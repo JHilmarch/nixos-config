@@ -50,6 +50,13 @@
     geary # Mail client for GNOME 3
     openrazer-daemon # Entirely open source user-space daemon that allows you to manage your Razer peripherals
     polychromatic # Graphical front-end and tray applet for configuring Razer peripherals
+    lm_sensors # Tools for reading hardware sensors
+
+    # Monitor and control your cooling devices
+    coolercontrol.coolercontrold
+    coolercontrol.coolercontrol-ui-data
+    coolercontrol.coolercontrol-liqctld
+    coolercontrol.coolercontrol-gui
   ];
 in {
   imports = [

@@ -90,7 +90,7 @@ in
       kernelModules = [ "nfs" ];
     };
 
-    kernelModules = [ "kvm-intel" "btusb" "btintel" ];
+    kernelModules = [ "kvm-intel" "btusb" "btintel" "coretemp" "nct6775" ];
     extraModulePackages = [ ];
   };
 
@@ -218,6 +218,11 @@ in
       # Certain features, including CLI integration and system authentication support,
       # require enabling PolKit integration on some desktop environments (e.g. Plasma).
       polkitPolicyOwners = [ "${username}" ];
+    };
+
+    coolercontrol = {
+      enable = true;
+      nvidiaSupport = true;
     };
   };
 
