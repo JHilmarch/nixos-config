@@ -134,6 +134,43 @@
             }
           ];
         };
+
+      iso = let
+        system = "x86_64-linux";
+        nixpkgsWithOverlays = import inputs.nixpkgs {
+          inherit system;
+          config = {
+            allowUnfree = true;
+            permittedInsecurePackages = [
+              # Add any insecure packages you absolutely need here
+            ];
+          };
+          overlays = [
+            (_final: prev: {
+              unstable = import inputs.nixpkgs-unstable {
+                inherit (prev) system;
+                inherit (prev.config) allowUnfree;
+              };
+            })
+          ];
+        };
+
+        specialArgs = {
+          inherit inputs system;
+          username = "jonatan";
+          hostname = "iso";
+        };
+      in
+        inputs.nixpkgs.lib.nixosSystem {
+          inherit system specialArgs;
+          pkgs = nixpkgsWithOverlays;
+
+          modules = [
+            "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+            "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
+            ./hosts/iso/configuration.nix
+          ];
+        };
     };
 
     formatter.x86_64-linux = inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
