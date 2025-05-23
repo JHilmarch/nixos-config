@@ -208,6 +208,11 @@ in
     };
   };
 
+  console = {
+    useXkbConfig = true;
+    earlySetup = true;
+  };
+
   programs = {
     fish.enable = true;
     nix-ld = {
