@@ -85,7 +85,7 @@ in
     };
 
     initrd = {
-      availableKernelModules = [ "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "uas" "sd_mod" ];
+      availableKernelModules = [ "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "hid_generic" "usb_storage" "uas" "sd_mod" ];
       supportedFilesystems = [ "nfs" ];
       kernelModules = [ "nfs" ];
       luks.devices."encrypted-nix-root".device = "/dev/disk/by-uuid/e8bb294d-bba0-43f5-936d-4fcc08aa6ce7";
