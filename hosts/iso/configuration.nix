@@ -56,7 +56,7 @@
   ];
 
   services = {
-    openssh.enable = true;
+    openssh.enable = lib.mkForce false;
   };
 
   nix = {
