@@ -79,8 +79,11 @@ in
 
   boot = {
     supportedFilesystems = [ "ntfs" ];
+    kernelModules = [ "kvm-intel" "btusb" "btintel" "coretemp" "nct6775" ];
+    extraModulePackages = [ ];
+
     loader = {
-        systemd-boot.enable = true;
+        systemd-boot.enable = false; # using lanzaboote
         efi.canTouchEfiVariables = true;
     };
 
@@ -88,11 +91,25 @@ in
       availableKernelModules = [ "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "hid_generic" "usb_storage" "uas" "sd_mod" ];
       supportedFilesystems = [ "nfs" ];
       kernelModules = [ "nfs" ];
-      luks.devices."encrypted-nix-root".device = "/dev/disk/by-uuid/e8bb294d-bba0-43f5-936d-4fcc08aa6ce7";
+      luks.devices."encrypted-nix-root" = {
+        device = "/dev/disk/by-uuid/e8bb294d-bba0-43f5-936d-4fcc08aa6ce7";
+        crypttabExtraOpts = [ "tpm2-device=auto" "tpm2-measure-pcr=yes" ];
+        allowDiscards = true;
+        preLVM = true;
+      };
+
+      systemd = {
+        enable = true;
+        tpm2.enable = true;
+      };
     };
 
-    kernelModules = [ "kvm-intel" "btusb" "btintel" "coretemp" "nct6775" ];
-    extraModulePackages = [ ];
+    lanzaboote = {
+      enable = true;
+      pkiBundle = "/var/lib/sbctl";
+    };
+
+    bootspec.enable = true;
   };
 
   fileSystems."/" = {
@@ -235,6 +252,12 @@ in
   security = {
     sudo.wheelNeedsPassword = true;
     rtkit.enable = true;
+
+    tpm2 = {
+      enable = true;
+      pkcs11.enable = true;
+      tctiEnvironment.enable = true;
+    };
   };
 
   users.defaultUserShell = pkgs.fish;
