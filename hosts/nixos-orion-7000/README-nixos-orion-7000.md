@@ -234,3 +234,16 @@ sudo cat /run/secrets/secret1
 > Installed and configured CoolerControl. Here is documentation of how to restore the backup:
 > https://docs.coolercontrol.org/wiki/config-files.html#backup-import
 
+> **2025-05-24**
+>
+> SECURE BOOT WITH Lanzaboote
+>
+> I put the UEFI Secure Boot in "setup" mode, generated keys with `sbctl` migrated them from /etc/secureboot to
+> /var/lib/sbctl. Finally, the keys was enrolled to the motherboard and the UEFI Windows Secure Boot was activated.
+> I can log in to Windows but NixOS boot gives me an error saying that 'Kernel hash has no match',
+> or something like that. The message is only visible for a second so it's hard to read it word for word.
+>
+> Command to sign all keys under /boot: `sbctl verify | sed 's/✗ /sbctl sign -s /e'`
+>
+
+

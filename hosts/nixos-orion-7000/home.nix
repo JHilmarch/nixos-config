@@ -10,6 +10,7 @@
     sops # Simple and flexible tool for managing secrets
     age # Modern encryption tool with small explicit keys
     age-plugin-yubikey # YubiKey plugin for age
+    sbctl # Secure Boot key manager
   ];
 
   stable-packages = with pkgs; [
@@ -59,6 +60,8 @@
     coolercontrol.coolercontrol-gui
 
     cryptsetup # LUKS for dm-crypt
+
+    tpm2-tools # Command line tools that provide access to a TPM 2.0 compatible device
   ];
 in {
   imports = [
