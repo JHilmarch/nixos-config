@@ -107,7 +107,6 @@ in
   };
 
   swapDevices = [
-    { device = "/dev/disk/by-label/NIXSWAP"; }
   ];
 
   fileSystems."/mnt/samsung-ssd-870-evo-1tb-usb" = {
