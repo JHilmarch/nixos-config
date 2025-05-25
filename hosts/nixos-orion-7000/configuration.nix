@@ -198,7 +198,14 @@ in
       packages = [pkgs.yubikey-personalization];
     };
 
-    openssh.enable = true;
+    openssh = {
+      enable = true;
+      banner = "${username}@${hostname}, log in with your Yubi(SSH)Key!";
+      settings = {
+        PermitRootLogin = "prohibit-password";
+        PasswordAuthentication = false;
+      };
+    };
 
     # Enable CUPS to print documents.
     printing.enable = true;
@@ -252,8 +259,13 @@ in
       tree
     ];
 
-    openssh.authorizedKeys.keys = [
-    ];
+    openssh = {
+      authorizedKeys.keys = [
+        # TODO: use ankarhem GitHub helper
+        "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIFQM3waWfoxgXd+Yws1ecrYT3v6pXbFvlVbhJe+xXdyAAAAADnNzaDpnaXRodWIuY29t"
+        "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIL6o3q+b1eMaIWSB06Yt244Ff3n2sNcGcfQqrW8gFo0kAAAADnNzaDpnaXRodWIuY29t"
+      ];
+    };
   };
 
   nix = {
