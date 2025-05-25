@@ -78,16 +78,16 @@ in
   };
 
   boot = {
-    supportedFilesystems = [ "ntfs" ];
+    supportedFilesystems = [ "ntfs" "vfat" "btrfs"  ];
     loader = {
         systemd-boot.enable = true;
         efi.canTouchEfiVariables = true;
     };
 
     initrd = {
-      availableKernelModules = [ "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "hid_generic" "usb_storage" "uas" "sd_mod" ];
-      supportedFilesystems = [ "nfs" ];
-      kernelModules = [ "nfs" ];
+      availableKernelModules = [ "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "hid_generic" "usb_storage" "uas" "sd_mod" "btrfs" ];
+      supportedFilesystems = [ "nfs" "vfat" ];
+      kernelModules = [ "nfs" "vfat" "btrfs" ];
       luks.devices."encrypted-nix-root".device = "/dev/disk/by-uuid/e8bb294d-bba0-43f5-936d-4fcc08aa6ce7";
     };
 
