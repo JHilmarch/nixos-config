@@ -88,7 +88,11 @@ in
       availableKernelModules = [ "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "hid_generic" "usb_storage" "uas" "sd_mod" "btrfs" ];
       supportedFilesystems = [ "nfs" "vfat" ];
       kernelModules = [ "nfs" "vfat" "btrfs" ];
-      luks.devices."encrypted-nix-root".device = "/dev/disk/by-uuid/e8bb294d-bba0-43f5-936d-4fcc08aa6ce7";
+      luks.devices."encrypted-nix-root" = {
+        device = "/dev/disk/by-uuid/e8bb294d-bba0-43f5-936d-4fcc08aa6ce7";
+        crypttabExtraOpts = [ "fido2-device=auto" ];
+      };
+      systemd.enable = true;
     };
 
     kernelModules = [ "kvm-intel" "btusb" "btintel" "coretemp" "nct6775" ];
