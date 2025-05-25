@@ -53,6 +53,7 @@
   environment.systemPackages = with pkgs; [
     util-linux
     cryptsetup
+    git
   ];
 
   services = {

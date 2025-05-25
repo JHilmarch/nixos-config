@@ -10,6 +10,10 @@
 
 `sudo cryptsetup luksOpen /dev/disk/by-uuid/{uuid} encrypted-nix-root`
 
+### Check partitions and filesystem
+
+If the NixOS root filesystem is formatted; change the uuid in the git repository (preferable from another machine).
+
 ### Mounted partitions
 
 ```
@@ -18,84 +22,15 @@ sudo mkdir -p /mnt/boot
 sudo mount /dev/disk/by-label/ESP /mnt/boot
 ```
 
-### Generate the configuration files
-
-`sudo nixos-generate-config --force --root /mnt`
-
-### Edit the nix configuration with vim:
+## Download nixos-config
 
 ```
-sudo vim /mnt/etc/nixos/configuration.nix
-sudo vim /mnt/etc/nixos/hardware-configuration.nix
-```
-
-- `time.timeZone = "Europe/Stockholm";`
-- `boot.supportedFilesystems = [ "ntfs" ];`
-- `swapDevices = [ { device = "/dev/disk/by-label/NIXSWAP"; } ];`
-- `nixpkgs.config.allowUnfree = true;`
-
-- Language
-
-```
-i18n.defaultLocale = "sv_SE.UTF-8";
-console = {
-    font = "Lat2-Terminus16";
-    useXkbConfig = true;
-};
-```
-
-- xserver
-
-```
-xserver = {
-  enable = true;
-  xkb.layout = "se";
-  videoDrivers = [ "nvidia" ];
-};
-
-```
-
-- Boot changes
-
-```
-boot = {
-    supportedFilesystems = [ "ntfs" ];
-    loader = {
-        systemd-boot.enable = true;
-        efi.canTouchEfiVariables = true;
-    };
-
-    initrd = {
-      availableKernelModules = [ "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "uas" "sd_mod" ];
-      supportedFilesystems = [ "nfs" ];
-      kernelModules = [ "nfs" ];
-    };
-
-    kernelModules = [ "kvm-intel" "btusb" "btintel" ];
-    extraModulePackages = [ ];
-};
-```
-
-- Nix Flakes
-
-```
-nix = {
-    settings.experimental-features = ["nix-command" "flakes"];
-    extraOptions = "experimental-features = nix-command flakes";
-};
+cd /mnt/
+git clone https://github.com/JHilmarch/nixos-config.git
 ```
 
 ### Install
 
 ```
-cd /mnt/
-sudo nixos-install
+sudo nixos-install --flake /mnt/nixos-config#nixos-orion-7000
 ```
-
-### Set passwords
-
-Set password than prompted for root.
-
-After starting from the new revision:
-- Ctrl-Alt-F1 to open getty terminal (Alt-F7 to switch back to X)
-- Mount USB with dotfiles/nixos-config, copy to home and rebuild with flakes.
