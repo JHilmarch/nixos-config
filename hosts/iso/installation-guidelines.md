@@ -4,7 +4,7 @@
 
 ### List discs and partitions
 
-`lsblk -o NAME,SIZE,TYPE,FSTYPE,LABEL,MOUNTPOINT,UUID`
+ `lsblk -f` or `lsblk -o NAME,SIZE,TYPE,FSTYPE,LABEL,MOUNTPOINT,UUID`
 
 ### Open the encrypted LINUX filesystem partition
 
@@ -25,12 +25,13 @@ sudo mount /dev/disk/by-label/ESP /mnt/boot
 ## Download nixos-config
 
 ```
-cd /mnt/
+sudo mkdir -p /mnt/install
+cd /mnt/install
 git clone https://github.com/JHilmarch/nixos-config.git
 ```
 
 ### Install
 
 ```
-sudo nixos-install --flake /mnt/nixos-config#nixos-orion-7000
+sudo nixos-install --root /mnt --flake /mnt/install/nixos-config#nixos-orion-7000
 ```
