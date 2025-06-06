@@ -75,6 +75,7 @@ in
       };
     };
     openrazer.enable = true;
+    cpu.intel.updateMicrocode = true;
   };
 
   boot = {
