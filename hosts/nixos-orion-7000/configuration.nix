@@ -305,5 +305,10 @@ in
     AllowSuspendThenHibernate=no
   '';
 
+    user.extraConfig = ''
+      DefaultTimeoutStopSec=15s
+    '';
+  };
+
   system.stateVersion = "24.11";
 }
