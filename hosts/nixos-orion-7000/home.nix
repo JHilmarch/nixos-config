@@ -83,8 +83,8 @@ in {
       stable-packages
       ++ unstable-packages
       ++ [
-        # pkgs.some-package
-        # pkgs.unstable.some-other-package
+        (pkgs.writeShellScriptBin "attach-yubikey" (builtins.readFile ./boot-initrd-scripts/attach-yubikey.sh))
+        (pkgs.writeShellScriptBin "detach-yubikey" (builtins.readFile ./boot-initrd-scripts/detach-yubikey.sh))
       ];
   };
 
