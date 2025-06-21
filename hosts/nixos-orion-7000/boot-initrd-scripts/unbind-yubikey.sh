@@ -1,8 +1,7 @@
 #!/bin/sh
+echo "Usage: $0 <busid>"
 if [ -z "$1" ]; then
-  if ! BUSID=$(sh "$(dirname "$0")/detect-yubikey.sh"); then
-    exit 1
-  fi
+  BUSID=$(sh "$(dirname "$0")/detect-yubikey.sh") || exit 1
 else
   BUSID="$1"
 fi

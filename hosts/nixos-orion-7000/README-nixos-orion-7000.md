@@ -242,7 +242,7 @@ sudo cat /run/secrets/secret1
 > ```
 > systemd-cryptenroll --fido2-device=list
 > ```
-> Re-enroll Yubikey's
+> Re-enroll YubiKey's
 > ```
 > sudo cryptsetup status encrypted-nix-root
 > sudo cryptsetup luksDump /dev/nvme0n1p6
@@ -252,7 +252,7 @@ sudo cat /run/secrets/secret1
 > ```
 > **On local client**
 >
-> Find your Yubikey's busid, e.g., 3-1.
+> Find your YubiKey's busid, e.g., 3-1.
 >
 > `sudo usbip list -l`
 >
