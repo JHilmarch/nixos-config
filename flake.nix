@@ -115,6 +115,9 @@
           inherit inputs;
           username = "jonatan";
           hostname = "nixos-orion-7000";
+          helpers = import ./helpers {
+            pkgs = import inputs.nixpkgs { inherit system; };
+          };
         };
       in
         inputs.nixpkgs.lib.nixosSystem {

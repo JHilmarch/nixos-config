@@ -234,3 +234,71 @@ sudo cat /run/secrets/secret1
 > Installed and configured CoolerControl. Here is documentation of how to restore the backup:
 > https://docs.coolercontrol.org/wiki/config-files.html#backup-import
 
+> **2025-06-12**
+>
+> LUKS UNLOCK WITH FIDO2
+>
+> List all suitable FIDO2 security tokens
+> ```
+> systemd-cryptenroll --fido2-device=list
+> ```
+> Re-enroll YubiKey's
+> ```
+> sudo cryptsetup status encrypted-nix-root
+> sudo cryptsetup luksDump /dev/nvme0n1p6
+> sudo systemd-cryptenroll --wipe-slot=1 /dev/nvme0n1p6
+> sudo systemd-cryptenroll --wipe-slot=2 /dev/nvme0n1p6
+> sudo systemd-cryptenroll --fido2-device=auto --fido2-with-client-pin=yes --fido2-with-user-presence=yes /dev/nvme0n1p6
+> ```
+> **On local client**
+>
+> Find your YubiKey's busid, e.g., 3-1.
+>
+> `sudo usbip list -l`
+>
+> Yubico.com devices: https://devicehunt.com/search/type/usb/vendor/1050/device/any
+>
+> Start host
+>
+> `sudo modprobe usbip-host`
+>
+> Bind
+>
+> `sudo usbip bind -b 3-1`
+>
+> **On remote host, via SSH**
+>
+> Load Virtual Host Controller Interface Host Controller Driver
+> ```
+> sudo modprobe vhci_hcd
+> sudo usbip attach -r localhost -b 3-1
+> ```
+> Detach
+> ```
+> usbip port
+> sudo usbip detach -p 00
+> ```
+> **On local client**
+>
+> `sudo usbip unbind -b 3-1`
+>
+>  **Client SSH configuration**
+> ```
+> Host orion-boot
+>       HostName 192.168.2.106
+>       port 22
+>       user root
+>       IdentitiesOnly yes
+>       IdentityFile ~/.ssh/id_ed25519_sk_rk_github.com
+>       RequestTTY yes
+>       ForwardAgent no
+>       RemoteForward 3240 localhost:3240
+> Host orion
+>       HostName 192.168.2.106
+>       port 22
+>       user jonatan
+>       IdentitiesOnly yes
+>       IdentityFile ~/.ssh/id_ed25519_sk_rk_github.com
+>       ForwardAgent no
+>       RemoteForward 3240 localhost:3240
+> ```

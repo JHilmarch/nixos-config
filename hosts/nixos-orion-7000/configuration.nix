@@ -5,6 +5,7 @@
   lib,
   username,
   inputs,
+  helpers,
   ...
 }:
 let
@@ -41,6 +42,11 @@ let
     mountSharePath = "/mnt/FILESHARE_SHARE";
     mountJonatanArkivPath = "/mnt/FILESHARE_JONATAN_ARKIV";
   };
+
+  authorizedSSHKeys = helpers.ssh.getGithubKeys ({
+    username = "JHilmarch";
+    sha256 = "be8166d2e49794c8e2fb64a6868e55249b4f2dd7cd8ecf1e40e0323fb12a2348";
+  });
 in
 {
 
@@ -81,19 +87,58 @@ in
   boot = {
     supportedFilesystems = [ "ntfs" "vfat" "btrfs"  ];
     loader = {
-        systemd-boot.enable = true;
-        efi.canTouchEfiVariables = true;
+      systemd-boot = {
+        enable = true;
+        editor = false;
+      };
+      efi.canTouchEfiVariables = true;
     };
 
     initrd = {
-      availableKernelModules = [ "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "hid_generic" "usb_storage" "uas" "sd_mod" "btrfs" ];
+      # check with command 'lspci -v'
+      availableKernelModules = [
+        "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "hid_generic" "usb_storage" "uas" "sd_mod" "btrfs" "r8169" "vhci_hcd" ];
       supportedFilesystems = [ "nfs" "vfat" ];
       kernelModules = [ "nfs" "vfat" "btrfs" ];
-      luks.devices."encrypted-nix-root" = {
-        device = "/dev/disk/by-uuid/e8bb294d-bba0-43f5-936d-4fcc08aa6ce7";
-        crypttabExtraOpts = [ "fido2-device=auto" ];
+      luks = {
+        devices."encrypted-nix-root" = {
+          device = "/dev/disk/by-uuid/e8bb294d-bba0-43f5-936d-4fcc08aa6ce7";
+          crypttabExtraOpts = [ "fido2-device=auto" ];
+        };
       };
-      systemd.enable = true;
+      systemd = {
+        enable = true;
+        initrdBin = with pkgs; [
+          cryptsetup # LUKS for dm-crypt
+          linuxKernel.packages.linux_zen.usbip # allows to pass USB device from server to client over the network
+          gnused # GNU sed, a batch stream editor
+          gawk # GNU implementation of the Awk programming language
+          (pkgs.writeShellScriptBin "init-shell" (builtins.readFile ./boot-initrd-scripts/init-shell.sh))
+          (pkgs.writeShellScriptBin "attach-yubikey" (builtins.readFile ./boot-initrd-scripts/attach-yubikey.sh))
+          (pkgs.writeShellScriptBin "detach-yubikey" (builtins.readFile ./boot-initrd-scripts/detach-yubikey.sh))
+          (pkgs.writeShellScriptBin "unlock" (builtins.readFile ./boot-initrd-scripts/unlock-luks.sh))
+        ];
+
+        network = {
+          enable = true;
+          wait-online.enable = false;
+          networks.enp6s0 = {
+            matchConfig.Name = "enp6s0";
+            networkConfig.DHCP = "yes";
+          };
+        };
+
+        users.root.shell = "/bin/init-shell";
+      };
+
+      network = {
+        enable = true;
+        ssh = {
+          enable = true;
+          authorizedKeys = authorizedSSHKeys;
+          hostKeys = [ "/etc/ssh/initrd_ssh_host_ed25519_key" ];
+        };
+      };
     };
 
     kernelModules = [ "kvm-intel" "btusb" "btintel" "coretemp" "nct6775" ];
@@ -103,6 +148,7 @@ in
   fileSystems."/" = {
     device = "/dev/disk/by-label/NIXROOT";
     fsType = "btrfs";
+    options = [ "x-systemd.device-timeout=480s" ];
   };
 
   fileSystems."/boot" = {
@@ -134,6 +180,7 @@ in
   networking = {
     hostName = "${hostname}";
     networkmanager.enable = true;
+    useDHCP = false;
 
     firewall = {
       enable = true;
@@ -159,6 +206,7 @@ in
       bluez
       usbutils
       pciutils
+      linuxKernel.packages.linux_zen.usbip
     ];
 
     gnome.excludePackages = (with pkgs; [
@@ -201,7 +249,7 @@ in
 
     openssh = {
       enable = true;
-      banner = "${username}@${hostname}, log in with your Yubi(SSH)Key!";
+      banner = "${username}@${hostname}, log in with your SSH key (YubiKey)!";
       settings = {
         PermitRootLogin = "prohibit-password";
         PasswordAuthentication = false;
@@ -217,6 +265,8 @@ in
       alsa.support32Bit = true;
       pulse.enable = true;
     };
+
+    displayManager.defaultSession = "gnome";
   };
 
   console = {
@@ -255,17 +305,15 @@ in
       "wheel"
       "networkmanager"
       "openrazer"
+      "video"
+      "audio"
     ];
     packages = with pkgs; [
       tree
     ];
 
     openssh = {
-      authorizedKeys.keys = [
-        # TODO: use ankarhem GitHub helper
-        "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIFQM3waWfoxgXd+Yws1ecrYT3v6pXbFvlVbhJe+xXdyAAAAADnNzaDpnaXRodWIuY29t"
-        "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIL6o3q+b1eMaIWSB06Yt244Ff3n2sNcGcfQqrW8gFo0kAAAADnNzaDpnaXRodWIuY29t"
-      ];
+      authorizedKeys.keys = authorizedSSHKeys;
     };
   };
 
@@ -296,12 +344,18 @@ in
     corefonts
   ];
 
-  systemd.sleep.extraConfig = ''
-    AllowSuspend=no
-    AllowHibernation=no
-    AllowHybridSleep=no
-    AllowSuspendThenHibernate=no
-  '';
+  systemd = {
+    sleep.extraConfig = ''
+        AllowSuspend=no
+        AllowHibernation=no
+        AllowHybridSleep=no
+        AllowSuspendThenHibernate=no
+      '';
+
+    user.extraConfig = ''
+      DefaultTimeoutStopSec=15s
+    '';
+  };
 
   system.stateVersion = "24.11";
 }
