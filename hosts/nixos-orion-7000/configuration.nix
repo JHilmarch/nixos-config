@@ -5,6 +5,7 @@
   lib,
   username,
   inputs,
+  helpers,
   ...
 }:
 let
@@ -41,6 +42,11 @@ let
     mountSharePath = "/mnt/FILESHARE_SHARE";
     mountJonatanArkivPath = "/mnt/FILESHARE_JONATAN_ARKIV";
   };
+
+  authorizedSSHKeys = helpers.ssh.getGithubKeys ({
+    username = "JHilmarch";
+    sha256 = "be8166d2e49794c8e2fb64a6868e55249b4f2dd7cd8ecf1e40e0323fb12a2348";
+  });
 in
 {
 
@@ -261,11 +267,7 @@ in
     ];
 
     openssh = {
-      authorizedKeys.keys = [
-        # TODO: use ankarhem GitHub helper
-        "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIFQM3waWfoxgXd+Yws1ecrYT3v6pXbFvlVbhJe+xXdyAAAAADnNzaDpnaXRodWIuY29t"
-        "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIL6o3q+b1eMaIWSB06Yt244Ff3n2sNcGcfQqrW8gFo0kAAAADnNzaDpnaXRodWIuY29t"
-      ];
+      authorizedKeys.keys = authorizedSSHKeys;
     };
   };
 
