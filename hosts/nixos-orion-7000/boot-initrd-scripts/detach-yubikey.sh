@@ -2,7 +2,7 @@
 if [ -z "$1" ]; then
 	echo "Usage: $0 <usb-port>"
 	echo "'sudo usbip list -r <host>' or 'usbip port' to locate YubiKey"
-	echo "Trying to autodetect Yubikey..."
+	echo "Trying to autodetect YubiKey..."
 	# Attempt to autodetect the YubiKey by parsing the output of 'usbip port'
 	# 1. Look for lines containing '1050' (YubiKey vendor ID).
 	# 2. Extract the port number from the preceding 'Port' line.
