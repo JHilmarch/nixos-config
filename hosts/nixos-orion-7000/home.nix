@@ -24,7 +24,7 @@
     unzip # A utility for extracting files from ZIP archives
     tree-sitter # A parser generator tool
     alejandra # nix linter
-    pinentry-gnome3 # GnuPG’s interface to passphrase input in GNOME
+    pinentry-tty # GnuPG’s interface to passphrase input
     jetbrains.rider # IDE for .NET and C# development
     jetbrains.webstorm # IDE for Web Development
     yubikey-manager # Command line tool for configuring any YubiKey over all USB transports
