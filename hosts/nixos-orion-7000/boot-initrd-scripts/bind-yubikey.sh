@@ -8,5 +8,6 @@ fi
 
 echo "Binding YubiKey on bus $BUSID..."
 modprobe usbip-host
+systemctl enable --now usbipd
 usbip bind -b "$BUSID"
 exit 0
