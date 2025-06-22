@@ -207,6 +207,11 @@ in
       usbutils
       pciutils
       linuxKernel.packages.linux_zen.usbip
+
+      # Remote Desktop Server packages
+      gnome-remote-desktop # GNOME Remote Desktop server
+      gnome-session # GNOME session manager
+      xrdp # Open source RDP server
     ];
 
     gnome.excludePackages = (with pkgs; [
@@ -236,10 +241,24 @@ in
       xkb.layout = "se";
 
       # Enable the GNOME Desktop Environment.
-      displayManager.gdm.enable = true;
+      displayManager.gdm = {
+        enable = true;
+        autoSuspend = false;
+      };
+
       desktopManager.gnome.enable = true;
 
       videoDrivers = [ "nvidia" ];
+    };
+
+    gnome = {
+      gnome-remote-desktop.enable = true;
+    };
+
+    xrdp = {
+      enable = true;
+      defaultWindowManager = "gnome-session";
+      openFirewall = true;
     };
 
     udev = {
@@ -266,7 +285,10 @@ in
       pulse.enable = true;
     };
 
-    displayManager.defaultSession = "gnome";
+    displayManager = {
+      defaultSession = "gnome";
+      autoLogin.enable = false;
+    };
   };
 
   console = {
@@ -296,6 +318,7 @@ in
   security = {
     sudo.wheelNeedsPassword = true;
     rtkit.enable = true;
+    polkit.enable = true;
   };
 
   users.defaultUserShell = pkgs.fish;
