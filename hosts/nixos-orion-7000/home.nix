@@ -60,6 +60,9 @@
     coolercontrol.coolercontrol-gui
 
     cryptsetup # LUKS for dm-crypt
+
+    bruno # Open-source IDE For exploring and testing APIs
+    bruno-cli # CLI of the open-source IDE For exploring and testing APIs
   ];
 in {
   imports = [
