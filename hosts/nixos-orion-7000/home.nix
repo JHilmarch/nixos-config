@@ -88,6 +88,7 @@ in {
       ++ [
         (pkgs.writeShellScriptBin "attach-yubikey" (builtins.readFile ./boot-initrd-scripts/attach-yubikey.sh))
         (pkgs.writeShellScriptBin "detach-yubikey" (builtins.readFile ./boot-initrd-scripts/detach-yubikey.sh))
+        (pkgs.writeShellScriptBin "boot-windows" (builtins.readFile ./../../scripts/reboot-to-windows.sh))
       ];
   };
 
