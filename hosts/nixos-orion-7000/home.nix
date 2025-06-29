@@ -101,7 +101,7 @@ in {
 
     lsd = {
       enable = true;
-      enableAliases = true;
+      enableFishIntegration = true;
     };
 
     fzf = {
