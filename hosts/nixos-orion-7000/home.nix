@@ -10,6 +10,8 @@
     sops # Simple and flexible tool for managing secrets
     age # Modern encryption tool with small explicit keys
     age-plugin-yubikey # YubiKey plugin for age
+    bruno # Open-source IDE For exploring and testing APIs
+    bruno-cli # CLI of the open-source IDE For exploring and testing APIs
   ];
 
   stable-packages = with pkgs; [
@@ -60,9 +62,6 @@
     coolercontrol.coolercontrol-gui
 
     cryptsetup # LUKS for dm-crypt
-
-    bruno # Open-source IDE For exploring and testing APIs
-    bruno-cli # CLI of the open-source IDE For exploring and testing APIs
   ];
 in {
   imports = [
