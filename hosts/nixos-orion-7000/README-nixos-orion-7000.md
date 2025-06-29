@@ -302,3 +302,17 @@ sudo cat /run/secrets/secret1
 >       ForwardAgent no
 >       RemoteForward 3240 localhost:3240
 > ```
+
+> **2025-06-29**
+>
+> I can't use Jetbrains Toolbox to connect to Orion via SSH. It seems that resident keys aren't supported.
+> I added a password protected SSH key instead with 1Password as SSH agent.
+> ```
+> Host orion-rider
+>       IdentityAgent ~/.1password/agent.sock
+>       HostName 192.168.2.106
+>       port 22
+>       user jonatan
+>       IdentitiesOnly yes
+>       IdentityFile ~/.ssh/id_ed25519_jonatan_nixos_orion.pub
+> ```
