@@ -16,12 +16,10 @@ let
     spotify-localDiscovery-mobileSync = 57621;
 
     fileSystem-nfs4-nfsdService = 2049; # (TCP)
-    rdp-server = 3389;
   };
 
   udpPorts = [
     ports.spotify-localDiscovery-mobileSync
-    ports.rdp-server
   ];
 
   tcpOnlyPorts = builtins.filter (port: !builtins.elem port udpPorts) (builtins.attrValues ports);
@@ -29,7 +27,7 @@ let
   firewallOptions = {
     allowedPorts = {
       udp = udpPorts;
-      tcp = tcpOnlyPorts ++ [ ports.spotify-localDiscovery-mobileSync ports.rdp-server ];
+      tcp = tcpOnlyPorts ++ [ ports.spotify-localDiscovery-mobileSync ];
     };
   };
 
@@ -260,6 +258,7 @@ in
     xrdp = {
       enable = true;
       defaultWindowManager = "gnome-session";
+      openFirewall = true;
     };
 
     udev = {
