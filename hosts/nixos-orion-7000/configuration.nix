@@ -336,7 +336,9 @@ in
     ];
 
     openssh = {
-      authorizedKeys.keys = authorizedSSHKeys;
+      authorizedKeys.keys = authorizedSSHKeys ++ [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhXKd/Bp3e0yFS8WU2v2ul4/2nsWSQOoLdYVJWPPHWn jonatan@nixos-orion-7000"
+      ];
     };
   };
 
