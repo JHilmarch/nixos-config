@@ -55,13 +55,14 @@
     polychromatic # Graphical front-end and tray applet for configuring Razer peripherals
     lm_sensors # Tools for reading hardware sensors
 
+    cryptsetup # LUKS for dm-crypt
+    dotnet-sdk_9 # Core functionality needed to create .NET Core projects
+
     # Monitor and control your cooling devices
     coolercontrol.coolercontrold
     coolercontrol.coolercontrol-ui-data
     coolercontrol.coolercontrol-liqctld
     coolercontrol.coolercontrol-gui
-
-    cryptsetup # LUKS for dm-crypt
   ];
 in {
   imports = [
