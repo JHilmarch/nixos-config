@@ -316,3 +316,22 @@ sudo cat /run/secrets/secret1
 >       IdentitiesOnly yes
 >       IdentityFile ~/.ssh/id_ed25519_jonatan_nixos_orion.pub
 > ```
+
+> **2025-07-07**
+>
+> CUSTOM SECURE BOOT
+>
+> I put the UEFI Secure Boot in "setup" mode, generated keys with `sbctl` migrated them from /etc/secureboot to
+> /var/lib/sbctl. Finally, the keys were enrolled to the motherboard and the UEFI Windows Secure Boot was activated.
+> ```
+> ❯ sudo sbctl status
+> Installed:	✓ sbctl is installed
+> Owner GUID:	e6e5318d-91c7-4ef6-8349-ae633338e5ac
+> Setup Mode:	✓ Disabled
+> Secure Boot:	✓ Enabled
+> Vendor Keys:	microsoft
+> ```
+> ![HWiNFO summary](./images/custom-secure-boot-enabled.png)
+>
+> - "Setup mode": OS Type = Other OS, Boot mode = Custom, Clear/Delete keys
+> - "Custom Secure Boot": OS Type = Windows UEFI mode, Boot mode = Custom
