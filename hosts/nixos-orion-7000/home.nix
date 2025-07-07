@@ -57,6 +57,7 @@
 
     cryptsetup # LUKS for dm-crypt
     dotnet-sdk_9 # Core functionality needed to create .NET Core projects
+    sbctl # Secure Boot key manager
 
     # Monitor and control your cooling devices
     coolercontrol.coolercontrold
