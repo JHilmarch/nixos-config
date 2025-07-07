@@ -5,6 +5,10 @@
   ...
 }: let
   unstable-packages = with pkgs.unstable; [
+
+  ];
+
+  stable-packages = with pkgs; [
     git # A distributed version control system
     gh # GitHub CLI
     sops # Simple and flexible tool for managing secrets
@@ -12,18 +16,6 @@
     age-plugin-yubikey # YubiKey plugin for age
     bruno # Open-source IDE For exploring and testing APIs
     bruno-cli # CLI of the open-source IDE For exploring and testing APIs
-  ];
-
-  stable-packages = with pkgs; [
-    coreutils # A collection of basic file, shell, and text manipulation utilities. ls, cat, rm, cp...
-    findutils # A set of tools for finding files and directories based on various criteria
-    htop # An interactive process viewer for Unix systems
-    killall # A command that sends a signal to all processes running a specified command
-    curl # A command-line tool for transferring data with URLs. find, xargs, locate...
-    wget # A command-line utility for downloading files from the web
-    jq # A lightweight and flexible command-line JSON processor
-    zip # A utility for creating ZIP archives
-    unzip # A utility for extracting files from ZIP archives
     tree-sitter # A parser generator tool
     alejandra # nix linter
     pinentry-tty # GnuPG’s interface to passphrase input

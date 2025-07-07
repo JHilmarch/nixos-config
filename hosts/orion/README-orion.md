@@ -65,14 +65,14 @@ The file `keys.txt` in the home age configuration folder is used to lookup age i
 After keys in .sops.yaml changed, we re-**encrypt** the secret files:
 
 ```bash
-sops updatekeys secrets/nixos-orion-7000/secrets.yml
+sops updatekeys secrets/orion/secrets.yml
 ```
 
 [sops](https://github.com/getsops/sops) keys and creation rules allow both the user 'jonatan-yubikey-23839166' and the
-host 'local' to **decrypt** secrets under secrets/nixos-orion-7000:
+host 'local' to **decrypt** secrets under secrets/orion:
 
 ```bash
-sops secrets/nixos-orion-7000/secrets.yml
+sops secrets/orion/secrets.yml
 ```
 
 To check the secret in the nix store after rebuild:

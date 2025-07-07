@@ -5,7 +5,8 @@
   lib,
   username,
   inputs,
-  helpers,
+  functions,
+  self,
   ...
 }:
 let
@@ -14,8 +15,6 @@ let
     spotify-localDiscovery-casting = 5353;
     # Sync local tracks with mobile in the same network (TCP+UDP)
     spotify-localDiscovery-mobileSync = 57621;
-
-    fileSystem-nfs4-nfsdService = 2049; # (TCP)
   };
 
   udpPorts = [
@@ -31,19 +30,7 @@ let
     };
   };
 
-  nfsShareOptions = [
-    "nfsvers=4"
-    "x-systemd.automount"
-    "noauto"
-  ];
-
-  # TODO: create mount points on boot, if not exist.
-  fileshareOptions = {
-    mountSharePath = "/mnt/FILESHARE_SHARE";
-    mountJonatanArkivPath = "/mnt/FILESHARE_JONATAN_ARKIV";
-  };
-
-  authorizedSSHKeys = helpers.ssh.getGithubKeys ({
+  authorizedSSHKeys = functions.ssh.getGithubKeys ({
     username = "JHilmarch";
     sha256 = "be8166d2e49794c8e2fb64a6868e55249b4f2dd7cd8ecf1e40e0323fb12a2348";
   });
@@ -52,6 +39,7 @@ in
 
   imports = [
     ./modules/sops.nix
+    "${self}/modules/nfs/fileshare.nix"
   ];
 
   # Run `timedatectl list-timezones` to list timezones"
@@ -165,20 +153,8 @@ in
     fsType = "ntfs";
   };
 
-  fileSystems."${fileshareOptions.mountSharePath}" = {
-    device = "fileshare.local:/volume2/SHARE";
-    fsType = "nfs";
-    options = nfsShareOptions;
-  };
-
-  fileSystems."${fileshareOptions.mountJonatanArkivPath}" = {
-    device = "fileshare.local:/volume2/Jonatan arkiv";
-    fsType = "nfs";
-    options = nfsShareOptions;
-  };
-
   networking = {
-    hostName = "${hostname}";
+    hostName = "nixos-${hostname}";
     networkmanager.enable = true;
     useDHCP = false;
 
@@ -188,10 +164,6 @@ in
       allowedTCPPorts = firewallOptions.allowedPorts.tcp;
       allowedUDPPorts = firewallOptions.allowedPorts.udp;
     };
-
-    hosts = {
-      "192.168.2.103" = ["fileshare.local"];
-    };
   };
 
   environment = {
@@ -199,14 +171,23 @@ in
     enableAllTerminfo = true;
 
     systemPackages = with pkgs; [
-      vim
-      util-linux
-      ripgrep
-      pipewire
-      bluez
-      usbutils
-      pciutils
-      linuxKernel.packages.linux_zen.usbip
+      vim # Most popular clone of the VI editor
+      util-linux # Set of system utilities for Linux
+      ripgrep # Utility that combines the usability of The Silver Searcher with the raw speed of grep
+      pipewire # Server and user space API to deal with multimedia pipelines
+      bluez # Official Linux Bluetooth protocol stack
+      usbutils # Tools for working with USB devices, such as lsusb
+      pciutils # Collection of programs for inspecting and manipulating configuration of PCI devices
+      linuxKernel.packages.linux_zen.usbip # Allows to pass USB device from server to client over the network
+      coreutils # A collection of basic file, shell, and text manipulation utilities. ls, cat, rm, cp...
+      findutils # A set of tools for finding files and directories based on various criteria
+      htop # An interactive process viewer for Unix systems
+      killall # A command that sends a signal to all processes running a specified command
+      curl # A command-line tool for transferring data with URLs. find, xargs, locate...
+      wget # A command-line utility for downloading files from the web
+      jq # A lightweight and flexible command-line JSON processor
+      zip # A utility for creating ZIP archives
+      unzip # A utility for extracting files from ZIP archives
 
       # Remote Desktop Server packages
       gnome-remote-desktop # GNOME Remote Desktop server
@@ -337,7 +318,7 @@ in
 
     openssh = {
       authorizedKeys.keys = authorizedSSHKeys ++ [
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhXKd/Bp3e0yFS8WU2v2ul4/2nsWSQOoLdYVJWPPHWn jonatan@nixos-orion-7000"
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhXKd/Bp3e0yFS8WU2v2ul4/2nsWSQOoLdYVJWPPHWn jonatan@nixos-orion"
       ];
     };
   };

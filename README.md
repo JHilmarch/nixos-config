@@ -11,17 +11,17 @@
 ## Flake
 
 Contains NixOS configurations for the following targets:
-- [wsl](./hosts/wsl/README-wsl.md)
-- [nixos-orion-7000](./hosts/nixos-orion-7000/README-nixos-orion-7000.md)
+- [orion](./hosts/orion/README-orion.md)
+- [iso](./hosts/iso/README-iso.md)
 
 How to target a host:
 
 ```
 cd ~/nixos-config
-sudo nixos-rebuild switch --flake .#wsl && sudo shutdown -h now
+sudo nixos-rebuild switch --flake .#orion && sudo shutdown -h now
 ```
 
-Change `wsl` to the host you want to target. See the nix [flake](./flake.nix) for details.
+Change `orion` to the host you want to target. See the nix [flake](./flake.nix) for details.
 
 How to clean up and remove old generations:
 
