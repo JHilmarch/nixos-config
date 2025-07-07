@@ -345,7 +345,7 @@ let
     "org/gnome/shell/extensions/tilingshell" = {
       layouts-json = builtins.readFile ./tilingshell-layouts.json;
       selected-layouts = [
-        ["Horizontal 22 56 22"]
+        ["Layout 4"]
         ["Horizontal 22 56 22"]
         ["Horizontal 22-22 56 22"]
         ["Horizontal 22 56 22"]
