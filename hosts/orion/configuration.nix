@@ -22,10 +22,8 @@ in
     "${self}/modules/nfs/fileshare.nix"
     "${self}/modules/systemd/no-sleep.nix"
     "${self}/modules/spotify/firewall.nix"
+    "${self}/modules/defaults.nix"
   ];
-
-  # Run `timedatectl list-timezones` to list timezones"
-  time.timeZone = "Europe/Stockholm";
 
   hardware = {
     enableAllFirmware = true;
@@ -316,7 +314,6 @@ in
     };
 
     package = pkgs.nixVersions.stable;
-    extraOptions = ''experimental-features = nix-command flakes'';
 
     gc = {
       automatic = true;

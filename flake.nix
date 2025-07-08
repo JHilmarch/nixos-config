@@ -54,8 +54,7 @@
             config = nixpkgsConfig;
           };
 
-          inherit inputs;
-          inherit self;
+          inherit inputs self;
           username = "jonatan";
           hostname = "nixos-orion";
           functions = import ./functions {
@@ -102,7 +101,7 @@
         };
 
         specialArgs = {
-          inherit inputs system;
+          inherit inputs system self;
           username = "jonatan";
           hostname = "iso";
         };

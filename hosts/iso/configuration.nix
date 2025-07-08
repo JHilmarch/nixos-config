@@ -5,11 +5,14 @@
   hostname,
   lib,
   system,
+  self,
   ...
 }:
 {
+  imports = [
+    "${self}/modules/defaults.nix"
+  ];
 
-  time.timeZone = "Europe/Stockholm";
   console.keyMap = "sv-latin1";
 
   networking = {
@@ -58,11 +61,6 @@
 
   services = {
     openssh.enable = lib.mkForce false;
-  };
-
-  nix = {
-    settings.experimental-features = ["nix-command" "flakes"];
-    extraOptions = "experimental-features = nix-command flakes";
   };
 
   hardware = {
