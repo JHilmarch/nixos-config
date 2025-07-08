@@ -1,7 +1,7 @@
-{ pkgs, username, hostname, ...}:{
+{ pkgs, username, hostname, self, ...}:{
 
   sops = {
-    defaultSopsFile = ../../../secrets/${hostname}/secrets.yml;
+    defaultSopsFile = "${self}/secrets/${hostname}/secrets.yml";
     defaultSopsFormat = "yaml";
     validateSopsFiles = true;
     gnupg.sshKeyPaths = [];
