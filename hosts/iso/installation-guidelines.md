@@ -33,5 +33,5 @@ git clone https://github.com/JHilmarch/nixos-config.git
 ### Install
 
 ```
-sudo nixos-install --root /mnt --flake /mnt/install/nixos-config#orion
+sudo nixos-install --root /mnt --flake /mnt/install/nixos-config#nixos-orion
 ```

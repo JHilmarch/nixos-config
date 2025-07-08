@@ -28,7 +28,7 @@
         config.allowUnfree = true;
       };
     in {
-      orion = let
+      nixos-orion = let
         system = "x86_64-linux";
         nixpkgsWithOverlays = import inputs.nixpkgs {
           inherit system;
@@ -57,7 +57,7 @@
           inherit inputs;
           inherit self;
           username = "jonatan";
-          hostname = "orion";
+          hostname = "nixos-orion";
           functions = import ./functions {
             pkgs = import inputs.nixpkgs { inherit system; };
           };
@@ -76,7 +76,7 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "hm-backup";
-              home-manager.users.${specialArgs.username} = import ./hosts/${specialArgs.hostname}/home.nix;
+              home-manager.users.${specialArgs.username} = import ./hosts/orion/home.nix;
             }
           ];
         };

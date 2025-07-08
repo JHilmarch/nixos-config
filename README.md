@@ -18,10 +18,10 @@ How to target a host:
 
 ```
 cd ~/nixos-config
-sudo nixos-rebuild switch --flake .#orion && sudo shutdown -h now
+sudo nixos-rebuild switch --flake .#nixos-orion && sudo shutdown -h now
 ```
 
-Change `orion` to the host you want to target. See the nix [flake](./flake.nix) for details.
+Change `nixos-orion` to the host you want to target. See the nix [flake](./flake.nix) for details.
 
 How to clean up and remove old generations:
 

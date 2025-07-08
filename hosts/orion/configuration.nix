@@ -155,7 +155,7 @@ in
   };
 
   networking = {
-    hostName = "nixos-${hostname}";
+    hostName = "${hostname}";
     networkmanager.enable = true;
     useDHCP = false;
 
