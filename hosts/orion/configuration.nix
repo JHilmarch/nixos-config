@@ -40,6 +40,7 @@ in
   imports = [
     ./modules/sops.nix
     "${self}/modules/nfs/fileshare.nix"
+    "${self}/modules/systemd/no-sleep.nix"
   ];
 
   # Run `timedatectl list-timezones` to list timezones"
@@ -270,6 +271,8 @@ in
       defaultSession = "gnome";
       autoLogin.enable = false;
     };
+
+    systemdNoSleep.enable = true;
   };
 
   console = {
@@ -349,19 +352,6 @@ in
   fonts.packages = with pkgs; [
     corefonts
   ];
-
-  systemd = {
-    sleep.extraConfig = ''
-        AllowSuspend=no
-        AllowHibernation=no
-        AllowHybridSleep=no
-        AllowSuspendThenHibernate=no
-      '';
-
-    user.extraConfig = ''
-      DefaultTimeoutStopSec=15s
-    '';
-  };
 
   system.stateVersion = "24.11";
 }
