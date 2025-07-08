@@ -60,10 +60,10 @@
   ];
 in {
   imports = [
-    "${self}/modules/fish"
-    "${self}/modules/gpg"
-    "${self}/modules/ssh"
-    "${self}/modules/git"
+    "${self}/home-modules/fish"
+    "${self}/home-modules/gpg"
+    "${self}/home-modules/ssh"
+    "${self}/home-modules/git"
     ./modules/file.nix
     inputs.nix-index-database.hmModules.nix-index
     ./dconf.nix
