@@ -66,7 +66,7 @@ in {
     "${self}/home-modules/git"
     ./modules/file.nix
     inputs.nix-index-database.hmModules.nix-index
-    ./dconf.nix
+    ./modules/dconf
   ];
 
   home = {
