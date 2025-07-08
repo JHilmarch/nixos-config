@@ -2,6 +2,7 @@
   pkgs,
   username,
   inputs,
+  self,
   ...
 }: let
   unstable-packages = with pkgs.unstable; [
@@ -59,10 +60,11 @@
   ];
 in {
   imports = [
-    ../../modules/fish
-    ../../modules/gpg
-    ../../modules/ssh
-    ../../modules/git
+    "${self}/modules/fish"
+    "${self}/modules/gpg"
+    "${self}/modules/ssh"
+    "${self}/modules/git"
+    ./modules/file.nix
     inputs.nix-index-database.hmModules.nix-index
     ./dconf.nix
   ];
@@ -81,7 +83,7 @@ in {
       ++ [
         (pkgs.writeShellScriptBin "attach-yubikey" (builtins.readFile ./boot-initrd-scripts/attach-yubikey.sh))
         (pkgs.writeShellScriptBin "detach-yubikey" (builtins.readFile ./boot-initrd-scripts/detach-yubikey.sh))
-        (pkgs.writeShellScriptBin "boot-windows" (builtins.readFile ./../../scripts/reboot-to-windows.sh))
+        (pkgs.writeShellScriptBin "boot-windows" (builtins.readFile "${self}/scripts/reboot-to-windows.sh"))
       ];
   };
 

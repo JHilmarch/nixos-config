@@ -16,50 +16,55 @@ let
 in
 {
   options = {
-    host = mkOption {
-      type = types.str;
-      default = "fileshare.local";
-      description = "NFS server hostname";
-    };
-    ip = mkOption {
-      type = types.str;
-      default = "192.168.2.103";
-      description = "NFS server IP address";
-    };
-    shares = mkOption {
-      type = types.listOf shareType;
-      default = [];
-      description = "List of NFS shares to mount";
-    };
-    nfsShareOptions = mkOption {
-      type = types.listOf types.str;
-      default = [
-        "nfsvers=4"
-        "x-systemd.automount"
-        "noauto"
-      ];
-      description = "Default NFS mount options";
-    };
-    port = mkOption {
-      type = types.int;
-      default = 2049;
-      description = "NFS server TCP port";
+    nfs = {
+      enable = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Enable this NFS fileshare submodule";
+      };
+      host = mkOption {
+        type = types.str;
+        description = "NFS server hostname";
+      };
+      ip = mkOption {
+        type = types.str;
+        description = "NFS server IP address";
+      };
+      shares = mkOption {
+        type = types.listOf shareType;
+        default = [];
+        description = "List of NFS shares to mount";
+      };
+      shareOptions = mkOption {
+        type = types.listOf types.str;
+        default = [
+          "nfsvers=4"
+          "x-systemd.automount"
+          "noauto"
+        ];
+        description = "Default NFS mount options";
+      };
+      port = mkOption {
+        type = types.int;
+        default = 2049;
+        description = "NFS server TCP port";
+      };
     };
   };
 
   config = {
-    networking.hosts."${config.ip}" = mkAfter [ config.host ];
-    networking.firewall.allowedTCPPorts = mkAfter [ config.port ];
+    networking.hosts."${config.nfs.ip}" = mkAfter [ config.nfs.host ];
+    networking.firewall.allowedTCPPorts = mkAfter [ config.nfs.port ];
 
-    fileSystems = listToAttrs (map (share: {
+    fileSystems = (listToAttrs (map (share: {
       name = share.path;
       value = {
-        device = "${config.host}:${share.device}";
+        device = "${config.nfs.host}:${share.device}";
         fsType = "nfs";
-        options = config.nfsShareOptions;
+        options = config.nfs.shareOptions;
       };
-    }) config.shares);
+    }) config.nfs.shares));
 
-    systemd.tmpfiles.rules = map (share: "d '${share.path}' 0755 root root - -") config.shares;
+    systemd.tmpfiles.rules = map (share: "d '${share.path}' 0755 root root - -") config.nfs.shares;
   };
 }
