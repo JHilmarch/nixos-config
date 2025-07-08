@@ -10,26 +10,6 @@
   ...
 }:
 let
-  ports = {
-    # Discover Google Cast and other Spotify Connect devices (TCP)
-    spotify-localDiscovery-casting = 5353;
-    # Sync local tracks with mobile in the same network (TCP+UDP)
-    spotify-localDiscovery-mobileSync = 57621;
-  };
-
-  udpPorts = [
-    ports.spotify-localDiscovery-mobileSync
-  ];
-
-  tcpOnlyPorts = builtins.filter (port: !builtins.elem port udpPorts) (builtins.attrValues ports);
-
-  firewallOptions = {
-    allowedPorts = {
-      udp = udpPorts;
-      tcp = tcpOnlyPorts ++ [ ports.spotify-localDiscovery-mobileSync ];
-    };
-  };
-
   authorizedSSHKeys = functions.ssh.getGithubKeys ({
     username = "JHilmarch";
     sha256 = "be8166d2e49794c8e2fb64a6868e55249b4f2dd7cd8ecf1e40e0323fb12a2348";
@@ -41,6 +21,7 @@ in
     ./modules/sops.nix
     "${self}/modules/nfs/fileshare.nix"
     "${self}/modules/systemd/no-sleep.nix"
+    "${self}/modules/spotify/firewall.nix"
   ];
 
   # Run `timedatectl list-timezones` to list timezones"
@@ -158,13 +139,7 @@ in
     hostName = "${hostname}";
     networkmanager.enable = true;
     useDHCP = false;
-
-    firewall = {
-      enable = true;
-
-      allowedTCPPorts = firewallOptions.allowedPorts.tcp;
-      allowedUDPPorts = firewallOptions.allowedPorts.udp;
-    };
+    firewall.enable = true;
   };
 
   environment = {
@@ -273,6 +248,7 @@ in
     };
 
     systemdNoSleep.enable = true;
+    spotifyFirewall.enable = true;
   };
 
   console = {
