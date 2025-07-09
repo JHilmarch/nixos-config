@@ -98,22 +98,22 @@ in {
 
     lsd = {
       enable = true;
-      enableFishIntegration = true;
+      enableFishIntegration = config.programs.fish.enable;
     };
 
     fzf = {
       enable = true;
-      enableFishIntegration = true;
+      enableFishIntegration = config.programs.fish.enable;
     };
 
     zoxide = {
       enable = true;
-      enableFishIntegration = true;
+      enableFishIntegration = config.programs.fish.enable;
     };
 
     broot = {
       enable = true;
-      enableFishIntegration = true;
+      enableFishIntegration = config.programs.fish.enable;
     };
 
     direnv = {
