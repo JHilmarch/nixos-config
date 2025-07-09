@@ -50,8 +50,7 @@ See the `hosts/iso` project on how to create a bootable USB and install NixOS.
 ## LUKS encryption FIDO2
 
 The NIXROOT filesystem is LUKS encrypted and can be unlocked during Initial ramdisk ("early boot stage"),
-with a YubiKey or a backup password. For remote work via SSH,
-[USB over IP](https://github.com/torvalds/linux/tree/master/tools/usb/usbip) is needed.
+with a YubiKey or a backup password.
 
 **List all suitable FIDO2 security tokens**
 
@@ -69,43 +68,23 @@ sudo systemd-cryptenroll --wipe-slot=2 /dev/nvme0n1p6
 sudo systemd-cryptenroll --fido2-device=auto --fido2-with-client-pin=yes --fido2-with-user-presence=yes /dev/nvme0n1p6
 ```
 
-**On local client**
+For remote work via SSH,
+[USB over IP](https://github.com/torvalds/linux/tree/master/tools/usb/usbip) is needed.
 
-Find your YubiKey's busid, e.g., 3-1.
+Use the scripts in `./boot-initrd-scripts` to bind the YubiKey locally and attach the YubiKey to the remote host.
 
-`sudo usbip list -l`
+The unlock LUKS on boot experience, step by step:
+1. Make sure Yubikey is unbound (usbip server)
+2. Connect to host as root with SSH and use the Yubikey private key as identity (ssh config)
+3. Bind Yubikey (usbip server)
+4. Attach Yubikey (usbip client)
+5. Unlock LUKS filesystem
+6. After entering PIN and touching the YubiKey; the system continues to stage two and the SSH connection is broken
+7. Repeat step 1-4 but login to SSH as <user>
 
-Yubico.com devices: https://devicehunt.com/search/type/usb/vendor/1050/device/any
+The usbip server is running on the SSH client side. Other way around: the usbip client is running on the SSH host side.
 
-Start host
-
-`sudo modprobe usbip-host`
-
-Bind
-
-`sudo usbip bind -b 3-1`
-
-**On remote host, via SSH**
-
-Load Virtual Host Controller Interface Host Controller Driver
-
-```
-sudo modprobe vhci_hcd
-sudo usbip attach -r localhost -b 3-1
-```
-
-Detach
-
-```
-usbip port
-sudo usbip detach -p 00
-```
-
-**On local client**
-
-`sudo usbip unbind -b 3-1`
-
- **Client SSH configuration**
+**Client SSH configuration**
 
 ```
 Host orion-boot
