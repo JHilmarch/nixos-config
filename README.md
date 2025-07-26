@@ -172,6 +172,11 @@ A module to configure NFS shares. `fileshare.nix` is setting up common shares at
 
 _Sleep_ and _Hibernation_ is creating problems so a common pattern used is to disable those functions.
 
+#### wake-on-lan
+
+A systemd service enables Wake on LAN with magic package on the network interface.
+The [ethtool](https://mirrors.edge.kernel.org/pub/software/network/ethtool/) command is triggered during system boot.
+
 ## Scripts
 
 ### Reboot to Windows
