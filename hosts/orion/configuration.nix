@@ -21,6 +21,7 @@ in
     ./modules/sops.nix
     "${self}/modules/nfs/fileshare.nix"
     "${self}/modules/systemd/no-sleep.nix"
+    "${self}/modules/systemd/wake-on-lan.nix"
     "${self}/modules/spotify/firewall.nix"
     "${self}/modules/defaults.nix"
   ];
@@ -246,6 +247,7 @@ in
     };
 
     systemdNoSleep.enable = true;
+    systemdWakeOnLan.enable = true;
     spotifyFirewall.enable = true;
   };
 
