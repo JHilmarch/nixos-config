@@ -66,7 +66,7 @@ in {
     "${self}/home-modules/ssh"
     "${self}/home-modules/git"
     ./modules/file.nix
-    inputs.nix-index-database.hmModules.nix-index
+    inputs.nix-index-database.homeModules.nix-index
     ./modules/dconf
   ];
 
