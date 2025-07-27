@@ -20,6 +20,11 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators/";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ {self, ...}: {
@@ -117,6 +122,37 @@
           ];
         };
     };
+
+    packages.x86_64-linux = let
+      system = "x86_64-linux";
+      vmsDir = ./hosts/homelab/vms;
+      vmFiles = builtins.filter
+        (f: builtins.match ".*\.nix$" f != null)
+        (builtins.attrNames (builtins.readDir vmsDir));
+      mkImage = file: inputs.nixos-generators.nixosGenerate {
+        inherit system;
+        format = "proxmox";
+        modules = [
+          {
+            nix.registry.nixpkgs.flake = inputs.nixpkgs;
+            virtualisation.diskSize = 20 * 1024;
+          }
+          (vmsDir + "/${file}")
+        ];
+        specialArgs = {
+          functions = import ./functions {
+            pkgs = import inputs.nixpkgs { inherit system; };
+          };
+          inherit self;
+        };
+      };
+    in
+      builtins.listToAttrs (map
+        (file: {
+          name = "homelab-" + builtins.replaceStrings [".nix"] [""] file;
+          value = mkImage file;
+        })
+        vmFiles);
 
     formatter.x86_64-linux = inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
   };
