@@ -220,6 +220,10 @@ in
     udev = {
       enable = true;
       packages = [pkgs.yubikey-personalization];
+      extraRules = ''
+        SUBSYSTEM=="usb", ATTR{idVendor}=="1050", MODE="0660", GROUP="usbusers"
+        KERNEL=="hidraw*", SUBSYSTEM=="hidraw", TAG+="uaccess", MODE="0660", GROUP="usbusers"
+      '';
     };
 
     openssh = {
@@ -281,25 +285,29 @@ in
     polkit.enable = true;
   };
 
-  users.defaultUserShell = pkgs.fish;
-  users.users.${username} = {
-    isNormalUser = true;
-    extraGroups = [
-      "wheel"
-      "networkmanager"
-      "openrazer"
-      "video"
-      "audio"
-    ];
-    packages = with pkgs; [
-      tree
-    ];
+  users = {
+    defaultUserShell = pkgs.fish;
+    groups.usbusers = {};
+    users.${username} = {
+        isNormalUser = true;
+        extraGroups = [
+          "wheel"
+          "networkmanager"
+          "openrazer"
+          "video"
+          "audio"
+          "usbusers"
+        ];
+        packages = with pkgs; [
+          tree
+        ];
 
-    openssh = {
-      authorizedKeys.keys = authorizedSSHKeys ++ [
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhXKd/Bp3e0yFS8WU2v2ul4/2nsWSQOoLdYVJWPPHWn jonatan@nixos-orion"
-      ];
-    };
+        openssh = {
+          authorizedKeys.keys = authorizedSSHKeys ++ [
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhXKd/Bp3e0yFS8WU2v2ul4/2nsWSQOoLdYVJWPPHWn jonatan@nixos-orion"
+          ];
+        };
+      };
   };
 
   nix = {
