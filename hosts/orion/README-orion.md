@@ -106,6 +106,10 @@ Host orion
       RemoteForward 3240 localhost:3240
 ```
 
+The _usbusers_ group and the additional device manager rules (udev) ensure that users can remotely use the YubiKey for
+signing git commits, fetching git changes, and running commands such as `usbip port` and `gpg --card-status` without
+requiring root access.
+
 ## Custom Secure Boot
 
 I put the UEFI Secure Boot in "setup" mode, generated keys with `sbctl` migrated them from /etc/secureboot to
