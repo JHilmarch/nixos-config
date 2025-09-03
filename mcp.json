@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "nixos": {
+      "type": "stdio",
+      "command": "mcp-nixos"
+    }
+  }
+}

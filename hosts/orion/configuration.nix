@@ -163,6 +163,7 @@ in
       jq # A lightweight and flexible command-line JSON processor
       zip # A utility for creating ZIP archives
       unzip # A utility for extracting files from ZIP archives
+      inputs.mcp-nixos.packages.${pkgs.system}.mcp-nixos # MCP-NixOS
 
       # Remote Desktop Server packages
       gnome-remote-desktop # GNOME Remote Desktop server

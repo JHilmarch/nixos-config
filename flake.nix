@@ -5,6 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     nur.url = "github:nix-community/NUR";
+    mcp-nixos.url = "github:utensils/mcp-nixos";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-25.05";
