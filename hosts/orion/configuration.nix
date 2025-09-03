@@ -164,6 +164,7 @@ in
       zip # A utility for creating ZIP archives
       unzip # A utility for extracting files from ZIP archives
       inputs.mcp-nixos.packages.${pkgs.system}.mcp-nixos # MCP-NixOS
+      flatpak # Linux application sandboxing and distribution framework
 
       # Remote Desktop Server packages
       gnome-remote-desktop # GNOME Remote Desktop server
@@ -254,12 +255,9 @@ in
     systemdNoSleep.enable = true;
     systemdWakeOnLan.enable = true;
     spotifyFirewall.enable = true;
+    flatpak.enable = true;
   };
 
-  console = {
-    useXkbConfig = true;
-    earlySetup = true;
-  };
 
   programs = {
     fish.enable = true;
