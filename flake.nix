@@ -43,7 +43,7 @@
             (_final: prev: {
               unstable = import inputs.nixpkgs-unstable {
                 inherit (prev) system;
-                inherit (prev.config) allowUnfree;
+                config = prev.config;
               };
             })
           ];
@@ -95,7 +95,7 @@
             (_final: prev: {
               unstable = import inputs.nixpkgs-unstable {
                 inherit (prev) system;
-                inherit (prev.config) allowUnfree;
+                config = prev.config;
               };
             })
           ];
