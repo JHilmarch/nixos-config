@@ -1,8 +1,8 @@
 {
-  "servers": {
+  "mcpServers": {
     "nixos": {
-      "type": "stdio",
-      "command": "mcp-nixos"
+      "command": "nix",
+      "args": ["run", "/home/jonatan/code/mcp-nixos", "--"]
     }
   }
 }
