@@ -189,6 +189,15 @@ cold booting into Windows, for example after using Wake On LAN.
 
 Here, SOPS secrets is stored, sorted by host.
 
+## Assistant and MCP
+
+This repository is set up to work with JetBrains Junie Pro via the
+Model Context Protocol (MCP).
+
+- The project-level MCP registry lives at: `./mcp.json`
+- It defines a server named `nixos` that is started with:
+  `nix run /home/jonatan/code/mcp-nixos --`
+
 ## NixOS
 
 - [NixOS Manual](https://nixos.org/manual/nixos/stable/)
