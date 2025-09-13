@@ -144,7 +144,7 @@ with lib.hm.gvariant; let
 
     "org/gnome/desktop/notifications" = {
       application-children = [
-        "firefox"
+        "org-mozilla-firefox"
         "element-desktop"
         "org-gnome-settings"
         "org-gnome-console"
@@ -157,8 +157,8 @@ with lib.hm.gvariant; let
       application-id = "element-desktop.desktop";
     };
 
-    "org/gnome/desktop/notifications/application/firefox" = {
-      application-id = "firefox.desktop";
+    "org/gnome/desktop/notifications/application/org-mozilla-firefox" = {
+      application-id = "org.mozilla.firefox.desktop";
     };
 
     "org/gnome/desktop/notifications/application/org-gnome-characters" = {

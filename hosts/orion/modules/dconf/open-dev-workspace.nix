@@ -7,5 +7,5 @@ pkgs.writeShellScript "dev-workspace-script" ''
   # Launch Rider, Console, and Firefox
   ${pkgs.jetbrains.rider}/bin/rider && sleep 0.3 &
   ${pkgs.gnome-terminal}/bin/gnome-terminal && sleep 0.3 &
-  ${pkgs.firefox}/bin/firefox --new-window &
+  ${pkgs.flatpak}/bin/flatpak run org.mozilla.firefox --new-window &
 ''

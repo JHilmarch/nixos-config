@@ -19,7 +19,9 @@ in {
     "${self}/modules/nfs/fileshare.nix"
     "${self}/modules/systemd/no-sleep.nix"
     "${self}/modules/systemd/wake-on-lan.nix"
-    "${self}/modules/systemd/flathub.nix"
+    "${self}/modules/systemd/flatpak.nix"
+    "${self}/modules/systemd/mullvad-browser.nix"
+    "${self}/modules/systemd/firefox.nix"
     "${self}/modules/spotify/firewall.nix"
     "${self}/modules/defaults.nix"
   ];
@@ -263,6 +265,9 @@ in {
     systemdNoSleep.enable = true;
     systemdWakeOnLan.enable = true;
     spotifyFirewall.enable = true;
+    systemdFlatpak.enable = true;
+    systemdMullvadBrowser.enable = true;
+    systemdFirefox.enable = true;
   };
 
   programs = {

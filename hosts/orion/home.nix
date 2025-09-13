@@ -26,7 +26,6 @@
     yubico-piv-tool # Used for interacting with the Privilege and Identification Card (PIV) application on a YubiKey
     libfido2 # Provides library functionality for FIDO 2.0, including communication with a device over USB.
     spotify
-    firefox
     grc # Generic text colouriser
     element-desktop # A feature-rich client for Matrix.org
     slack # Desktop client for Slack
