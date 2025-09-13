@@ -7,7 +7,6 @@
   systemd.services.configure-flathub = {
     description = "Configure Flathub repository";
     wantedBy = [ "multi-user.target" ];
-    after = [ "network-online.target" ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = "yes";
