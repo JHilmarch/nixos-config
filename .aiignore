@@ -1,0 +1,77 @@
+# Build outputs and cache
+result
+result-*
+*.qcow2
+*.iso
+
+# Secrets and sensitive information
+secrets/
+.sops.yaml
+*.age
+*.key
+**/secrets.nix
+**/secrets.yaml
+
+# Development environment temp files
+.direnv/
+.env
+.envrc
+
+# Version control
+.git/
+.gitignore
+.gitmodules
+
+# Lock files and generated content
+flake.lock
+*.lock
+
+# Temporary and backup files
+*.swp
+*.bak
+*~
+\#*\#
+.#*
+
+# Logs and debugging
+*.log
+.debug/
+
+# Cache directories
+.cache/
+__pycache__/
+
+# Node modules (if you have any JavaScript tools)
+node_modules/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE and editor settings
+.idea/
+.vscode/
+
+# Archives and large artifacts
+*.tar
+*.tar.gz
+*.tar.zst
+*.tgz
+*.zip
+*.zst
+*.vma
+*.vma.zst
+
+# Additional secrets/certificates
+*.pem
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Environment files (broader)
+.env.*
+*.env
+
+# Windows alternate data streams
+*.Zone.Identifier
