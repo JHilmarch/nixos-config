@@ -9,8 +9,7 @@ These guidelines tell Junie how to work in this repository.
     modules/, home-modules/, functions/, scripts/, secrets/
 
 - Always validate changes against the local NixOS MCP
-  - The local MCP is defined in mcp.json under the key "nixos" and
-    runs via: nix run /home/jonatan/code/mcp-nixos --
+  - The local MCP is defined in .junie/mcp/mcp.json under the key "nixos"
   - Use it to check correctness and get guidance for Nix/NixOS-specific
     questions.
   - If MCP is unavailable, ask the user to run it locally and report
@@ -44,4 +43,4 @@ These guidelines tell Junie how to work in this repository.
   - Use Conventional Commits.
   - Subject line must be at most 50 characters.
   - Leave a blank line between subject and body.
-  - Wrap body lines at 70 characters max.
+  - Wrap body lines at 72 characters max.

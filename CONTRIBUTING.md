@@ -24,7 +24,7 @@ changed .nix files before committing.
 ## 2) Commit messages
 
 Use [Conventional Commits](https://www.conventionalcommits.org/). Keep the subject concise (≤ 50 chars), leave a blank
-line, and wrap the body at ~70 chars.
+line, and wrap the body at ~72 chars.
 
 Examples:
 - feat(orion): add systemd no-sleep module
@@ -57,10 +57,6 @@ If any command fails, review the output, fix the issue, and re-run.
 ## 4) MCP helper (optional but recommended)
 
 This repo is set up to use a local NixOS MCP helper (see `mcp.json`). If
-available on your machine, you can run it for guidance and validation:
-
-```bash
-nix run /home/jonatan/code/mcp-nixos --
-```
+available on your machine, Junie can run it for guidance and validation.
 
 See the main README for repository structure and additional guidelines.
