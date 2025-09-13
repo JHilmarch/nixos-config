@@ -8,15 +8,12 @@
   functions,
   self,
   ...
-}:
-let
-  authorizedSSHKeys = functions.ssh.getGithubKeys ({
+}: let
+  authorizedSSHKeys = functions.ssh.getGithubKeys {
     username = "JHilmarch";
     sha256 = "be8166d2e49794c8e2fb64a6868e55249b4f2dd7cd8ecf1e40e0323fb12a2348";
-  });
-in
-{
-
+  };
+in {
   imports = [
     ./modules/sops.nix
     "${self}/modules/nfs/fileshare.nix"
@@ -55,7 +52,7 @@ in
   };
 
   boot = {
-    supportedFilesystems = [ "ntfs" "vfat" "btrfs"  ];
+    supportedFilesystems = ["ntfs" "vfat" "btrfs"];
     loader = {
       systemd-boot = {
         enable = true;
@@ -67,13 +64,25 @@ in
     initrd = {
       # check with command 'lspci -v'
       availableKernelModules = [
-        "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "hid_generic" "usb_storage" "uas" "sd_mod" "btrfs" "r8169" "vhci_hcd" ];
-      supportedFilesystems = [ "nfs" "vfat" ];
-      kernelModules = [ "nfs" "vfat" "btrfs" ];
+        "vmd"
+        "xhci_pci"
+        "ahci"
+        "nvme"
+        "usbhid"
+        "hid_generic"
+        "usb_storage"
+        "uas"
+        "sd_mod"
+        "btrfs"
+        "r8169"
+        "vhci_hcd"
+      ];
+      supportedFilesystems = ["nfs" "vfat"];
+      kernelModules = ["nfs" "vfat" "btrfs"];
       luks = {
         devices."encrypted-nix-root" = {
           device = "/dev/disk/by-uuid/e8bb294d-bba0-43f5-936d-4fcc08aa6ce7";
-          crypttabExtraOpts = [ "fido2-device=auto" ];
+          crypttabExtraOpts = ["fido2-device=auto"];
         };
       };
       systemd = {
@@ -106,25 +115,25 @@ in
         ssh = {
           enable = true;
           authorizedKeys = authorizedSSHKeys;
-          hostKeys = [ "/etc/ssh/initrd_ssh_host_ed25519_key" ];
+          hostKeys = ["/etc/ssh/initrd_ssh_host_ed25519_key"];
         };
       };
     };
 
-    kernelModules = [ "kvm-intel" "btusb" "btintel" "coretemp" "nct6775" ];
-    extraModulePackages = [ ];
+    kernelModules = ["kvm-intel" "btusb" "btintel" "coretemp" "nct6775"];
+    extraModulePackages = [];
   };
 
   fileSystems."/" = {
     device = "/dev/disk/by-label/NIXROOT";
     fsType = "btrfs";
-    options = [ "x-systemd.device-timeout=480s" ];
+    options = ["x-systemd.device-timeout=480s"];
   };
 
   fileSystems."/boot" = {
     device = "/dev/disk/by-label/ESP";
     fsType = "vfat";
-    options = [ "fmask=0022" "dmask=0022" ];
+    options = ["fmask=0022" "dmask=0022"];
   };
 
   swapDevices = [
@@ -143,7 +152,6 @@ in
   };
 
   environment = {
-
     enableAllTerminfo = true;
 
     systemPackages = with pkgs; [
@@ -173,7 +181,7 @@ in
       xrdp # Open source RDP server
     ];
 
-    gnome.excludePackages = (with pkgs; [
+    gnome.excludePackages = with pkgs; [
       # evince # document viewer
       # gnome-characters
 
@@ -184,13 +192,12 @@ in
       totem # video player
       yelp # Help view
       geary # Mail client for GNOME 3
-    ]);
+    ];
 
-    shells = [ pkgs.fish ];
+    shells = [pkgs.fish];
   };
 
   services = {
-
     # Enable PCSC-Lite daemon, to access smart cards using SCard API (PC/SC).
     pcscd.enable = true;
 
@@ -207,7 +214,7 @@ in
 
       desktopManager.gnome.enable = true;
 
-      videoDrivers = [ "nvidia" ];
+      videoDrivers = ["nvidia"];
     };
 
     gnome = {
@@ -258,7 +265,6 @@ in
     spotifyFirewall.enable = true;
   };
 
-
   programs = {
     fish.enable = true;
     nix-ld = {
@@ -269,7 +275,7 @@ in
       enable = true;
       # Certain features, including CLI integration and system authentication support,
       # require enabling PolKit integration on some desktop environments (e.g. Plasma).
-      polkitPolicyOwners = [ "${username}" ];
+      polkitPolicyOwners = ["${username}"];
     };
 
     coolercontrol = {
@@ -288,25 +294,27 @@ in
     defaultUserShell = pkgs.fish;
     groups.usbusers = {};
     users.${username} = {
-        isNormalUser = true;
-        extraGroups = [
-          "wheel"
-          "networkmanager"
-          "openrazer"
-          "video"
-          "audio"
-          "usbusers"
-        ];
-        packages = with pkgs; [
-          tree
-        ];
+      isNormalUser = true;
+      extraGroups = [
+        "wheel"
+        "networkmanager"
+        "openrazer"
+        "video"
+        "audio"
+        "usbusers"
+      ];
+      packages = with pkgs; [
+        tree
+      ];
 
-        openssh = {
-          authorizedKeys.keys = authorizedSSHKeys ++ [
+      openssh = {
+        authorizedKeys.keys =
+          authorizedSSHKeys
+          ++ [
             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhXKd/Bp3e0yFS8WU2v2ul4/2nsWSQOoLdYVJWPPHWn jonatan@nixos-orion"
           ];
-        };
       };
+    };
   };
 
   nix = {

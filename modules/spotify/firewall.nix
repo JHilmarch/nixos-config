@@ -1,12 +1,13 @@
-{ config, lib, ... }:
-
-let
+{
+  config,
+  lib,
+  ...
+}: let
   ports = {
     spotify-localDiscovery-casting = 5353;
     spotify-localDiscovery-mobileSync = 57621;
   };
-in
-{
+in {
   options = {
     services.spotifyFirewall.enable = lib.mkEnableOption "Open firewall ports for Spotify";
   };
@@ -24,6 +25,6 @@ in
       ports.spotify-localDiscovery-mobileSync
     ];
 
-    networking.firewall.allowedUDPPorts = [ ports.spotify-localDiscovery-mobileSync ];
+    networking.firewall.allowedUDPPorts = [ports.spotify-localDiscovery-mobileSync];
   };
 }

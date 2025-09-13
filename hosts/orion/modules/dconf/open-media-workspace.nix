@@ -1,4 +1,4 @@
-{ pkgs }:
+{pkgs}:
 pkgs.writeShellScript "media-workspace-script" ''
   #!/bin/bash
   # Switch to workspace 4 (Media)

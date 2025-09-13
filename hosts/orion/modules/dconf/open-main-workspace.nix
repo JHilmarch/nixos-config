@@ -1,4 +1,4 @@
-{ pkgs }:
+{pkgs}:
 pkgs.writeShellScript "main-workspace-script" ''
   #!/bin/bash
   # Switch to workspace 1 (Main)

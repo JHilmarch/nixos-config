@@ -1,4 +1,4 @@
-{ pkgs }:
+{pkgs}:
 pkgs.writeShellScript "social-workspace-script" ''
   #!/bin/bash
   # Switch to workspace 3 (Social)

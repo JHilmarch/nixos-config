@@ -1,6 +1,9 @@
-{ config, lib, pkgs, ... }:
-
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: {
   options = {
     services.systemdWakeOnLan = {
       enable = lib.mkEnableOption "Enable Wake-on-LAN systemd service";
@@ -15,7 +18,7 @@
   config = lib.mkIf config.services.systemdWakeOnLan.enable {
     systemd.services.systemdWakeOnLan = {
       description = "Enable Wake-on-LAN with magic package";
-      wantedBy = [ "multi-user.target" ];
+      wantedBy = ["multi-user.target"];
       serviceConfig = {
         Type = "oneshot";
         ExecStart = "${pkgs.ethtool}/bin/ethtool -s ${config.services.systemdWakeOnLan.interface} wol g";

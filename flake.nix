@@ -59,7 +59,7 @@
           username = "jonatan";
           hostname = "nixos-orion";
           functions = import ./functions {
-            pkgs = import inputs.nixpkgs { inherit system; };
+            pkgs = import inputs.nixpkgs {inherit system;};
           };
         };
       in

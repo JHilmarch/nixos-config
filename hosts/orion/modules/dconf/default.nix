@@ -1,11 +1,14 @@
-{ pkgs, lib, username, ... }:
-
-with lib.hm.gvariant;
-let
+{
+  pkgs,
+  lib,
+  username,
+  ...
+}:
+with lib.hm.gvariant; let
   # Unsorted dconf settings
   baseLine = {
     "apps/seahorse/listing" = {
-      keyrings-selected = [ "openssh:///home/${username}/.ssh" ];
+      keyrings-selected = ["openssh:///home/${username}/.ssh"];
     };
 
     "org/gnome/calendar" = {
@@ -14,30 +17,36 @@ let
 
     "org/gnome/clocks" = {
       world-clocks = [
-        ([
-          (mkDictionaryEntry ["location" (mkVariant (mkTuple [
-            (mkUint32 2)
+        [
+          (mkDictionaryEntry [
+            "location"
             (mkVariant (mkTuple [
-              "Coordinated Universal Time (UTC)"
-              "@UTC"
-              false
-              [(mkTuple [(51.4769280000000000) (0.0005450000000000)])]
-              [(mkTuple [(51.4769280000000000) (0.0005450000000000)])]
+              (mkUint32 2)
+              (mkVariant (mkTuple [
+                "Coordinated Universal Time (UTC)"
+                "@UTC"
+                false
+                [(mkTuple [51.4769280000000000 0.0005450000000000])]
+                [(mkTuple [51.4769280000000000 0.0005450000000000])]
+              ]))
             ]))
-          ]))])
-        ])
-        ([
-          (mkDictionaryEntry ["location" (mkVariant (mkTuple [
-            (mkUint32 2)
+          ])
+        ]
+        [
+          (mkDictionaryEntry [
+            "location"
             (mkVariant (mkTuple [
-              "Stockholm"
-              "ESSB"
-              true
-              [(mkTuple [(1.0358529110586345) (0.31328660073298215)])]
-              [(mkTuple [(1.0355620170322046) (0.31503192998497648)])]
+              (mkUint32 2)
+              (mkVariant (mkTuple [
+                "Stockholm"
+                "ESSB"
+                true
+                [(mkTuple [1.0358529110586345 0.31328660073298215])]
+                [(mkTuple [1.0355620170322046 0.31503192998497648])]
+              ]))
             ]))
-          ]))])
-        ])
+          ])
+        ]
       ];
     };
 
@@ -49,8 +58,8 @@ let
             "Stockholm"
             "ESSB"
             true
-            [(mkTuple [(1.0358529110586345) (0.31328660073298215)])]
-            [(mkTuple [(1.0355620170322046) (0.31503192998497648)])]
+            [(mkTuple [1.0358529110586345 0.31328660073298215])]
+            [(mkTuple [1.0355620170322046 0.31503192998497648])]
           ]))
         ]))
       ];
@@ -68,8 +77,8 @@ let
             "Göteborg-Landvetter Airport"
             "ESGG"
             false
-            [(mkTuple [(1.0064732078011609) (0.21467549799530256)])]
-            [(mkTuple [(1.0064732078011609) (0.21467549799530256)])]
+            [(mkTuple [1.0064732078011609 0.21467549799530256])]
+            [(mkTuple [1.0064732078011609 0.21467549799530256])]
           ]))
         ]))
       ];
@@ -88,19 +97,19 @@ let
             "Göteborg-Landvetter Airport"
             "ESGG"
             false
-            [(mkTuple [(1.0064732078011609) (0.21467549799530256)])]
-            [(mkTuple [(1.0064732078011609) (0.21467549799530256)])]
+            [(mkTuple [1.0064732078011609 0.21467549799530256])]
+            [(mkTuple [1.0064732078011609 0.21467549799530256])]
           ]))
         ]))
       ];
     };
 
     "org/gnome/desktop/app-folders" = {
-      folder-children = [ "Utilities" "YaST" "Pardus" ];
+      folder-children = ["Utilities" "YaST" "Pardus"];
     };
 
     "org/gnome/desktop/app-folders/folders/Pardus" = {
-      categories = [ "X-Pardus-Apps" ];
+      categories = ["X-Pardus-Apps"];
       name = "X-Pardus-Apps.directory";
       translate = true;
     };
@@ -122,13 +131,13 @@ let
         "org.gnome.Usage.desktop"
       ];
 
-      categories = [ "X-GNOME-Utilities" ];
+      categories = ["X-GNOME-Utilities"];
       name = "X-GNOME-Utilities.directory";
       translate = true;
     };
 
     "org/gnome/desktop/app-folders/folders/YaST" = {
-      categories = [ "X-SuSE-YaST" ];
+      categories = ["X-SuSE-YaST"];
       name = "suse-yast.directory";
       translate = true;
     };
@@ -221,11 +230,11 @@ let
   inputSources = {
     "org/gnome/desktop/input-sources" = {
       sources = [
-        (mkTuple [ "xkb" "se" ])
-        (mkTuple [ "xkb" "no" ])
-        (mkTuple [ "xkb" "gb" ])
+        (mkTuple ["xkb" "se"])
+        (mkTuple ["xkb" "no"])
+        (mkTuple ["xkb" "gb"])
       ];
-      xkb-options = [ "terminate:ctrl_alt_bksp" ];
+      xkb-options = ["terminate:ctrl_alt_bksp"];
     };
   };
 
@@ -244,23 +253,23 @@ let
 
     "org/gnome/desktop/wm/preferences" = {
       num-workspaces = 5;
-      workspace-names = [ "Main" "Dev" "Social" "Media" "Free" ];
+      workspace-names = ["Main" "Dev" "Social" "Media" "Free"];
     };
   };
 
   configureMediaKeys = {
     "org/gnome/settings-daemon/plugins/media-keys" = {
-      play = [ "<Super>KP_Add" ];
-      pause = [ "<Super>XF86AudioMute" ];
-      stop = [ "<Super>KP_Subtract" ];
-      next = [ "<Super>XF86AudioRaiseVolume" ];
-      previous = [ "<Super>XF86AudioLowerVolume" ];
-      volume-up = [ "XF86AudioRaiseVolume" ];
-      volume-down = [ "XF86AudioLowerVolume" ];
-      volume-mute = [ "XF86AudioMute" ];
-      media = [ "<Super>XF86Calculator" ];
-      mic-mute = [ "<Super>KP_Multiply" ];
-      eject = [ "<Super>KP_Divide" ];
+      play = ["<Super>KP_Add"];
+      pause = ["<Super>XF86AudioMute"];
+      stop = ["<Super>KP_Subtract"];
+      next = ["<Super>XF86AudioRaiseVolume"];
+      previous = ["<Super>XF86AudioLowerVolume"];
+      volume-up = ["XF86AudioRaiseVolume"];
+      volume-down = ["XF86AudioLowerVolume"];
+      volume-mute = ["XF86AudioMute"];
+      media = ["<Super>XF86Calculator"];
+      mic-mute = ["<Super>KP_Multiply"];
+      eject = ["<Super>KP_Divide"];
     };
   };
 
@@ -279,10 +288,10 @@ let
     };
   };
 
-  openMainWorkspaceScript = import ./open-main-workspace.nix { pkgs = pkgs; };
-  openDevWorkspaceScript = import ./open-dev-workspace.nix { pkgs = pkgs; };
-  openSocialWorkspaceScript = import ./open-social-workspace.nix { pkgs = pkgs; };
-  openMediaWorkspaceScript = import ./open-media-workspace.nix { pkgs = pkgs; };
+  openMainWorkspaceScript = import ./open-main-workspace.nix {pkgs = pkgs;};
+  openDevWorkspaceScript = import ./open-dev-workspace.nix {pkgs = pkgs;};
+  openSocialWorkspaceScript = import ./open-social-workspace.nix {pkgs = pkgs;};
+  openMediaWorkspaceScript = import ./open-media-workspace.nix {pkgs = pkgs;};
 
   workspaceShortcuts = {
     # Clear default Super bindings
@@ -295,17 +304,17 @@ let
     };
 
     "org/gnome/desktop/wm/keybindings" = {
-      switch-to-workspace-1 = [ "<Super>1" ];
-      switch-to-workspace-2 = [ "<Super>2" ];
-      switch-to-workspace-3 = [ "<Super>3" ];
-      switch-to-workspace-4 = [ "<Super>4" ];
-      switch-to-workspace-5 = [ "<Super>5" ];
+      switch-to-workspace-1 = ["<Super>1"];
+      switch-to-workspace-2 = ["<Super>2"];
+      switch-to-workspace-3 = ["<Super>3"];
+      switch-to-workspace-4 = ["<Super>4"];
+      switch-to-workspace-5 = ["<Super>5"];
 
-      move-to-workspace-1 = [ "<Super><Shift>1" ];
-      move-to-workspace-2 = [ "<Super><Shift>2" ];
-      move-to-workspace-3 = [ "<Super><Shift>3" ];
-      move-to-workspace-4 = [ "<Super><Shift>4" ];
-      move-to-workspace-5 = [ "<Super><Shift>5" ];
+      move-to-workspace-1 = ["<Super><Shift>1"];
+      move-to-workspace-2 = ["<Super><Shift>2"];
+      move-to-workspace-3 = ["<Super><Shift>3"];
+      move-to-workspace-4 = ["<Super><Shift>4"];
+      move-to-workspace-5 = ["<Super><Shift>5"];
     };
 
     "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/goto-workspace-1" = {

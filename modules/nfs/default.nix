@@ -1,6 +1,9 @@
-{ config, lib, ... }:
-with lib;
-let
+{
+  config,
+  lib,
+  ...
+}:
+with lib; let
   shareType = types.submodule {
     options = {
       path = mkOption {
@@ -13,8 +16,7 @@ let
       };
     };
   };
-in
-{
+in {
   options = {
     nfs = {
       enable = mkOption {
@@ -53,17 +55,18 @@ in
   };
 
   config = {
-    networking.hosts."${config.nfs.ip}" = mkAfter [ config.nfs.host ];
-    networking.firewall.allowedTCPPorts = mkAfter [ config.nfs.port ];
+    networking.hosts."${config.nfs.ip}" = mkAfter [config.nfs.host];
+    networking.firewall.allowedTCPPorts = mkAfter [config.nfs.port];
 
-    fileSystems = (listToAttrs (map (share: {
-      name = share.path;
-      value = {
-        device = "${config.nfs.host}:${share.device}";
-        fsType = "nfs";
-        options = config.nfs.shareOptions;
-      };
-    }) config.nfs.shares));
+    fileSystems = listToAttrs (map (share: {
+        name = share.path;
+        value = {
+          device = "${config.nfs.host}:${share.device}";
+          fsType = "nfs";
+          options = config.nfs.shareOptions;
+        };
+      })
+      config.nfs.shares);
 
     systemd.tmpfiles.rules = map (share: "d '${share.path}' 0755 root root - -") config.nfs.shares;
   };

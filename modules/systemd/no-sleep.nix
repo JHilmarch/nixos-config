@@ -1,6 +1,8 @@
-{ config, lib, ... }:
-
 {
+  config,
+  lib,
+  ...
+}: {
   options = {
     services.systemdNoSleep.enable = lib.mkEnableOption "Disable all system sleep/hibernate modes";
   };

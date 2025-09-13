@@ -1,5 +1,9 @@
-{ pkgs, username, self, ...}:{
-
+{
+  pkgs,
+  username,
+  self,
+  ...
+}: {
   sops = {
     defaultSopsFile = "${self}/secrets/orion/secrets.yml";
     defaultSopsFormat = "yaml";

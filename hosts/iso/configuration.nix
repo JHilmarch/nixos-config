@@ -7,8 +7,7 @@
   system,
   self,
   ...
-}:
-{
+}: {
   imports = [
     "${self}/modules/defaults.nix"
   ];
@@ -21,26 +20,45 @@
 
   boot = {
     kernelPackages = pkgs.linuxPackages_latest;
-    supportedFilesystems = lib.mkForce [ "btrfs" "reiserfs" "vfat" "f2fs" "xfs" "ntfs" "cifs" ];
+    supportedFilesystems = lib.mkForce ["btrfs" "reiserfs" "vfat" "f2fs" "xfs" "ntfs" "cifs"];
     loader = {
-        grub.enable = false;
-        systemd-boot.enable = true;
-        efi.canTouchEfiVariables = true;
+      grub.enable = false;
+      systemd-boot.enable = true;
+      efi.canTouchEfiVariables = true;
     };
 
     initrd = {
       availableKernelModules = [
-        "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "hid" "hid_generic" "usb_storage" "uas" "sd_mod"
+        "vmd"
+        "xhci_pci"
+        "ahci"
+        "nvme"
+        "usbhid"
+        "hid"
+        "hid_generic"
+        "usb_storage"
+        "uas"
+        "sd_mod"
       ];
 
-      supportedFilesystems = [ "nfs" ];
+      supportedFilesystems = ["nfs"];
       kernelModules = [
-        "nfs" "vmd" "xhci_pci" "ahci" "nvme" "usbhid" "hid" "hid_generic" "usb_storage" "uas" "sd_mod"
+        "nfs"
+        "vmd"
+        "xhci_pci"
+        "ahci"
+        "nvme"
+        "usbhid"
+        "hid"
+        "hid_generic"
+        "usb_storage"
+        "uas"
+        "sd_mod"
       ];
     };
 
-    kernelModules = [ "kvm-intel" "btusb" "btintel" ];
-    extraModulePackages = [ ];
+    kernelModules = ["kvm-intel" "btusb" "btintel"];
+    extraModulePackages = [];
   };
 
   isoImage = {

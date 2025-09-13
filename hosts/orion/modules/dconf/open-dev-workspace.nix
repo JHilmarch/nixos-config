@@ -1,4 +1,4 @@
-{ pkgs }:
+{pkgs}:
 pkgs.writeShellScript "dev-workspace-script" ''
   #!/bin/bash
   # Switch to workspace 2 (Dev)
