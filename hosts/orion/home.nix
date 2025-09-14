@@ -58,6 +58,17 @@
     coolercontrol.coolercontrol-liqctld
     coolercontrol.coolercontrol-gui
   ];
+
+  # Common MIME associations for Flatpak Firefox desktop entry
+  firefoxDefaultMime = {
+    "text/html" = [ "org.mozilla.firefox.desktop" ];
+    "application/xhtml+xml" = [ "org.mozilla.firefox.desktop" ];
+    "x-scheme-handler/http" = [ "org.mozilla.firefox.desktop" ];
+    "x-scheme-handler/https" = [ "org.mozilla.firefox.desktop" ];
+    "x-scheme-handler/about" = [ "org.mozilla.firefox.desktop" ];
+    "x-scheme-handler/unknown" = [ "org.mozilla.firefox.desktop" ];
+  };
+
 in {
   imports = [
     "${self}/home-modules/fish"
@@ -131,25 +142,9 @@ in {
     mimeApps = {
       enable = true;
 
-      # Primary defaults
-      defaultApplications = {
-        "text/html" = [ "org.mozilla.firefox.desktop" ];
-        "application/xhtml+xml" = [ "org.mozilla.firefox.desktop" ];
-        "x-scheme-handler/http" = [ "org.mozilla.firefox.desktop" ];
-        "x-scheme-handler/https" = [ "org.mozilla.firefox.desktop" ];
-        "x-scheme-handler/about" = [ "org.mozilla.firefox.desktop" ];
-        "x-scheme-handler/unknown" = [ "org.mozilla.firefox.desktop" ];
-      };
-
-      # Reinforce associations to avoid other apps claiming them
-      associations.added = {
-        "text/html" = [ "org.mozilla.firefox.desktop" ];
-        "application/xhtml+xml" = [ "org.mozilla.firefox.desktop" ];
-        "x-scheme-handler/http" = [ "org.mozilla.firefox.desktop" ];
-        "x-scheme-handler/https" = [ "org.mozilla.firefox.desktop" ];
-        "x-scheme-handler/about" = [ "org.mozilla.firefox.desktop" ];
-        "x-scheme-handler/unknown" = [ "org.mozilla.firefox.desktop" ];
-      };
+      # Use common set for both defaults and added associations
+      defaultApplications = firefoxDefaultMime;
+      associations.added = firefoxDefaultMime;
     };
   };
 }
