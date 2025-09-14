@@ -9,6 +9,7 @@
   unstable-packages = with pkgs.unstable; [
     jetbrains.rider # IDE for .NET and C# development
     jetbrains.webstorm # IDE for Web Development
+    github-mcp-server # GitHub's official MCP Server
   ];
 
   stable-packages = with pkgs; [
@@ -58,7 +59,6 @@
     coolercontrol.coolercontrol-gui
   ];
 
-  # Common MIME associations for Flatpak Firefox desktop entry
   firefoxDefaultMime = {
     "text/html" = [ "org.mozilla.firefox.desktop" ];
     "application/xhtml+xml" = [ "org.mozilla.firefox.desktop" ];
@@ -136,12 +136,9 @@ in {
     };
   };
 
-  # Set Flatpak Firefox as default browser via XDG (Home Manager)
   xdg = {
     mimeApps = {
       enable = true;
-
-      # Use common set for both defaults and added associations
       defaultApplications = firefoxDefaultMime;
       associations.added = firefoxDefaultMime;
     };
