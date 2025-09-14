@@ -9,7 +9,6 @@
   unstable-packages = with pkgs.unstable; [
     jetbrains.rider # IDE for .NET and C# development
     jetbrains.webstorm # IDE for Web Development
-    github-mcp-server # GitHub's official MCP Server
   ];
 
   stable-packages = with pkgs; [
