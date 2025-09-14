@@ -9,6 +9,7 @@
   unstable-packages = with pkgs.unstable; [
     jetbrains.rider # IDE for .NET and C# development
     jetbrains.webstorm # IDE for Web Development
+    github-mcp-server # GitHub's official MCP Server
   ];
 
   stable-packages = with pkgs; [
@@ -122,6 +123,33 @@ in {
 
     starship = {
       enable = true;
+    };
+  };
+
+  # Set Flatpak Firefox as default browser via XDG (Home Manager)
+  xdg = {
+    mimeApps = {
+      enable = true;
+
+      # Primary defaults
+      defaultApplications = {
+        "text/html" = [ "org.mozilla.firefox.desktop" ];
+        "application/xhtml+xml" = [ "org.mozilla.firefox.desktop" ];
+        "x-scheme-handler/http" = [ "org.mozilla.firefox.desktop" ];
+        "x-scheme-handler/https" = [ "org.mozilla.firefox.desktop" ];
+        "x-scheme-handler/about" = [ "org.mozilla.firefox.desktop" ];
+        "x-scheme-handler/unknown" = [ "org.mozilla.firefox.desktop" ];
+      };
+
+      # Reinforce associations to avoid other apps claiming them
+      associations.added = {
+        "text/html" = [ "org.mozilla.firefox.desktop" ];
+        "application/xhtml+xml" = [ "org.mozilla.firefox.desktop" ];
+        "x-scheme-handler/http" = [ "org.mozilla.firefox.desktop" ];
+        "x-scheme-handler/https" = [ "org.mozilla.firefox.desktop" ];
+        "x-scheme-handler/about" = [ "org.mozilla.firefox.desktop" ];
+        "x-scheme-handler/unknown" = [ "org.mozilla.firefox.desktop" ];
+      };
     };
   };
 }
