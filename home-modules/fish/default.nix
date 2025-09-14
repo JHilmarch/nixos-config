@@ -3,6 +3,10 @@
     enable = true;
     interactiveShellInit = ''
       set fish_greeting # Disable greeting
+      set -gx EDITOR vim
+      if test -n "$XDG_RUNTIME_DIR"
+        set -gx DOCKER_HOST "unix://$XDG_RUNTIME_DIR/docker.sock"
+      end
     '';
 
     plugins = with pkgs.fishPlugins; [

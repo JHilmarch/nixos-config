@@ -59,14 +59,13 @@
   ];
 
   firefoxDefaultMime = {
-    "text/html" = [ "org.mozilla.firefox.desktop" ];
-    "application/xhtml+xml" = [ "org.mozilla.firefox.desktop" ];
-    "x-scheme-handler/http" = [ "org.mozilla.firefox.desktop" ];
-    "x-scheme-handler/https" = [ "org.mozilla.firefox.desktop" ];
-    "x-scheme-handler/about" = [ "org.mozilla.firefox.desktop" ];
-    "x-scheme-handler/unknown" = [ "org.mozilla.firefox.desktop" ];
+    "text/html" = ["org.mozilla.firefox.desktop"];
+    "application/xhtml+xml" = ["org.mozilla.firefox.desktop"];
+    "x-scheme-handler/http" = ["org.mozilla.firefox.desktop"];
+    "x-scheme-handler/https" = ["org.mozilla.firefox.desktop"];
+    "x-scheme-handler/about" = ["org.mozilla.firefox.desktop"];
+    "x-scheme-handler/unknown" = ["org.mozilla.firefox.desktop"];
   };
-
 in {
   imports = [
     "${self}/home-modules/fish"
@@ -74,6 +73,7 @@ in {
     "${self}/home-modules/ssh"
     "${self}/home-modules/git"
     ./modules/file.nix
+    ./modules/docker-home.nix
     inputs.nix-index-database.homeModules.nix-index
     ./modules/dconf
   ];

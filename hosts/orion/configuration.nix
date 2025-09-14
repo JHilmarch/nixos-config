@@ -16,6 +16,7 @@
 in {
   imports = [
     ./modules/sops.nix
+    ./modules/docker.nix
     "${self}/modules/nfs/fileshare.nix"
     "${self}/modules/systemd/no-sleep.nix"
     "${self}/modules/systemd/wake-on-lan.nix"
@@ -303,6 +304,7 @@ in {
       extraGroups = [
         "wheel"
         "networkmanager"
+        "docker"
         "openrazer"
         "video"
         "audio"

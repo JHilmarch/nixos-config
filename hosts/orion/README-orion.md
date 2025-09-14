@@ -10,6 +10,8 @@ Configuration and documentation for NixOS dual boot with Windows 11 on Acer Pred
 - [LUKS encryption FIDO2](#luks-encryption-fido2)
 - [Custom Secure Boot](#custom-secure-boot)
 - [Jetbrains remote work](#jetbrains-remote-work)
+- [GitHub MCP for Junie in JetBrains Rider](#github-mcp-for-junie-in-jetbrains-rider)
+    - [Token security best practices](#token-security-best-practices)
 - [Nvidia](#nvidia)
 - [Bluetooth](#bluetooth)
 - [Fan control](#fan-control)
@@ -151,6 +153,47 @@ Host orion-rider
       IdentitiesOnly yes
       IdentityFile ~/.ssh/id_ed25519_jonatan_nixos_orion.pub
 ```
+
+## GitHub MCP for Junie in JetBrains Rider
+
+This configuration runs the GitHub MCP Server locally in a Docker container
+and connects Rider (Junie) to it. Add the following MCP configuration to
+Rider’s MCP settings:
+
+```
+{
+  "mcpServers": {
+    "github": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_PAT"
+      }
+    }
+  }
+}
+```
+
+Replace the placeholder token value (YOUR_PAT) with a valid GitHub Personal Access Token.
+
+### Token security best practices
+
+Abridged recommendations from the GitHub MCP Server docs:
+- Use a fine-grained Personal Access Token with the minimum scopes needed for your workflow (principle of least privilege).
+- Never hardcode tokens in config files or commit them to source control; pass via environment variables or a secrets manager.
+- Restrict token access to only the required repositories/organizations and rotate tokens regularly; revoke immediately if exposed.
+- Prefer injecting the token at runtime (e.g., docker run -e GITHUB_PERSONAL_ACCESS_TOKEN=...) over storing it on disk.
+- Run tools with least privileges and avoid sharing tokens across machines or users.
+
+See: [Full guidance](https://github.com/github/github-mcp-server?tab=readme-ov-file#token-security-best-practices)
+
+For Rider-specific setup details, also see the
+[JetBrains IDE installation guide](https://github.com/github/github-mcp-server/blob/main/docs/installation-guides/install-other-copilot-ides.md#jetbrains-ides).
 
 ## Nvidia
 
