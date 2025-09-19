@@ -21,6 +21,7 @@
     bruno-cli # CLI of the open-source IDE For exploring and testing APIs
     tree-sitter # A parser generator tool
     alejandra # nix linter
+    pkgs.mdformat # CommonMark compliant Markdown formatter
     pinentry-tty # GnuPG’s interface to passphrase input
     yubikey-manager # Command line tool for configuring any YubiKey over all USB transports
     yubico-piv-tool # Used for interacting with the Privilege and Identification Card (PIV) application on a YubiKey
