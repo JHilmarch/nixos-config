@@ -5,9 +5,9 @@ end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 charset = utf-8
-ij_editor_right_margin = 120
+max_line_length = 120
 
 [*.nix]
 indent_style = space
 indent_size = 2
-ij_editor_right_margin = 100
+max_line_length = 100

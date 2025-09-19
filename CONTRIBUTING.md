@@ -4,8 +4,7 @@ Please follow the steps below before committing.
 
 ## 1) Format/lint changed files with alejandra
 
-Use alejandra (Nix formatter) to keep the style consistent. Always format the
-changed .nix files before committing.
+Use alejandra (Nix formatter) to keep the style consistent. Always format the changed .nix files before committing.
 
 - Format only the staged/changed .nix files (recommended):
 
@@ -21,16 +20,39 @@ changed .nix files before committing.
 
 [alejandra on GitHub](https://github.com/kamadorueda/alejandra)
 
-## 2) Commit messages
+## 2) Markdown: format
+
+- Formatter: mdformat (configured via `.mdformat.toml`)
+
+Recommended (staged files only):
+
+```bash
+git diff --name-only --cached -- '*.md' | xargs -r mdformat
+```
+
+Whole repo:
+
+```bash
+mdformat .
+```
+
+If not in PATH, you can run via Nix:
+
+```bash
+nix run nixpkgs#mdformat -- .
+```
+
+## 3) Commit messages
 
 Use [Conventional Commits](https://www.conventionalcommits.org/). Keep the subject concise (≤ 50 chars), leave a blank
-line, and wrap the body at ~72 chars.
+line, and wrap the body before 72 chars.
 
 Examples:
+
 - feat(orion): add systemd no-sleep module
 - fix(nfs): correct exports for fileshare
 
-## 3) Nix-specific checks (when .nix files change)
+## 4) Nix-specific checks
 
 When you change .nix files, validate locally before pushing (see README for host targets):
 
@@ -54,9 +76,9 @@ When you change .nix files, validate locally before pushing (see README for host
 
 If any command fails, review the output, fix the issue, and re-run.
 
-## 4) MCP helper (optional but recommended)
+## 5) MCP helper (optional but recommended)
 
-This repo is set up to use a local NixOS MCP helper (see `mcp.json`). If
-available on your machine, Junie can run it for guidance and validation.
+This repo is set up to use a local NixOS MCP helper (see `mcp.json`). If available on your machine, Junie can run it for
+guidance and validation.
 
 See the main README for repository structure and additional guidelines.

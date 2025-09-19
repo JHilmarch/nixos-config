@@ -23,6 +23,7 @@
 ## Flake
 
 Contains NixOS configurations for the following targets:
+
 - [orion](./hosts/orion/README-orion.md)
 - [iso](./hosts/iso/README-iso.md)
 
@@ -91,8 +92,8 @@ Modules intended to be used with Home Manager (`home.nix`).
 ### fish
 
 The module contains the _fish_ shell configurations. It includes the fuzzy finder plugin and smart abbreviations for
-common git commands. The shell suggests commands based on history and completions, in color.
-Read more at [fishshell.com](https://fishshell.com/).
+common git commands. The shell suggests commands based on history and completions, in color. Read more at
+[fishshell.com](https://fishshell.com/).
 
 ### git
 
@@ -119,6 +120,7 @@ ykman info
 ```
 
 Read more on how to set up your YubiKey:
+
 - [Dr Duh's YubiKey-Guide](https://github.com/drduh/YubiKey-Guide)
 
 Using a YubiKey is assumed. The name on your private keys should correspond to the configured identity files.
@@ -175,25 +177,24 @@ _Sleep_ and _Hibernation_ is creating problems so a common pattern used is to di
 
 #### wake-on-lan
 
-A systemd service enables Wake on LAN with magic package on the network interface.
-The [ethtool](https://mirrors.edge.kernel.org/pub/software/network/ethtool/) command is triggered during system boot.
+A systemd service enables Wake on LAN with magic package on the network interface. The
+[ethtool](https://mirrors.edge.kernel.org/pub/software/network/ethtool/) command is triggered during system boot.
 
 ## Scripts
 
 ### Reboot to Windows
 
-The `reboot-to-windows.sh` script uses the `bootctl` tool to set Windows as the next UEFI boot entry,
-then reboots the system. Since the latest NixOS generation is the default, this script is useful for remotely
-cold booting into Windows, for example after using Wake On LAN.
+The `reboot-to-windows.sh` script uses the `bootctl` tool to set Windows as the next UEFI boot entry, then reboots the
+system. Since the latest NixOS generation is the default, this script is useful for remotely cold booting into Windows,
+for example, after using Wake On LAN.
 
 ## Secrets
 
-Here, SOPS secrets is stored, sorted by host.
+Here, SOPS secrets are stored, sorted by host.
 
 ## AI Assistant and MCP
 
-This repository is set up to work with JetBrains Junie via the
-Model Context Protocol (MCP).
+This repository is set up to work with JetBrains Junie via the Model Context Protocol (MCP).
 
 - The project-level MCP registry lives at: `.junie/mcp/mcp.json`
 - It defines a server named `nixos` that is started with: `mcp-nixos`
@@ -206,6 +207,6 @@ Model Context Protocol (MCP).
 - [Search packages & options](https://search.nixos.org/)
 - [Flakes](https://nixos.wiki/wiki/Flakes)
 
----
+______________________________________________________________________
 
 [Back to top](#jonatans-nixos-config)

@@ -4,7 +4,7 @@
 
 ### List discs and partitions
 
- `lsblk -f` or `lsblk -o NAME,SIZE,TYPE,FSTYPE,LABEL,MOUNTPOINT,UUID`
+`lsblk -f` or `lsblk -o NAME,SIZE,TYPE,FSTYPE,LABEL,MOUNTPOINT,UUID`
 
 ### Open the encrypted LINUX filesystem partition
 

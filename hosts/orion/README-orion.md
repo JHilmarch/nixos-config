@@ -5,30 +5,30 @@ Configuration and documentation for NixOS dual boot with Windows 11 on Acer Pred
 ## Table of Contents
 
 - [Installation](#installation)
-    - [Partitioning the hard drives](#partitioning-the-hard-drives)
-    - [Installing NixOS](#installing-nixos)
+  - [Partitioning the hard drives](#partitioning-the-hard-drives)
+  - [Installing NixOS](#installing-nixos)
 - [LUKS encryption FIDO2](#luks-encryption-fido2)
 - [Custom Secure Boot](#custom-secure-boot)
 - [Jetbrains remote work](#jetbrains-remote-work)
 - [GitHub MCP for Junie in JetBrains Rider](#github-mcp-for-junie-in-jetbrains-rider)
-    - [Token security best practices](#token-security-best-practices)
+  - [Token security best practices](#token-security-best-practices)
 - [Nvidia](#nvidia)
 - [Bluetooth](#bluetooth)
 - [Fan control](#fan-control)
 - [GNOME](#gnome)
 - [Handle secrets](#handle-secrets)
-    - [Deploying secrets](#deploying-secrets)
-    - [Encrypt & decrypt secrets using sops, age & YubiKey](#encrypt--decrypt-secrets-using-sops-age--yubikey)
+  - [Deploying secrets](#deploying-secrets)
+  - [Encrypt & decrypt secrets using sops, age & YubiKey](#encrypt--decrypt-secrets-using-sops-age--yubikey)
 
 ## Installation
 
 ### Partitioning the hard drives
 
-It's recommended to start with a Windows 11 installation. Boot into the motherboard firmware and disable
-UEFI secure boot. Then you can use a tool like _MiniTool Partition Wizard Free_ to shrink the system (C:/) and
-expand the ESP drive. Changes will be loaded and performed before next boot. Make the ESP drive bigger than you need.
-Mine is 6 GB, but 1,5 GB should be enough. If the ESP partition is in the beginning of the disk, and you can't move
-the system partition further on you have to manage your partitions from a bootable USB disk.
+It's recommended to start with a Windows 11 installation. Boot into the motherboard firmware and disable UEFI secure
+boot. Then you can use a tool like _MiniTool Partition Wizard Free_ to shrink the system (C:/) and expand the ESP drive.
+Changes will be loaded and performed before next boot. Make the ESP drive bigger than you need. Mine is 6 GB, but 1,5 GB
+should be enough. If the ESP partition is in the beginning of the disk, and you can't move the system partition further
+on you have to manage your partitions from a bootable USB disk.
 
 **Creating the NixOS partition table**
 
@@ -37,6 +37,7 @@ _This is based on notes from my last installation and may not be completely accu
 `lsblk` with and without the -f flag and `sudo fdisk -l` can be used to list disks and partition table.
 
 Use [**fdisk**](https://www.man7.org/linux/man-pages/man8/fdisk.8.html) to create partitions:
+
 - Target correct disk: `sudo fdisk /dev/nvme0n1`
 - `n` to create partition
 - `t` to change partition type
@@ -51,8 +52,8 @@ See the `hosts/iso` project on how to create a bootable USB and install NixOS.
 
 ## LUKS encryption FIDO2
 
-The NIXROOT filesystem is LUKS encrypted and can be unlocked during Initial ramdisk ("early boot stage"),
-with a YubiKey or a backup password.
+The NIXROOT filesystem is LUKS encrypted and can be unlocked during Initial ramdisk ("early boot stage"), with a YubiKey
+or a backup password.
 
 **List all suitable FIDO2 security tokens**
 
@@ -70,19 +71,19 @@ sudo systemd-cryptenroll --wipe-slot=2 /dev/nvme0n1p6
 sudo systemd-cryptenroll --fido2-device=auto --fido2-with-client-pin=yes --fido2-with-user-presence=yes /dev/nvme0n1p6
 ```
 
-For remote work via SSH,
-[USB over IP](https://github.com/torvalds/linux/tree/master/tools/usb/usbip) is needed.
+For remote work via SSH, [USB over IP](https://github.com/torvalds/linux/tree/master/tools/usb/usbip) is needed.
 
 Use the scripts in `./boot-initrd-scripts` to bind the YubiKey locally and attach the YubiKey to the remote host.
 
 The unlock LUKS on boot experience, step by step:
+
 1. Make sure Yubikey is unbound (usbip server)
-2. Connect to host as root with SSH and use the Yubikey private key as identity (ssh config)
-3. Bind Yubikey (usbip server)
-4. Attach Yubikey (usbip client)
-5. Unlock LUKS filesystem
-6. After entering PIN and touching the YubiKey; the system continues to stage two and the SSH connection is broken
-7. Repeat step 1-4 but login to SSH as <user>
+1. Connect to host as root with SSH and use the Yubikey private key as identity (ssh config)
+1. Bind Yubikey (usbip server)
+1. Attach Yubikey (usbip client)
+1. Unlock LUKS filesystem
+1. After entering PIN and touching the YubiKey; the system continues to stage two and the SSH connection is broken
+1. Repeat step 1-4 but login to SSH as <user>
 
 The usbip server is running on the SSH client side. Other way around: the usbip client is running on the SSH host side.
 
@@ -118,6 +119,7 @@ I put the UEFI Secure Boot in "setup" mode, generated keys with `sbctl` migrated
 /var/lib/sbctl. Finally, the keys were enrolled to the motherboard and the UEFI Windows Secure Boot was activated.
 
 The UEFI Windows Secure Boot is supported by following these steps:
+
 - Put the UEFI Secure Boot in "setup" mode
 - Generate keys with `sbctl` and migrate them from /etc/secureboot to /var/lib/sbctl
 - Enroll the keys to the motherboard
@@ -139,8 +141,8 @@ Vendor Keys:	microsoft
 
 ## Jetbrains remote work
 
-I can't use Jetbrains Toolbox to connect to Orion via SSH. It seems that resident keys aren't supported.
-I added a password protected SSH key instead with 1Password as SSH agent.
+I can't use Jetbrains Toolbox to connect to Orion via SSH. It seems that resident keys aren't supported. I added a
+password protected SSH key instead with 1Password as SSH agent.
 
 **Client SSH configuration**
 
@@ -156,9 +158,8 @@ Host orion-rider
 
 ## GitHub MCP for Junie in JetBrains Rider
 
-This configuration runs the GitHub MCP Server locally in a Docker container
-and connects Rider (Junie) to it. Add the following MCP configuration to
-Rider’s MCP settings:
+This configuration runs the GitHub MCP Server locally in a Docker container and connects Rider (Junie) to it. Add the
+following MCP configuration to Rider’s MCP settings:
 
 ```
 {
@@ -184,9 +185,13 @@ Replace the placeholder token value (YOUR_PAT) with a valid GitHub Personal Acce
 ### Token security best practices
 
 Abridged recommendations from the GitHub MCP Server docs:
-- Use a fine-grained Personal Access Token with the minimum scopes needed for your workflow (principle of least privilege).
-- Never hardcode tokens in config files or commit them to source control; pass via environment variables or a secrets manager.
-- Restrict token access to only the required repositories/organizations and rotate tokens regularly; revoke immediately if exposed.
+
+- Use a fine-grained Personal Access Token with the minimum scopes needed for your workflow (principle of least
+  privilege).
+- Never hardcode tokens in config files or commit them to source control; pass via environment variables or a secrets
+  manager.
+- Restrict token access to only the required repositories/organizations and rotate tokens regularly; revoke immediately
+  if exposed.
 - Prefer injecting the token at runtime (e.g., docker run -e GITHUB_PERSONAL_ACCESS_TOKEN=...) over storing it on disk.
 - Run tools with least privileges and avoid sharing tokens across machines or users.
 
@@ -209,18 +214,17 @@ Bluetooth is configured with the package `bluez` and the kernel modules `btusb` 
 
 ## Fan control
 
-Normally the fan control is already is built in and optimized but...
-I fucked up the motherboard by hard reset during ME firmware update and had to buy a new motherboard.
-No spare parts was available, so I ordered and installed a Asus Prime Z790-P Wifi board. A header is missing to
-control a fan or led. Therefore, this configuration installs and configure CoolerControl.
-Here is documentation of how to restore the backup:
+Normally the fan control is already is built in and optimized but... I fucked up the motherboard by hard reset during ME
+firmware update and had to buy a new motherboard. No spare parts was available, so I ordered and installed a Asus Prime
+Z790-P Wifi board. A header is missing to control a fan or led. Therefore, this configuration installs and configure
+CoolerControl. Here is documentation of how to restore the backup:
 https://docs.coolercontrol.org/wiki/config-files.html#backup-import
 
 ## GNOME
 
-I've struggled a lot with a tiling window setup. I couldn't get Hyprland to work, so I have to come back to that
-at a later point. I'm now using the GNOME extension tiling-shell, with shortcuts for opening workspaces and apps.
-GNOME settings can be found in `./modules/dconf/default.nix`.
+I've struggled a lot with a tiling window setup. I couldn't get Hyprland to work, so I have to come back to that at a
+later point. I'm now using the GNOME extension tiling-shell, with shortcuts for opening workspaces and apps. GNOME
+settings can be found in `./modules/dconf/default.nix`.
 
 ## Handle secrets
 
@@ -299,6 +303,6 @@ To check the secret in the nix store after rebuild:
 sudo cat /run/secrets/secret1
 ```
 
----
+______________________________________________________________________
 
 [Back to top](#nixos-on-orion-7000-dual-boot-host)
