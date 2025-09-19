@@ -204,6 +204,9 @@ in {
     # Enable PCSC-Lite daemon, to access smart cards using SCard API (PC/SC).
     pcscd.enable = true;
 
+    # GVFS provides virtual filesystem backends used by GNOME apps and Flatpaks
+    gvfs.enable = true;
+
     # X11 windowing system
     xserver = {
       enable = true;
