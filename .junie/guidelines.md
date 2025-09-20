@@ -14,7 +14,7 @@ These guidelines tell Junie how to work in this repository.
   - Use it to check correctness and get guidance for Nix/NixOS-specific questions.
   - If MCP is unavailable, ask the user to run it locally and report back results.
 
-- Ask the user to test or build before committing to Git only when .nix files are changed
+- Ask the user to test or rebuild before committing to Git only when .nix files are changed:
 
   - If any .nix file was modified in this session, explicitly prompt the user to perform a local test build before
     finalizing changes or asking to commit.
