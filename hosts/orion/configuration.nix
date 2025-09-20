@@ -204,6 +204,9 @@ in {
     # Enable PCSC-Lite daemon, to access smart cards using SCard API (PC/SC).
     pcscd.enable = true;
 
+    # UPower D-Bus service for power management
+    upower.enable = true;
+
     # GVFS provides virtual filesystem backends used by GNOME apps and Flatpaks
     gvfs.enable = true;
 
