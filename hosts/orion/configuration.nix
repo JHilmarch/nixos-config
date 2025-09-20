@@ -197,7 +197,7 @@ in {
       geary # Mail client for GNOME 3
     ];
 
-    shells = [pkgs.fish];
+    shells = with pkgs; [fish bash];
   };
 
   services = {
