@@ -57,6 +57,8 @@
     coolercontrol.coolercontrol-ui-data
     coolercontrol.coolercontrol-liqctld
     coolercontrol.coolercontrol-gui
+
+    nodejs_22
   ];
 
   firefoxDefaultMime = {
