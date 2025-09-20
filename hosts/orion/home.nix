@@ -60,6 +60,8 @@
     coolercontrol.coolercontrol-gui
 
     nodejs_22
+
+    context7 # Context7 MCP CLI (packaged via overlay)
   ];
 
   firefoxDefaultMime = {

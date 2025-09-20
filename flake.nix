@@ -24,6 +24,31 @@
   };
 
   outputs = inputs @ {self, ...}: {
+    packages.x86_64-linux = let
+      system = "x86_64-linux";
+      nixpkgsWithOverlays = import inputs.nixpkgs {
+        inherit system;
+        config = {
+          allowUnfree = true;
+          permittedInsecurePackages = [
+            # Add any insecure packages you absolutely need here
+          ];
+        };
+        overlays = [
+          (_final: prev: {
+            unstable = import inputs.nixpkgs-unstable {
+              inherit (prev) system;
+              config = prev.config;
+            };
+          })
+          (import ./overlays/context7)
+        ];
+      };
+    in {
+      context7 = nixpkgsWithOverlays.context7;
+      default = nixpkgsWithOverlays.context7;
+    };
+
     nixosConfigurations = let
       nixpkgsConfig = {
         config.allowUnfree = true;
@@ -46,6 +71,7 @@
                 config = prev.config;
               };
             })
+            (import ./overlays/context7)
           ];
         };
 
@@ -98,6 +124,7 @@
                 config = prev.config;
               };
             })
+            (import ./overlays/context7)
           ];
         };
 

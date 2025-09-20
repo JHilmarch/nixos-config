@@ -1,8 +1,12 @@
 {
-  "mcpServers" : {
+  "mcpServers": {
     "nixos": {
       "type": "stdio",
       "command": "mcp-nixos"
+    },
+    "context7": {
+      "type": "stdio",
+      "command": "context7"
     }
   }
 }
