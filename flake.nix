@@ -21,6 +21,11 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nixos-wsl = {
+      url = "github:nix-community/NixOS-WSL";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ {self, ...}: {
@@ -103,6 +108,51 @@
               home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "hm-backup";
               home-manager.users.${specialArgs.username} = import ./hosts/orion/home.nix;
+            }
+          ];
+        };
+
+      wsl-cab = let
+        system = "x86_64-linux";
+        nixpkgsWithOverlays = import inputs.nixpkgs {
+          inherit system;
+          config = {
+            allowUnfree = true;
+            permittedInsecurePackages = [
+              # Add any insecure packages you absolutely need here
+            ];
+          };
+          overlays = [
+            (_final: prev: {
+              unstable = import inputs.nixpkgs-unstable {
+                inherit (prev) system;
+                config = prev.config;
+              };
+            })
+            (import ./overlays/context7)
+          ];
+        };
+
+        specialArgs = {
+          inherit inputs self;
+          username = "jonatan";
+          hostname = "wsl-cab";
+        };
+      in
+        inputs.nixpkgs.lib.nixosSystem {
+          inherit system specialArgs;
+          pkgs = nixpkgsWithOverlays;
+
+          modules = [
+            inputs.nixos-wsl.nixosModules.wsl
+            ./hosts/wsl-cab/configuration.nix
+            inputs.home-manager.nixosModules.home-manager
+            {
+              home-manager.extraSpecialArgs = specialArgs;
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.backupFileExtension = "hm-backup";
+              home-manager.users.${specialArgs.username} = import ./hosts/wsl-cab/home.nix;
             }
           ];
         };

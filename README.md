@@ -26,6 +26,7 @@ Contains NixOS configurations for the following targets:
 
 - [orion](./hosts/orion/README-orion.md)
 - [iso](./hosts/iso/README-iso.md)
+- [wsl-cab](./hosts/wsl-cab/README-wsl-cab.md)
 
 How to target a host:
 
