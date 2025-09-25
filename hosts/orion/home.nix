@@ -68,6 +68,7 @@
     nodejs_22
 
     context7 # Context7 MCP CLI (packaged via overlay)
+    mcp-nuget # NuGet MCP Server (packaged via overlay)
   ];
 
   firefoxDefaultMime = {

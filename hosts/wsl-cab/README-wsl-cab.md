@@ -43,6 +43,15 @@ passwd
         "--",
         "context7"
       ]
+    },
+    "nuget": {
+      "command": "wsl",
+      "args": [
+        "-d",
+        "NixOS",
+        "--",
+        "mcp-nuget"
+      ]
     }
   }
 }

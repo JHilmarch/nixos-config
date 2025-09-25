@@ -47,10 +47,12 @@
             };
           })
           (import ./overlays/context7)
+          (import ./overlays/nuget-mcp-server)
         ];
       };
     in {
       context7 = nixpkgsWithOverlays.context7;
+      mcp-nuget = nixpkgsWithOverlays.mcp-nuget;
       default = nixpkgsWithOverlays.context7;
     };
 
@@ -77,6 +79,7 @@
               };
             })
             (import ./overlays/context7)
+            (import ./overlays/nuget-mcp-server)
           ];
         };
 
@@ -130,6 +133,7 @@
               };
             })
             (import ./overlays/context7)
+            (import ./overlays/nuget-mcp-server)
           ];
         };
 
