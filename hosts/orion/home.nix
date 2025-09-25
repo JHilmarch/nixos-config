@@ -50,7 +50,13 @@
     lm_sensors # Tools for reading hardware sensors
 
     cryptsetup # LUKS for dm-crypt
-    dotnet-sdk_9 # Core functionality needed to create .NET Core projects
+
+    # Core functionality needed to create .NET Core projects
+    (dotnetCorePackages.combinePackages [
+      dotnetCorePackages.dotnet_9.sdk
+      dotnetCorePackages.dotnet_10.sdk
+    ])
+
     sbctl # Secure Boot key manager
 
     # Monitor and control your cooling devices
