@@ -195,11 +195,13 @@ Here, SOPS secrets are stored, sorted by host.
 
 ## AI Assistant and MCP
 
-This repository is set up to work with JetBrains Junie and Claude Code with the Model Context Protocol (MCP).
+This repository is set up to work with JetBrains Junie and Claude Code with the
+[Model Context Protocol](https://github.com/modelcontextprotocol/) (MCP).
 
 - The project-level MCP registry lives at: `.junie/mcp/mcp.json`
   - It defines a server named `nixos` that is started with: `mcp-nixos`
   - It defines a server named `context7` that is started with: `context7`
+  - It defines a server named `nuget-mcp-server` that is started with: `mcp-nuget`
 
 ## NixOS
 
