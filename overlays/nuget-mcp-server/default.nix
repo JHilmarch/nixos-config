@@ -5,8 +5,8 @@ in {
     pkgs = super;
     pname = "mcp-nuget";
     packageName = "NuGet.Mcp.Server";
-    version = "0.1.4-preview";
-    sha256 = "sha256-v2TaKFQYa+hUzSG6OXmJP5kq2gTmYdYVTnUBKunUvQE=";
+    version = "1.0.0";
+    sha256 = "sha256-W2y+jG2JQNN19fd8+TcfpMxvkA3bt3l8jHhwvkI7nVA=";
     dllName = "NuGet.Mcp.Server.dll";
     libDirName = "mcp-nuget";
     description = "NuGet MCP Server packaged from nuget.org .nupkg";
