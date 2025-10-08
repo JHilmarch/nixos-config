@@ -52,6 +52,15 @@ passwd
         "--",
         "mcp-nuget"
       ]
+    },
+    "azure": {
+      "command": "wsl",
+      "args": [
+        "-d",
+        "NixOS",
+        "--",
+        "azure-mcp-server"
+      ]
     }
   }
 }

@@ -58,6 +58,7 @@
       inputs.mcp-nixos.packages.${pkgs.system}.mcp-nixos
       context7
       mcp-nuget
+      azure-mcp-server
     ];
 
     shells = with pkgs; [fish bash];
