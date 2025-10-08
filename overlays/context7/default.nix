@@ -1,13 +1,13 @@
 self: super: {
   context7 = super.buildNpmPackage {
     pname = "context7";
-    version = "1.0.17";
+    version = "1.0.21";
 
     src = super.fetchFromGitHub {
       owner = "upstash";
       repo = "context7";
-      rev = "v1.0.17";
-      hash = "sha256-X4I36pqGmIRbWqLiREoM1xU93VV1s4iuEnAEuXLk9yY=";
+      rev = "v1.0.21";
+      hash = "sha256-F4IiS5hIutVt2XSNGr3vhEy7kr/ad8WtstX5rZVuIao=";
     };
 
     # Copy vendored lockfile so buildNpmPackage can prefetch dependencies
@@ -16,7 +16,7 @@ self: super: {
     '';
 
     # Pinned from build output (wanted)
-    npmDepsHash = "sha256-xGI0gpKyY/G/YlrQk/1bryy+qto41XeUJz8cQXKUBOU=";
+    npmDepsHash = "sha256-OTDt35r7UaAADFIv9i3CCG/4iKS8y5scy7f6krxjhyI=";
 
     buildPhase = ''
       runHook preBuild
