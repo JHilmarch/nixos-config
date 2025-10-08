@@ -178,7 +178,6 @@
                 config = prev.config;
               };
             })
-            (import ./overlays/context7)
           ];
         };
 
