@@ -48,11 +48,13 @@
           })
           (import ./overlays/context7)
           (import ./overlays/nuget-mcp-server)
+          (import ./overlays/azure-mcp-server)
         ];
       };
     in {
       context7 = nixpkgsWithOverlays.context7;
       mcp-nuget = nixpkgsWithOverlays.mcp-nuget;
+      azure-mcp-server = nixpkgsWithOverlays.azure-mcp-server;
       default = nixpkgsWithOverlays.context7;
     };
 
