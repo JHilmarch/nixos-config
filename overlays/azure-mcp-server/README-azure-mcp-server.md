@@ -1,7 +1,7 @@
 # Azure MCP Server overlay
 
-This overlay packages the [Azure MCP Server](https://www.nuget.org/packages/Azure.Mcp) (Azure.Mcp) from
-the published .nupkg and exposes a CLI named **azure-mcp-server** that runs on .NET 10.
+This overlay packages the [Azure MCP Server](https://www.nuget.org/packages/Azure.Mcp) (Azure.Mcp) from the published
+.nupkg and exposes a CLI named **azure-mcp-server** that runs on .NET 10.
 
 ## Build targets
 

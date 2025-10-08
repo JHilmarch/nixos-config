@@ -1,5 +1,4 @@
-self: super:
-let
+self: super: let
   buildNugetMcp = import ../../functions/nuget-mcp-builder.nix;
 in {
   mcp-nuget = buildNugetMcp {

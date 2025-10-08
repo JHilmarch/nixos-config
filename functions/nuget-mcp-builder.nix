@@ -9,17 +9,17 @@
 # - libDirName: directory name under $out/lib where contents are installed
 # - description: meta.description
 # - homepage: meta.homepage
-{ pkgs
-, pname
-, packageName
-, version
-, sha256
-, dllName
-, libDirName
-, description
-, homepage
-}:
-let
+{
+  pkgs,
+  pname,
+  packageName,
+  version,
+  sha256,
+  dllName,
+  libDirName,
+  description,
+  homepage,
+}: let
   lib = pkgs.lib;
   dotnet = pkgs.dotnetCorePackages.dotnet_10.sdk;
   src = pkgs.fetchurl {
@@ -27,41 +27,41 @@ let
     inherit sha256;
   };
 in
-pkgs.stdenvNoCC.mkDerivation {
-  inherit pname version src;
+  pkgs.stdenvNoCC.mkDerivation {
+    inherit pname version src;
 
-  nativeBuildInputs = [ pkgs.unzip pkgs.makeWrapper ];
+    nativeBuildInputs = [pkgs.unzip pkgs.makeWrapper];
 
-  unpackPhase = ''
-    runHook preUnpack
-    # .nupkg is a zip archive
-    mkdir source
-    unzip -q "$src" -d source
-    runHook postUnpack
-  '';
+    unpackPhase = ''
+      runHook preUnpack
+      # .nupkg is a zip archive
+      mkdir source
+      unzip -q "$src" -d source
+      runHook postUnpack
+    '';
 
-  installPhase = ''
-    runHook preInstall
-    mkdir -p $out/bin
-    mkdir -p $out/lib/${libDirName}
-    cp -R source/* $out/lib/${libDirName}/
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out/bin
+      mkdir -p $out/lib/${libDirName}
+      cp -R source/* $out/lib/${libDirName}/
 
-    DLL=$(find "$out/lib/${libDirName}" -type f -name '${dllName}' | head -n1 || true)
-    if [[ -z "${DLL:-}" ]]; then
-      echo "${dllName} not found in package" >&2
-      exit 1
-    fi
+      DLL=$(find "$out/lib/${libDirName}" -type f -name '${dllName}' | head -n1 || true)
+      if [[ -z "${DLL:-}" ]]; then
+        echo "${dllName} not found in package" >&2
+        exit 1
+      fi
 
-    makeWrapper ${dotnet}/bin/dotnet $out/bin/${pname} \
-      --add-flags "$DLL"
+      makeWrapper ${dotnet}/bin/dotnet $out/bin/${pname} \
+        --add-flags "$DLL"
 
-    runHook postInstall
-  '';
+      runHook postInstall
+    '';
 
-  meta = with lib; {
-    inherit homepage;
-    description = description;
-    license = licenses.mit;
-    platforms = platforms.unix;
-  };
-}
+    meta = with lib; {
+      inherit homepage;
+      description = description;
+      license = licenses.mit;
+      platforms = platforms.unix;
+    };
+  }
