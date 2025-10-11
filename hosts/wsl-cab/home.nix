@@ -21,6 +21,7 @@
 
     packages = with pkgs; [
       git
+      gh
       tree-sitter
       pinentry-tty
       grc

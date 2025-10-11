@@ -59,6 +59,7 @@
       context7
       mcp-nuget
       azure-mcp-server
+      github-mcp-server
     ];
 
     shells = with pkgs; [fish bash];

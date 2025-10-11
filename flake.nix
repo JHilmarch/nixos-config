@@ -140,6 +140,7 @@
             (import ./overlays/context7)
             (import ./overlays/nuget-mcp-server)
             (import ./overlays/azure-mcp-server)
+            (import ./overlays/github-mcp-server/gh-cli.nix)
           ];
         };
 
