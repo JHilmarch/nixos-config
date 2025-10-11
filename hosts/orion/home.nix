@@ -69,6 +69,7 @@
 
     context7 # Context7 MCP CLI (packaged via overlay)
     mcp-nuget # NuGet MCP Server (packaged via overlay)
+    github-mcp-server # GitHub MCP Server wrapped via overlay (uses gh auth token)
   ];
 
   firefoxDefaultMime = {

@@ -7,6 +7,10 @@
     "context7": {
       "type": "stdio",
       "command": "context7"
+    },
+    "github": {
+      "type": "stdio",
+      "command": "github-mcp-server"
     }
   }
 }

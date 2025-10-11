@@ -1,5 +1,6 @@
 {
   pkgs,
+  config,
   username,
   self,
   ...
@@ -18,6 +19,10 @@
 
     secrets = {
       secret1 = {};
+      gh_pat = {
+        owner = username;
+        mode = "0400";
+      };
     };
   };
 }
