@@ -17,6 +17,7 @@
     homeDirectory = "/home/${username}";
     sessionVariables = {
       EDITOR = "vim";
+      BROWSER = "wslview";
     };
 
     packages = with pkgs; [
@@ -26,6 +27,7 @@
       pinentry-tty
       grc
       gitleaks
+      wslu
     ];
   };
 
