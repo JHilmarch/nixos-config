@@ -26,9 +26,9 @@ self: super: let
     '')
     nupkgPairs;
 
-  # Determine tool version from deps when present (informational only)
+  # Determine tool version from deps when present
   toolVersion = let
-    entries = lib.filter (p: p.name == "NuGet.Mcp.Server") deps;
+    entries = lib.filter (p: lib.toLower p.name == "nuget.mcp.server") deps;
   in
     if entries != []
     then (lib.head entries).version
@@ -56,8 +56,9 @@ in {
             --add-flags "dnx" \
             --add-flags "NuGet.Mcp.Server" \
             --add-flags "--source" \
-            --add-flags "$out/nuget-source" \
+            --add-flags "file://$out/nuget-source" \
             --add-flags "--ignore-failed-sources" \
+            --add-flags "--yes" \
             --add-flags "--" \
             --add-flags "mcp-nuget" \
             --add-flags "server" \

@@ -28,7 +28,7 @@ self: super: let
 
   # Determine tool version from deps when present
   toolVersion = let
-    azureEntries = lib.filter (p: p.name == "Azure.Mcp") deps;
+    azureEntries = lib.filter (p: lib.toLower p.name == "azure.mcp") deps;
   in
     if azureEntries != []
     then (lib.head azureEntries).version
@@ -56,8 +56,9 @@ in {
             --add-flags "dnx" \
             --add-flags "Azure.Mcp" \
             --add-flags "--source" \
-            --add-flags "$out/nuget-source" \
+            --add-flags "file://$out/nuget-source" \
             --add-flags "--ignore-failed-sources" \
+            --add-flags "--yes" \
             --add-flags "--" \
             --add-flags "azmcp" \
             --add-flags "server" \

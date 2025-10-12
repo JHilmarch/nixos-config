@@ -3,5 +3,10 @@
     "name": "azure.mcp",
     "version": "0.8.6",
     "sha256": "11y3dnk0h5wajzxs8rwn7llg30qwkq4is2x9xqfjh654b61zvz5y"
+  },
+  {
+    "name": "azure.mcp.linux-x64",
+    "version": "0.8.6",
+    "sha256": "0wgjsbjab1qzxcwniavr84708l3rqj4yf029ib6cf3avb1axdj4l"
   }
 ]
