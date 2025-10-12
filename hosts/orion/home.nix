@@ -48,7 +48,7 @@
     openrazer-daemon # Entirely open source user-space daemon that allows you to manage your Razer peripherals
     polychromatic # Graphical front-end and tray applet for configuring Razer peripherals
     lm_sensors # Tools for reading hardware sensors
-
+    nuget # NuGet CLI for managing .NET packages
     cryptsetup # LUKS for dm-crypt
 
     # Core functionality needed to create .NET Core projects
