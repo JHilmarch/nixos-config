@@ -1,1 +1,7 @@
-[]
+[
+  {
+    "name": "azure.mcp",
+    "version": "0.8.6",
+    "sha256": "11y3dnk0h5wajzxs8rwn7llg30qwkq4is2x9xqfjh654b61zvz5y"
+  }
+]
