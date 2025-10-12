@@ -175,6 +175,8 @@ in {
       jq # A lightweight and flexible command-line JSON processor
       zip # A utility for creating ZIP archives
       unzip # A utility for extracting files from ZIP archives
+      icu # libicu runtime for .NET/globalization (no 'icu' binary expected)
+      azure-cli # Microsoft Azure CLI
       inputs.mcp-nixos.packages.${pkgs.system}.mcp-nixos # MCP-NixOS
       flatpak # Linux application sandboxing and distribution framework
 
