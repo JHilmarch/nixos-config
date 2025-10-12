@@ -55,6 +55,8 @@
       jq
       zip
       unzip
+      icu
+      azure-cli
       inputs.mcp-nixos.packages.${pkgs.system}.mcp-nixos
       context7
       mcp-nuget
