@@ -30,6 +30,11 @@ First login: set your password (needed for sudo).
 passwd
 ```
 
+## GitHub authentication
+
+The wrapped GitHub MCP Server uses the access token from GitHub CLI to authenticate.
+Login with `gh auth login`.
+
 ## Configure GitHub Copilot
 
 ```json
