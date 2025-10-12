@@ -61,6 +61,15 @@ passwd
         "--",
         "azure-mcp-server"
       ]
+    },
+    "github": {
+      "command": "wsl",
+      "args": [
+        "-d",
+        "NixOS",
+        "--",
+        "github-mcp-server"
+      ]
     }
   }
 }
