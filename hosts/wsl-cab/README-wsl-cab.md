@@ -32,8 +32,7 @@ passwd
 
 ## GitHub authentication
 
-The wrapped GitHub MCP Server uses the access token from GitHub CLI to authenticate.
-Login with `gh auth login`.
+The wrapped GitHub MCP Server uses the access token from GitHub CLI to authenticate. Login with `gh auth login`.
 
 ## Configure GitHub Copilot
 

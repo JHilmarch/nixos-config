@@ -6,37 +6,45 @@ self: super: let
   lib = super.lib;
 
   # Fetch all pinned nuget packages defined in deps.json
-  fetched = lib.map (p:
-    super.fetchurl {
-      url = "https://www.nuget.org/api/v2/package/${p.name}/${p.version}";
-      sha256 = p.sha256;
-      name = "${p.name}.${p.version}.nupkg";
-    }
-  ) deps;
+  fetched =
+    lib.map (
+      p:
+        super.fetchurl {
+          url = "https://www.nuget.org/api/v2/package/${p.name}/${p.version}";
+          sha256 = p.sha256;
+          name = "${p.name}.${p.version}.nupkg";
+        }
+    )
+    deps;
 
   # Build copy commands to populate a local nuget source folder
   nupkgNames = lib.map (p: "${p.name}.${p.version}.nupkg") deps;
   nupkgPairs = lib.lists.zipLists fetched nupkgNames;
-  copyLines = lib.concatMapStrings (pair: ''
-    cp -v ${pair.fst} "$out/nuget-source/${pair.snd}"
-  '') nupkgPairs;
+  copyLines =
+    lib.concatMapStrings (pair: ''
+      cp -v ${pair.fst} "$out/nuget-source/${pair.snd}"
+    '')
+    nupkgPairs;
 
   # Determine tool version from deps when present
   toolVersion = let
     azureEntries = lib.filter (p: p.name == "Azure.Mcp") deps;
-  in if azureEntries != [] then (lib.head azureEntries).version else "unknown";
-
+  in
+    if azureEntries != []
+    then (lib.head azureEntries).version
+    else "unknown";
 in {
   azure-mcp-server =
-    if deps == [] then
-      throw ''azure-mcp-server: overlays/azure-mcp-server/deps.json is empty.
-Please generate it with:
-  bash scripts/generate-nuget-deps.sh Azure.Mcp <Version> overlays/azure-mcp-server/deps.json''
+    if deps == []
+    then
+      throw ''        azure-mcp-server: overlays/azure-mcp-server/deps.json is empty.
+        Please generate it with:
+          bash scripts/generate-nuget-deps.sh Azure.Mcp <Version> overlays/azure-mcp-server/deps.json''
     else
       super.stdenvNoCC.mkDerivation {
         pname = "azure-mcp-server";
         version = toolVersion;
-        nativeBuildInputs = [ super.makeWrapper ];
+        nativeBuildInputs = [super.makeWrapper];
         dontUnpack = true;
         installPhase = ''
           runHook preInstall
