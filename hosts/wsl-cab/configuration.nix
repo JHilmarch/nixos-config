@@ -40,7 +40,10 @@
     };
   };
 
-  programs.fish.enable = true;
+  programs = {
+    fish.enable = true;
+    nix-ld.enable = true;
+  };
 
   environment = {
     systemPackages = with pkgs; [
