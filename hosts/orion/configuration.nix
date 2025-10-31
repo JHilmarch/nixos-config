@@ -199,6 +199,15 @@ in {
       geary # Mail client for GNOME 3
     ];
 
+    # Enable NVIDIA CoolBits for fan control and OC (12 = 4 + 8)
+    etc."X11/xorg.conf.d/20-nvidia-coolbits.conf".text = ''
+      Section "Device"
+          Identifier "Nvidia Card"
+          Driver "nvidia"
+          Option "Coolbits" "12"
+      EndSection
+    '';
+
     shells = with pkgs; [fish bash];
   };
 

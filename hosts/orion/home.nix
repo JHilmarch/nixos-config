@@ -150,6 +150,21 @@ in {
     };
   };
 
+  # Allow CoolerControl (root) to access the user's X server for XNVCtrl fan control
+  systemd.user.services.xhost-root = {
+    Unit = {
+      Description = "Allow root to connect to X server";
+      After = [ "graphical-session.target" ];
+    };
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.xorg.xhost}/bin/xhost +SI:localuser:root";
+    };
+  };
+
   xdg = {
     mimeApps = {
       enable = true;
