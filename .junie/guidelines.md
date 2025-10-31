@@ -39,3 +39,7 @@ These guidelines tell Junie how to work in this repository.
   - Subject line must be at most 50 characters.
   - Leave a blank line between subject and body.
   - The body lines should be at most 72 characters.
+
+- Terminal
+
+  - When giving guidelines for commands to be used in the Terminal, make them available to be run in fish shell.
