@@ -13,6 +13,7 @@
   ];
 
   stable-packages = with pkgs; [
+    jetbrains.jdk # OpenJDK fork to better support Jetbrains's products
     git # A distributed version control system
     gh # GitHub CLI
     sops # Simple and flexible tool for managing secrets
