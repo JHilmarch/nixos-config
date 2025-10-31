@@ -87,6 +87,7 @@ in {
     "${self}/home-modules/gpg"
     "${self}/home-modules/ssh"
     "${self}/home-modules/git"
+    "${self}/home-modules/xorg/allow-root.nix"
     ./modules/file.nix
     ./modules/docker-home.nix
     inputs.nix-index-database.homeModules.nix-index
@@ -145,24 +146,8 @@ in {
       nix-direnv.enable = true;
     };
 
-    starship = {
-      enable = true;
-    };
-  };
-
-  # Allow CoolerControl (root) to access the user's X server for XNVCtrl fan control
-  systemd.user.services.xhost-root = {
-    Unit = {
-      Description = "Allow root to connect to X server";
-      After = [ "graphical-session.target" ];
-    };
-    Install = {
-      WantedBy = [ "graphical-session.target" ];
-    };
-    Service = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.xorg.xhost}/bin/xhost +SI:localuser:root";
-    };
+    starship.enable = true;
+    xorgAllowRoot.enable = true;
   };
 
   xdg = {
