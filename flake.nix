@@ -147,7 +147,7 @@
 
         specialArgs = {
           inherit inputs self;
-          username = "jonatan";
+          username = "tux";
           hostname = "wsl-cab";
         };
       in
