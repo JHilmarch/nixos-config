@@ -19,11 +19,11 @@ NuGet.Mcp.Server version.
 
    Using nix-shell to provide tools (recommended):
 
-   - `bash scripts/generate-nuget-deps.sh NuGet.Mcp.Server <Version> overlays/nuget-mcp-server/deps.json`
+   - `bash scripts/generate-nuget-deps.sh --ensure-sibling nuget.mcp.server:nuget.mcp.server.linux-x64 NuGet.Mcp.Server <Version> overlays/nuget-mcp-server/deps.json`
 
    Examples:
 
-   - `bash scripts/generate-nuget-deps.sh NuGet.Mcp.Server 1.0.0 overlays/nuget-mcp-server/deps.json`
+   - `bash scripts/generate-nuget-deps.sh --ensure-sibling nuget.mcp.server:nuget.mcp.server.linux-x64 NuGet.Mcp.Server 1.0.0 overlays/nuget-mcp-server/deps.json`
 
    The script resolves the tool via `dotnet tool install`, computes sha256 for each package from nuget.org and writes
    them to `overlays/nuget-mcp-server/deps.json`.
