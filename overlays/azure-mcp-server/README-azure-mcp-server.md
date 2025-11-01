@@ -19,11 +19,11 @@ Azure.Mcp version.
 
    Using nix-shell to provide tools (recommended):
 
-   - `bash scripts/generate-nuget-deps.sh Azure.Mcp <Version> overlays/azure-mcp-server/deps.json`
+   - `bash scripts/generate-nuget-deps.sh --ensure-sibling azure.mcp:azure.mcp.linux-x64 Azure.Mcp <Version> overlays/azure-mcp-server/deps.json`
 
    Examples:
 
-   - `bash scripts/generate-nuget-deps.sh Azure.Mcp 0.8.6 overlays/azure-mcp-server/deps.json`
+   - `bash scripts/generate-nuget-deps.sh --ensure-sibling azure.mcp:azure.mcp.linux-x64 Azure.Mcp 0.8.6 overlays/azure-mcp-server/deps.json`
 
    The script resolves the tool via `dotnet tool install`, computes sha256 for each package from nuget.org and writes
    them to `overlays/azure-mcp-server/deps.json`.
