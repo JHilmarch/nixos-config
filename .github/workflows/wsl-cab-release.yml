@@ -81,11 +81,31 @@ jobs:
           retention-days: 30
 
       - name: Release
+        id: release
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
+          version: ${{ steps.meta.outputs.version }}
         run: |
-          gh release create "$tag" \
-              --repo="$GITHUB_REPOSITORY" \
-              --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
-              --draft
+          set -euo pipefail
+
+          notes=$(cat <<EOF
+          Download the WSL artifact from this workflow run (Artifacts section):
+
+          https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}#artifacts
+
+          Artifact name: nixos-${version}.wsl
+          EOF
+          )
+
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $tag already exists; updating notes"
+            gh release edit "$tag" --notes "$notes" --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$tag" \
+                --repo="$GITHUB_REPOSITORY" \
+                --title="WSL CAB ${version}" \
+                --notes "$notes" \
+                --draft
+          fi
