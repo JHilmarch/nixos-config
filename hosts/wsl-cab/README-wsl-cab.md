@@ -74,6 +74,15 @@ The wrapped GitHub MCP Server uses the access token from GitHub CLI to authentic
         "--",
         "github-mcp-server"
       ]
+    },
+    "awesome-copilot": {
+      "command": "wsl",
+      "args": [
+        "-d",
+        "NixOS",
+        "--",
+        "awesome-copilot"
+      ]
     }
   }
 }
