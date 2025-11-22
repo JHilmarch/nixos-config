@@ -28,6 +28,24 @@ in {
     "${self}/modules/defaults.nix"
   ];
 
+  nixpkgs = {
+    overlays = [
+      (_final: prev: {
+        unstable = import inputs.nixpkgs-unstable {
+          inherit (prev) system;
+          config = prev.config;
+        };
+      })
+      (import ./../../overlays/context7)
+      (import ./../../overlays/nuget-mcp-server)
+      (import ./../../overlays/github-mcp-server)
+      (import ./../../overlays/azure-mcp-server)
+    ];
+    config = {
+      allowUnfree = true;
+    };
+  };
+
   hardware = {
     enableAllFirmware = true;
     enableRedistributableFirmware = true;

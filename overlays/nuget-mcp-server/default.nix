@@ -1,4 +1,5 @@
 self: super: let
+  enabled = super.lib.attrByPath ["config" "mcp" "nuget-mcp-server" "enable"] true super;
   dotnet = super.dotnetCorePackages.dotnet_10.sdk;
   icu = super.icu;
   lib = super.lib;
@@ -33,43 +34,49 @@ self: super: let
     if entries != []
     then (lib.head entries).version
     else "unknown";
-in {
-  mcp-nuget =
-    if deps == []
-    then
-      throw ''        mcp-nuget: overlays/nuget-mcp-server/deps.json is empty.
-        Please generate it with:
-          bash scripts/generate-nuget-deps.sh NuGet.Mcp.Server <Version> overlays/nuget-mcp-server/deps.json''
-    else
-      super.stdenvNoCC.mkDerivation {
-        pname = "mcp-nuget";
-        version = toolVersion;
-        nativeBuildInputs = [super.makeWrapper];
-        dontUnpack = true;
-        installPhase = ''
-          runHook preInstall
-          mkdir -p $out/bin $out/nuget-source
-          ${copyLines}
-          makeWrapper ${dotnet}/bin/dotnet $out/bin/mcp-nuget \
-            --prefix LD_LIBRARY_PATH : ${icu}/lib \
-            --set DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 0 \
-            --add-flags "dnx" \
-            --add-flags "NuGet.Mcp.Server" \
-            --add-flags "--source" \
-            --add-flags "file://$out/nuget-source" \
-            --add-flags "--ignore-failed-sources" \
-            --add-flags "--yes" \
-            --add-flags "--" \
-            --add-flags "mcp-nuget" \
-            --add-flags "server" \
-            --add-flags "start"
-          runHook postInstall
-        '';
-        meta = with super.lib; {
-          description = "NuGet MCP Server";
-          homepage = "https://www.nuget.org/packages/NuGet.Mcp.Server";
-          license = licenses.mit;
-          platforms = platforms.unix;
+in
+  if enabled
+  then {
+    mcp-nuget =
+      if deps == []
+      then
+        throw ''          mcp-nuget: overlays/nuget-mcp-server/deps.json is empty.
+            Please generate it with:
+              bash scripts/generate-nuget-deps.sh NuGet.Mcp.Server <Version> overlays/nuget-mcp-server/deps.json''
+      else
+        super.stdenvNoCC.mkDerivation {
+          pname = "mcp-nuget";
+          version = toolVersion;
+          nativeBuildInputs = [super.makeWrapper];
+          dontUnpack = true;
+          installPhase = ''
+            runHook preInstall
+            mkdir -p $out/bin $out/nuget-source
+            ${copyLines}
+            makeWrapper ${dotnet}/bin/dotnet $out/bin/mcp-nuget \
+              --prefix LD_LIBRARY_PATH : ${icu}/lib \
+              --set DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 0 \
+              --add-flags "dnx" \
+              --add-flags "NuGet.Mcp.Server" \
+              --add-flags "--source" \
+              --add-flags "file://$out/nuget-source" \
+              --add-flags "--ignore-failed-sources" \
+              --add-flags "--yes" \
+              --add-flags "--" \
+              --add-flags "mcp-nuget" \
+              --add-flags "server" \
+              --add-flags "start"
+            runHook postInstall
+          '';
+          meta = with super.lib; {
+            description = "NuGet MCP Server";
+            homepage = "https://www.nuget.org/packages/NuGet.Mcp.Server";
+            license = licenses.mit;
+            platforms = platforms.unix;
+          };
         };
-      };
-}
+  }
+  else
+    (
+      lib.warn "nuget-mcp-server overlay: disabled via nixpkgs.config.mcp.nuget-mcp-server.enable = false" {}
+    )

@@ -11,6 +11,24 @@
     "${self}/modules/defaults.nix"
   ];
 
+  nixpkgs = {
+    overlays = [
+      (_final: prev: {
+        unstable = import inputs.nixpkgs-unstable {
+          inherit (prev) system;
+          config = prev.config;
+        };
+      })
+      (import ./../../overlays/context7)
+      (import ./../../overlays/nuget-mcp-server)
+      (import ./../../overlays/azure-mcp-server)
+      (import ./../../overlays/github-mcp-server/gh-cli.nix)
+    ];
+    config = {
+      allowUnfree = true;
+    };
+  };
+
   wsl = {
     enable = true;
     defaultUser = username;
@@ -46,26 +64,28 @@
   };
 
   environment = {
-    systemPackages = with pkgs; [
-      vim
-      util-linux
-      ripgrep
-      coreutils
-      findutils
-      killall
-      curl
-      wget
-      jq
-      zip
-      unzip
-      icu
-      azure-cli
-      inputs.mcp-nixos.packages.${pkgs.system}.mcp-nixos
-      context7
-      mcp-nuget
-      azure-mcp-server
-      github-mcp-server
-    ];
+    systemPackages = let
+      base = with pkgs; [
+        vim
+        util-linux
+        ripgrep
+        coreutils
+        findutils
+        killall
+        curl
+        wget
+        jq
+        zip
+        unzip
+        icu
+        azure-cli
+        inputs.mcp-nixos.packages.${pkgs.system}.mcp-nixos
+        context7
+        azure-mcp-server
+        github-mcp-server
+      ];
+    in
+      base ++ lib.optional (pkgs ? mcp-nuget) pkgs.mcp-nuget;
 
     shells = with pkgs; [fish bash];
   };

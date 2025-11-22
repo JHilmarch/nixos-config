@@ -67,28 +67,6 @@
     in {
       nixos-orion = let
         system = "x86_64-linux";
-        nixpkgsWithOverlays = import inputs.nixpkgs {
-          inherit system;
-          config = {
-            allowUnfree = true;
-            permittedInsecurePackages = [
-              # Add any insecure packages you absolutely need here
-            ];
-          };
-          overlays = [
-            (_final: prev: {
-              unstable = import inputs.nixpkgs-unstable {
-                inherit (prev) system;
-                config = prev.config;
-              };
-            })
-            (import ./overlays/context7)
-            (import ./overlays/nuget-mcp-server)
-            (import ./overlays/github-mcp-server)
-            (import ./overlays/azure-mcp-server)
-          ];
-        };
-
         specialArgs = {
           pkgs-unstable = import inputs.nixpkgs-unstable {
             inherit system;
@@ -105,8 +83,6 @@
       in
         inputs.nixpkgs.lib.nixosSystem {
           inherit system specialArgs;
-          pkgs = nixpkgsWithOverlays;
-
           modules = [
             ./hosts/orion/configuration.nix
             inputs.sops-nix.nixosModules.sops
@@ -123,28 +99,6 @@
 
       wsl-cab = let
         system = "x86_64-linux";
-        nixpkgsWithOverlays = import inputs.nixpkgs {
-          inherit system;
-          config = {
-            allowUnfree = true;
-            permittedInsecurePackages = [
-              # Add any insecure packages you absolutely need here
-            ];
-          };
-          overlays = [
-            (_final: prev: {
-              unstable = import inputs.nixpkgs-unstable {
-                inherit (prev) system;
-                config = prev.config;
-              };
-            })
-            (import ./overlays/context7)
-            (import ./overlays/nuget-mcp-server)
-            (import ./overlays/azure-mcp-server)
-            (import ./overlays/github-mcp-server/gh-cli.nix)
-          ];
-        };
-
         specialArgs = {
           inherit inputs self;
           username = "tux";
@@ -153,8 +107,6 @@
       in
         inputs.nixpkgs.lib.nixosSystem {
           inherit system specialArgs;
-          pkgs = nixpkgsWithOverlays;
-
           modules = [
             inputs.nixos-wsl.nixosModules.wsl
             ./hosts/wsl-cab/configuration.nix
