@@ -12,6 +12,7 @@ Configuration and documentation for NixOS dual boot with Windows 11 on Acer Pred
 - [Jetbrains remote work](#jetbrains-remote-work)
 - [GitHub MCP for Junie in JetBrains Rider](#github-mcp-for-junie-in-jetbrains-rider)
   - [Token security best practices](#token-security-best-practices)
+- [MCP Proxy configuration for Junie in JetBrains Rider](#mcp-proxy-configuration-for-junie-in-jetbrains-rider)
 - [Nvidia](#nvidia)
 - [Bluetooth](#bluetooth)
 - [Fan control](#fan-control)
@@ -161,7 +162,7 @@ Host orion-rider
 This configuration runs the GitHub MCP Server locally in a Docker container and connects Rider (Junie) to it. Add the
 following MCP configuration to Rider’s MCP settings:
 
-```
+```json
 {
   "mcpServers": {
     "github": {
@@ -193,12 +194,33 @@ Abridged recommendations from the GitHub MCP Server docs:
 - Restrict token access to only the required repositories/organizations and rotate tokens regularly; revoke immediately
   if exposed.
 - Prefer injecting the token at runtime (e.g., docker run -e GITHUB_PERSONAL_ACCESS_TOKEN=...) over storing it on disk.
-- Run tools with least privileges and avoid sharing tokens across machines or users.
+- Run tools with the least privileges and avoid sharing tokens across machines or users.
 
 See: [Full guidance](https://github.com/github/github-mcp-server?tab=readme-ov-file#token-security-best-practices)
 
 For Rider-specific setup details, also see the
 [JetBrains IDE installation guide](https://github.com/github/github-mcp-server/blob/main/docs/installation-guides/install-other-copilot-ides.md#jetbrains-ides).
+
+## MCP Proxy configuration for Junie in JetBrains Rider
+
+An MCP proxy to stdio is available for servers using streamable HTTP.
+This configuration runs the [MS Learn Server](https://github.com/MicrosoftDocs/mcp) over HTTP via `mcp-proxy`. Add the
+following MCP configuration to Rider’s MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "ms-learn": {
+      "type": "stdio",
+      "command": "mcp-proxy",
+      "args": [
+        "--transport", "streamablehttp",
+        "https://learn.microsoft.com/api/mcp"
+      ]
+    }
+  }
+}
+```
 
 ## Nvidia
 
