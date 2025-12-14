@@ -24,7 +24,7 @@ Updating to a new upstream version
 
 1. Bump version and src.rev in _overlays/context7/default.nix_ to the new tag (e.g., v1.0.18).
 1. Update the src.hash for the new tag:
-   - Temporarily set a fake src.hash, e.g. sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+   - Temporarily set a fake hash: `hash = lib.fakeHash;`
    - Run `nix build .#context7` (or nix build .#packages.x86_64-linux.context7)
    - Copy the wanted hash from the error into src.hash.
 1. Refresh the vendored lockfile (only needed if upstream dependencies are changed or there is no `package-lock.json` in
