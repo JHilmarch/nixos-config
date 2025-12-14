@@ -10,6 +10,7 @@
     jetbrains.rider # IDE for .NET and C# development
     jetbrains.webstorm # IDE for Web Development
     claude-code # Agentic coding tool by Anthropic (from nixpkgs-unstable)
+    playwright-mcp # Playwright MCP server
   ];
 
   stable-packages = with pkgs; [
