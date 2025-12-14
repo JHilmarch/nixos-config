@@ -83,7 +83,31 @@ The wrapped GitHub MCP Server uses the access token from GitHub CLI to authentic
         "--",
         "awesome-copilot"
       ]
+    },
+    "ms-learn": {
+      "command": "wsl",
+      "args": [
+        "-d",
+        "NixOS",
+        "--",
+        "mcp-proxy",
+        "--transport",
+        "streamablehttp",
+        "https://learn.microsoft.com/api/mcp"
+      ]
     }
   }
 }
 ```
+
+### Test the MCP proxy inside WSL
+
+From a WSL shell (NixOS), you can quickly smoke-test the MS Learn MCP over
+HTTP via the proxy:
+
+```bash
+mcp-proxy --transport streamablehttp https://learn.microsoft.com/api/mcp
+```
+
+If you see initialization logs rather than a 405 error, the proxy is using the
+correct transport (streamable HTTP) and is ready to be used from Copilot.
