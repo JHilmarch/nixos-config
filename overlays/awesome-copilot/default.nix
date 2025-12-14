@@ -3,13 +3,13 @@ self: super: let
 in {
   awesome-copilot = super.stdenvNoCC.mkDerivation rec {
     pname = "awesome-copilot";
-    version = "unstable-2025-11-22";
+    version = "unstable-2025-12-14";
 
     src = super.fetchFromGitHub {
       owner = "github";
       repo = "awesome-copilot";
-      rev = "13dc6a41328f810a94164d635c54203533252e03";
-      hash = "sha256-7beo1fFbTq6c4xKeouolxq78SojXPUms0Lcmbxf3r1I=";
+      rev = "ac93f988c4dcae2c9de8ec56ed357750834c5cd2";
+      hash = "sha256-Z42ymxEjYH+OMDcdTYT6Pvf7gFdGmSW8er8Xa3bRDL8=";
     };
 
     installPhase = ''
