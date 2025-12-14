@@ -102,6 +102,7 @@ in {
     homeDirectory = "/home/${username}";
     sessionVariables = {
       EDITOR = "vim";
+      MOZ_ENABLE_WAYLAND = "1";
     };
 
     packages =
