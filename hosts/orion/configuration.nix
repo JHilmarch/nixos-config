@@ -26,6 +26,7 @@ in {
     "${self}/modules/systemd/nvidia-coolbits.nix"
     "${self}/modules/spotify/firewall.nix"
     "${self}/modules/defaults.nix"
+    "${self}/modules/containers/awesome-copilot.nix"
   ];
 
   nixpkgs = {
@@ -37,7 +38,6 @@ in {
         };
       })
       (import ./../../overlays/context7)
-      (import ./../../overlays/awesome-copilot)
       (import ./../../overlays/nuget-mcp-server)
       (import ./../../overlays/github-mcp-server)
       (import ./../../overlays/azure-mcp-server)
@@ -204,6 +204,9 @@ in {
       gnome-remote-desktop # GNOME Remote Desktop server
       gnome-session # GNOME session manager
       xrdp # Open source RDP server
+
+      docker
+      docker-compose
     ];
 
     gnome.excludePackages = with pkgs; [
@@ -319,6 +322,9 @@ in {
     };
   };
 
+  virtualisation.oci-containers.backend = "docker";
+  services.containers.awesome-copilot.enable = true;
+
   security = {
     sudo.wheelNeedsPassword = true;
     rtkit.enable = true;
@@ -330,6 +336,7 @@ in {
     groups.usbusers = {};
     users.${username} = {
       isNormalUser = true;
+      linger = true;
       extraGroups = [
         "wheel"
         "networkmanager"

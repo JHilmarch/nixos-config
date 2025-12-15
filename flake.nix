@@ -47,7 +47,6 @@
             };
           })
           (import ./overlays/context7)
-          (import ./overlays/awesome-copilot)
           (import ./overlays/nuget-mcp-server)
           (import ./overlays/azure-mcp-server)
           (import ./overlays/github-mcp-server)
@@ -55,7 +54,6 @@
       };
     in {
       context7 = nixpkgsWithOverlays.context7;
-      awesome-copilot = nixpkgsWithOverlays.awesome-copilot;
       mcp-nuget = nixpkgsWithOverlays.mcp-nuget;
       azure-mcp-server = nixpkgsWithOverlays.azure-mcp-server;
       github-mcp-server = nixpkgsWithOverlays.github-mcp-server;

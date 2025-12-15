@@ -27,7 +27,6 @@
       grc
       gitleaks
       nuget
-      awesome-copilot
       unstable.playwright-mcp
       unstable.mcp-grafana
       unstable.mcp-proxy

@@ -74,7 +74,6 @@
     mcp-nuget # NuGet MCP Server (packaged via overlay)
     github-mcp-server # GitHub MCP Server (wrapped & packaged via overlay)
     azure-mcp-server # Azure MCP CLI (packaged via overlay)
-    awesome-copilot # Curated list of GitHub Copilot resources (overlay)
   ];
 
   firefoxDefaultMime = {
@@ -93,7 +92,6 @@ in {
     "${self}/home-modules/git"
     "${self}/home-modules/xorg/allow-root.nix"
     ./modules/file.nix
-    ./modules/docker-home.nix
     inputs.nix-index-database.homeModules.nix-index
     ./modules/dconf
   ];
@@ -153,6 +151,11 @@ in {
 
     starship.enable = true;
     xorgAllowRoot.enable = true;
+
+    # Manage Docker CLI config via Home Manager
+    "docker-cli" = {
+      enable = true;
+    };
   };
 
   xdg = {
