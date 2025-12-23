@@ -115,6 +115,8 @@ in {
         (pkgs.writeShellScriptBin "detach-yubikey" (builtins.readFile ./boot-initrd-scripts/detach-yubikey.sh))
         (pkgs.writeShellScriptBin "boot-windows" (builtins.readFile "${self}/scripts/reboot-to-windows.sh"))
       ];
+
+    file.".config/monitors.xml".source = ./monitors.xml;
   };
 
   programs = {

@@ -1,0 +1,25 @@
+<monitors version="2">
+  <configuration>
+    <layoutmode>physical</layoutmode>
+    <logicalmonitor>
+      <x>0</x>
+      <y>0</y>
+      <scale>1</scale>
+      <primary>yes</primary>
+      <monitor>
+        <monitorspec>
+          <connector>DP-3</connector>
+          <vendor>SAM</vendor>
+          <product>LS49AG95</product>
+          <serial>HNTW900216</serial>
+        </monitorspec>
+        <mode>
+          <width>5120</width>
+          <height>1440</height>
+          <rate>120.0</rate>
+        </mode>
+        <colormode>bt2100</colormode>
+      </monitor>
+    </logicalmonitor>
+  </configuration>
+</monitors>

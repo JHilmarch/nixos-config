@@ -249,6 +249,14 @@ with lib.hm.gvariant; let
     "org/gnome/mutter" = {
       dynamic-workspaces = false;
       workspaces-only-on-primary = true;
+
+      experimental-features = [
+        "scale-monitor-framebuffer"
+        "variable-refresh-rate"
+        "xwayland-native-scaling"
+        "hdr-metadata"
+        "autohdr"
+      ];
     };
 
     "org/gnome/desktop/wm/preferences" = {
