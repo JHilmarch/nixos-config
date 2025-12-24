@@ -203,9 +203,9 @@ For Rider-specific setup details, also see the
 
 ## MCP Proxy configuration for Junie in JetBrains Rider
 
-An MCP proxy to stdio is available for servers using streamable HTTP.
-This configuration runs the [MS Learn Server](https://github.com/MicrosoftDocs/mcp) over HTTP via `mcp-proxy`. Add the
-following MCP configuration to Rider’s MCP settings:
+An MCP proxy to stdio is available for servers using streamable HTTP. This configuration runs the
+[MS Learn Server](https://github.com/MicrosoftDocs/mcp) over HTTP via `mcp-proxy`. Add the following MCP configuration
+to Rider’s MCP settings:
 
 ```json
 {
