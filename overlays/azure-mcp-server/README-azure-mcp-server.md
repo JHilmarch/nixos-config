@@ -17,7 +17,7 @@ Azure.Mcp version.
 1. Regenerate the pinned dependencies for this overlay using the helper script. This step is required, otherwise the
    build will fail or use stale dependencies.
 
-   Using nix-shell to provide tools (recommended):
+   Bash command:
 
    - `bash scripts/generate-nuget-deps.sh --ensure-sibling azure.mcp:azure.mcp.linux-x64 Azure.Mcp <Version> overlays/azure-mcp-server/deps.json`
 
