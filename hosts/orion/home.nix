@@ -74,7 +74,7 @@
     mcp-nuget # NuGet MCP Server (packaged via overlay)
     github-mcp-server # GitHub MCP Server (wrapped & packaged via overlay)
     azure-mcp-server # Azure MCP CLI (packaged via overlay)
-    awesome-copilot # Curated list of GitHub Copilot resources (overlay)
+    awesome-copilot # Awesome Copilot MCP (packaged via overlay)
   ];
 
   firefoxDefaultMime = {

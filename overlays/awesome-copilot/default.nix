@@ -1,50 +1,53 @@
 self: super: let
   lib = super.lib;
+  dotnet = super.dotnetCorePackages.dotnet_9.sdk;
+  icu = super.icu;
+
+  src = super.fetchFromGitHub {
+    owner = "microsoft";
+    repo = "mcp-dotnet-samples";
+    rev = "6f0e66c81c5a6e48964ed006a645ad4e84e638fb";
+    hash = "sha256-TrJ2Iuj3sUZsyq6B5qRaRAWnvkFTimrrZd3wlHqjGH4=";
+  };
+
+  phases = (import ./lib.nix) {
+    inherit lib super dotnet icu src;
+    patchScript = ./patch-mcp-logging.sh;
+  };
 in {
-  awesome-copilot = super.stdenvNoCC.mkDerivation rec {
+  awesome-copilot = super.buildDotnetModule rec {
     pname = "awesome-copilot";
-    version = "unstable-2025-12-14";
+    version = "1.0.0";
 
-    src = super.fetchFromGitHub {
-      owner = "github";
-      repo = "awesome-copilot";
-      rev = "ac93f988c4dcae2c9de8ec56ed357750834c5cd2";
-      hash = "sha256-Z42ymxEjYH+OMDcdTYT6Pvf7gFdGmSW8er8Xa3bRDL8=";
-    };
+    inherit src;
 
-    installPhase = ''
-      runHook preInstall
+    projectFile = "awesome-copilot/src/McpSamples.AwesomeCopilot.HybridApp/McpSamples.AwesomeCopilot.HybridApp.csproj";
+    nugetDeps = ./deps.json;
 
-      # Docs location
-      docDir=$out/share/doc/awesome-copilot
-      mkdir -p "$docDir"
+    dotnet-sdk = dotnet;
+    dotnet-runtime = super.dotnetCorePackages.dotnet_9.runtime;
 
-      # Copy top-level docs
-      cp -r . "$docDir/"
+    runtimeDeps = [icu];
 
-      # Provide a simple viewer script
-      mkdir -p $out/bin
-      cat > $out/bin/awesome-copilot << 'EOF'
-      #!/usr/bin/env bash
-      set -euo pipefail
-      DOC_ROOT="$(${super.coreutils}/bin/realpath "$(dirname "$0")/../share/doc/awesome-copilot")"
-      README="$DOC_ROOT/README.md"
-      if [ -t 1 ] && command -v mdcat >/dev/null 2>&1; then
-        exec mdcat "$README"
-      else
-        exec ${super.less}/bin/less -R "$README"
-      fi
-      EOF
-      chmod +x $out/bin/awesome-copilot
-
-      runHook postInstall
+    buildPhase = ''
+      source ${phases.buildPhase'}
+      buildPhase false
     '';
 
+    installPhase = ''
+      source ${phases.installPhase'}
+      installPhase
+    '';
+
+    passthru = {
+      inherit (phases) buildPhase' installPhase' wrapper';
+    };
+
     meta = with super.lib; {
-      description = "A curated list of awesome GitHub Copilot resources";
-      homepage = "https://github.com/github/awesome-copilot";
+      description = "Awesome Copilot MCP packaged via overlay with a .NET 9 wrapper";
+      homepage = "https://github.com/microsoft/mcp-dotnet-samples/tree/main/awesome-copilot";
       license = licenses.mit;
-      platforms = platforms.all;
+      platforms = platforms.unix;
       maintainers = [];
     };
   };
