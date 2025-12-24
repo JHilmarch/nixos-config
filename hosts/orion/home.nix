@@ -93,7 +93,6 @@ in {
     "${self}/home-modules/git"
     "${self}/home-modules/xorg/allow-root.nix"
     ./modules/file.nix
-    ./modules/docker-home.nix
     inputs.nix-index-database.homeModules.nix-index
     ./modules/dconf
   ];
