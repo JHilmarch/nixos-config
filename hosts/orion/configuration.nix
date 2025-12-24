@@ -323,6 +323,10 @@ in {
     sudo.wheelNeedsPassword = true;
     rtkit.enable = true;
     polkit.enable = true;
+
+    pki.certificateFiles = [
+      "${self}/hosts/orion/aspnetcore-https-development.pem"
+    ];
   };
 
   users = {
