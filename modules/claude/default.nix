@@ -196,7 +196,7 @@ in {
         };
         ms-learn = {
           type = "stdio";
-          command =  "mcp-proxy";
+          command = "mcp-proxy";
           args = [
             "--transport"
             "streamablehttp"

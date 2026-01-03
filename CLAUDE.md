@@ -24,6 +24,7 @@ secrets/            # SOPS-encrypted secrets (never read/edit these)
 ## Flake Architecture
 
 The flake defines three NixOS configurations in `flake.nix`. Each host receives `specialArgs`:
+
 - `pkgs-unstable` - Unstable nixpkgs channel (orion only)
 - `inputs` - Flake inputs (nixpkgs, home-manager, sops-nix, etc.)
 - `self` - Reference to this flake
@@ -35,6 +36,7 @@ Home Manager is integrated per-host with `extraSpecialArgs` passed through.
 ## Module System
 
 - **`modules/`** - System-level NixOS modules (imported in host `configuration.nix`)
+
   - `defaults.nix` - Default settings (timezone, Nix config)
   - `nfs/` - NFS shares
   - `spotify/` - Firewall rules
@@ -43,6 +45,7 @@ Home Manager is integrated per-host with `extraSpecialArgs` passed through.
   - `context7/` - Context7 AI tool integration
 
 - **`home-modules/`** - Home Manager modules (imported in host `home.nix`)
+
   - `fish/` - Fish shell with fuzzy finder and git abbreviations
   - `git/` - Git with GPG signing
   - `gpg/` - GPG configuration
@@ -71,11 +74,13 @@ sudo nixos-rebuild boot --flake .                # Set as boot entry
 ## Conventional Commits
 
 Use Conventional Commits format with scope as the host/module:
+
 ```
 feat(orion): add systemd no-sleep module
 fix(wsl-cab): correct PATH configuration
 chore(context7): update to latest version
 ```
+
 - Subject line must be at most 50 characters.
 - Leave a blank line between subject and body.
 - The body lines should be at most 72 characters.
@@ -83,10 +88,13 @@ chore(context7): update to latest version
 ## MCP Integration
 
 The repository uses MCP (Model Context Protocol) with servers configured in `.junie/mcp/mcp.json`:
+
 - `nixos` - NixOS package/option search via `mcp-nixos`
-  - Always use NixOS MCP when I need to search for Nix community flakes, Nix packages, options or programs without me having to explicitly ask.
+  - Always use NixOS MCP when I need to search for Nix community flakes, Nix packages, options or programs without me
+    having to explicitly ask.
 - `context7` - Context7 AI tool
-  - Use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps but explicitly ask first.
+  - Use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps but explicitly
+    ask first.
 - `github` - GitHub integration
 - `nuget-mcp-server` - .NET/NuGet packages
   - Always use the NugGet MCP when I need to search for NuGet packages without me having to explicitly ask.
