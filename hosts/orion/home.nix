@@ -68,7 +68,6 @@
     # Monitor and control your cooling devices
     coolercontrol.coolercontrold
     coolercontrol.coolercontrol-ui-data
-    coolercontrol.coolercontrol-liqctld
     coolercontrol.coolercontrol-gui
 
     nodejs_22
