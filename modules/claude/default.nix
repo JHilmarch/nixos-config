@@ -190,9 +190,9 @@ in {
           type = "stdio";
           command = "github-mcp-server";
         };
-        nuget-mcp-server = {
+        nuget = {
           type = "stdio";
-          command = "nuget-mcp-server";
+          command = "mcp-nuget";
         };
         ms-learn = {
           type = "stdio";
