@@ -17,6 +17,7 @@ in {
   imports = [
     ./modules/sops.nix
     ./modules/docker.nix
+    "${self}/modules/context7/sops-wrapper.nix"
     "${self}/modules/claude/default.nix"
     "${self}/modules/nfs/fileshare.nix"
     "${self}/modules/systemd/no-sleep.nix"
