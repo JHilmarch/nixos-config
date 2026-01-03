@@ -33,7 +33,7 @@ in {
     overlays = [
       (_final: prev: {
         unstable = import inputs.nixpkgs-unstable {
-          inherit (prev) system;
+          inherit (prev.stdenv.hostPlatform) system;
           config = prev.config;
         };
       })
@@ -198,7 +198,7 @@ in {
       unzip # A utility for extracting files from ZIP archives
       icu # libicu runtime for .NET/globalization (no 'icu' binary expected)
       azure-cli # Microsoft Azure CLI
-      inputs.mcp-nixos.packages.${pkgs.system}.mcp-nixos # MCP-NixOS
+      inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos # MCP-NixOS
       flatpak # Linux application sandboxing and distribution framework
 
       # Remote Desktop Server packages
@@ -237,16 +237,19 @@ in {
     xserver = {
       enable = true;
       xkb.layout = "se";
+      videoDrivers = ["nvidia"];
+    };
 
-      # Enable the GNOME Desktop Environment.
-      displayManager.gdm = {
+    # Desktop and Display Managers
+    desktopManager.gnome.enable = true;
+
+    displayManager = {
+      gdm = {
         enable = true;
         autoSuspend = false;
       };
-
-      desktopManager.gnome.enable = true;
-
-      videoDrivers = ["nvidia"];
+      defaultSession = "gnome";
+      autoLogin.enable = false;
     };
 
     gnome = {
@@ -285,11 +288,6 @@ in {
       alsa.enable = true;
       alsa.support32Bit = true;
       pulse.enable = true;
-    };
-
-    displayManager = {
-      defaultSession = "gnome";
-      autoLogin.enable = false;
     };
 
     systemdNoSleep.enable = true;
