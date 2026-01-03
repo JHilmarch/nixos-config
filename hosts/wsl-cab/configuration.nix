@@ -15,7 +15,7 @@
     overlays = [
       (_final: prev: {
         unstable = import inputs.nixpkgs-unstable {
-          inherit (prev) system;
+          inherit (prev.stdenv.hostPlatform) system;
           config = prev.config;
         };
       })
@@ -80,7 +80,7 @@
         unzip
         icu
         azure-cli
-        inputs.mcp-nixos.packages.${pkgs.system}.mcp-nixos
+        inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
         context7
         azure-mcp-server
         github-mcp-server

@@ -9,8 +9,6 @@ in {
   programs = {
     git = {
       enable = true;
-      userName = "Jonatan Hilmarch";
-      userEmail = "jonatan.hilmarch@cabhealthcare.se";
 
       settings = {
         user = {
