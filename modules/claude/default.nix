@@ -184,11 +184,24 @@ in {
         };
         context7 = {
           type = "stdio";
-          command = "context7";
+          command = "context7-with-sops";
         };
         github = {
           type = "stdio";
           command = "github-mcp-server";
+        };
+        nuget-mcp-server = {
+          type = "stdio";
+          command = "nuget-mcp-server";
+        };
+        ms-learn = {
+          type = "stdio";
+          command =  "mcp-proxy";
+          args = [
+            "--transport"
+            "streamablehttp"
+            "https://learn.microsoft.com/api/mcp"
+          ];
         };
       };
     };
