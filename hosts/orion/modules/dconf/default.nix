@@ -252,7 +252,6 @@ with lib.hm.gvariant; let
 
       experimental-features = [
         "scale-monitor-framebuffer"
-        "variable-refresh-rate"
         "xwayland-native-scaling"
         "hdr-metadata"
         "autohdr"
