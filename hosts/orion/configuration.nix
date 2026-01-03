@@ -315,7 +315,6 @@ in {
 
     coolercontrol = {
       enable = true;
-      nvidiaSupport = true;
     };
   };
 
