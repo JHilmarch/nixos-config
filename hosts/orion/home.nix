@@ -11,6 +11,7 @@
     jetbrains.webstorm # IDE for Web Development
     playwright-mcp # Playwright MCP server
     mcp-proxy # MCP server which proxies other MCP servers from stdio to SSE or from SSE to stdio
+    nodejs_24
   ];
 
   stable-packages = with pkgs; [
@@ -68,8 +69,6 @@
     coolercontrol.coolercontrold
     coolercontrol.coolercontrol-ui-data
     coolercontrol.coolercontrol-gui
-
-    nodejs_22
 
     context7 # Context7 MCP CLI (packaged via overlay)
     mcp-nuget # NuGet MCP Server (packaged via overlay)
