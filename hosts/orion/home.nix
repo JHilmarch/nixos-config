@@ -9,7 +9,6 @@
   unstable-packages = with pkgs.unstable; [
     jetbrains.rider # IDE for .NET and C# development
     jetbrains.webstorm # IDE for Web Development
-    claude-code # Agentic coding tool by Anthropic (from nixpkgs-unstable)
     playwright-mcp # Playwright MCP server
     mcp-proxy # MCP server which proxies other MCP servers from stdio to SSE or from SSE to stdio
   ];
