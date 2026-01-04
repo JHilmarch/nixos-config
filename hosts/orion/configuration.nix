@@ -27,6 +27,7 @@ in {
     "${self}/modules/systemd/mullvad-browser.nix"
     "${self}/modules/systemd/firefox.nix"
     "${self}/modules/systemd/nvidia-coolbits.nix"
+    "${self}/modules/systemd/power-profile.nix"
     "${self}/modules/spotify/firewall.nix"
     "${self}/modules/defaults.nix"
   ];
@@ -233,6 +234,9 @@ in {
     # UPower D-Bus service for power management
     upower.enable = true;
 
+    # Power Profiles Daemon for power management
+    power-profiles-daemon.enable = true;
+
     # GVFS provides virtual filesystem backends used by GNOME apps and Flatpaks
     gvfs.enable = true;
 
@@ -300,6 +304,7 @@ in {
     systemdMullvadBrowser.enable = true;
     systemdFirefox.enable = true;
     systemdNvidiaCoolbits.enable = true;
+    systemdPowerProfile.enable = true;
   };
 
   programs = {
