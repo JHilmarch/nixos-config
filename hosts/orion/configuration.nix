@@ -17,6 +17,7 @@ in {
   imports = [
     ./modules/sops.nix
     ./modules/docker.nix
+    ./modules/openrazer.nix
     "${self}/modules/context7/sops-wrapper.nix"
     "${self}/modules/claude/default.nix"
     "${self}/modules/nfs/fileshare.nix"
@@ -73,6 +74,7 @@ in {
       };
     };
     openrazer.enable = true;
+    openrazer.users = ["${username}"];
     cpu.intel.updateMicrocode = true;
   };
 
