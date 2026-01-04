@@ -209,6 +209,10 @@ with lib.hm.gvariant; let
       sleep-inactive-ac-type = "nothing";
     };
 
+    "org/gnome/desktop/session" = {
+      idle-delay = mkUint32 0;
+    };
+
     "org/gnome/shell" = {
       disable-user-extensions = false;
       last-selected-power-profile = "performance";
