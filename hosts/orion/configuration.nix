@@ -203,6 +203,7 @@ in {
       icu # libicu runtime for .NET/globalization (no 'icu' binary expected)
       azure-cli # Microsoft Azure CLI
       inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos # MCP-NixOS
+      pkgs.python313Packages.markitdown # Markdown to other formats converter
       flatpak # Linux application sandboxing and distribution framework
 
       # Remote Desktop Server packages
