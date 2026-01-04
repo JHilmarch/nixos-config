@@ -8,9 +8,9 @@
       "type": "stdio",
       "command": "context7"
     },
-    "github": {
+    "github-personal": {
       "type": "stdio",
-      "command": "github-mcp-server"
+      "command": "github-personal-mcp"
     }
   }
 }
