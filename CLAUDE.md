@@ -67,6 +67,7 @@ sudo nixos-rebuild test --flake .#nixos-orion    # Test build for host
 nix build .#nixosConfigurations.iso.config.system.build.isoImage  # Build ISO
 
 # Apply configuration
+# Note: 'switch' and 'rebuild' is only allowed to be run by a human user.
 sudo nixos-rebuild switch --flake .#nixos-orion  # Switch to new config
 sudo nixos-rebuild boot --flake .                # Set as boot entry
 ```
