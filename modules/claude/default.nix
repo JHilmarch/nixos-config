@@ -13,6 +13,8 @@
     text = ''
       # shellcheck disable=SC1091
       source ${config.sops.templates."claude.env".path}
+      export ANTHROPIC_AUTH_TOKEN
+      export CONTEXT7_TOKEN
       exec claude "$@"
     '';
   };
