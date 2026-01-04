@@ -96,11 +96,13 @@ The repository uses MCP (Model Context Protocol) with servers configured in `.ju
 - `context7` - Context7 AI tool
   - Use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps but explicitly
     ask first.
-- `github` - GitHub integration
+- `github-personal` - GitHub integration
+  - Always use this MCP for GitHub operations without me having to explicitly ask.
+  - Prefer this GitHub MCP before `github-work` as long as I don't tell you otherwise.
 - `mcp-nuget` - .NET/NuGet packages
   - Always use the NugGet MCP when I need to search for NuGet packages without me having to explicitly ask.
 - `ms-learn` - Microsoft Learn MCP
-  - Always use the ms-learn MCP for up to date Microsoft's official documentation without me having to explicitly ask.
+  - Always use the ms-learn MCP for up-to-date Microsoft's official documentation without me having to explicitly ask.
   - Use the ms-learn MCP to fetch a complete article and search through code samples.
 
 ## Terminal
