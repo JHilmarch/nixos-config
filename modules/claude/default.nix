@@ -188,9 +188,13 @@ in {
           type = "stdio";
           command = "context7-with-sops";
         };
-        github = {
+        github-personal = {
           type = "stdio";
-          command = "github-mcp-server";
+          command = "github-personal-mcp";
+        };
+        github-work = {
+          type = "stdio";
+          command = "github-work-mcp";
         };
         nuget = {
           type = "stdio";

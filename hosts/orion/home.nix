@@ -72,7 +72,8 @@
 
     context7 # Context7 MCP CLI (packaged via overlay)
     mcp-nuget # NuGet MCP Server (packaged via overlay)
-    github-mcp-server # GitHub MCP Server (wrapped & packaged via overlay)
+    github-personal-mcp # GitHub MCP Server for personal account (wrapped via overlay)
+    github-work-mcp # GitHub MCP Server for work account (wrapped via overlay)
     azure-mcp-server # Azure MCP CLI (packaged via overlay)
     awesome-copilot # Awesome Copilot MCP (packaged via overlay)
   ];
