@@ -1,7 +1,6 @@
 {
   serviceName,
   patSecret,
-  self,
   super,
 }:
 super.writeShellApplication {
