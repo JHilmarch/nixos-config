@@ -19,7 +19,11 @@
 
     secrets = {
       secret1 = {};
-      gh_pat = {
+      gh_personal_pat = {
+        owner = username;
+        mode = "0400";
+      };
+      gh_work_pat = {
         owner = username;
         mode = "0400";
       };

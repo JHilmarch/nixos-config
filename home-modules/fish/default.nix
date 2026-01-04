@@ -13,8 +13,8 @@
         set -gx DOCKER_HOST "unix://$XDG_RUNTIME_DIR/docker.sock"
       end
 
-      if test -f "/run/secrets/gh_pat"
-        set -gx GH_TOKEN (string trim (cat /run/secrets/gh_pat))
+      if test -f "/run/secrets/gh_personal_pat"
+        set -gx GH_TOKEN (string trim (cat /run/secrets/gh_personal_pat))
       end
     '';
 
