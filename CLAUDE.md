@@ -106,7 +106,7 @@ The repository uses MCP (Model Context Protocol) with servers configured in `.ju
     pull request, or organization is work-related, or when I explicitly ask
     you to use `github-work`.
 - `mcp-nuget` - .NET/NuGet packages
-  - Always use the NugGet MCP when I need to search for NuGet packages without me having to explicitly ask.
+  - Always use the NuGet MCP when I need to search for NuGet packages without me having to explicitly ask.
 - `ms-learn` - Microsoft Learn MCP
   - Always use the ms-learn MCP for up-to-date Microsoft's official documentation without me having to explicitly ask.
   - Use the ms-learn MCP to fetch a complete article and search through code samples.
