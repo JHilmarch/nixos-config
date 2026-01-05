@@ -64,6 +64,9 @@ source ~/.config/fish/conf.d/context7.fish
 echo $CONTEXT7_TOKEN
 ```
 
+**Note:** The token is stored in plain text in your Fish config. This is acceptable for WSL development environments but
+not recommended for multi-user systems.
+
 ### Permanent (Windows environment variable)
 
 Alternatively, set the environment variable in Windows so it's available to WSL and the Context7 MCP module:
@@ -86,9 +89,6 @@ wsl --shutdown
 - To set system-wide (all users): use `'Machine'` instead of `'User'` (requires admin)
 - You can also set variables via Windows Settings GUI: Settings > System > About > Advanced system settings >
   Environment Variables
-
-**Note:** The token is stored in plain text in your Fish config. This is acceptable for WSL development environments but
-not recommended for multi-user systems.
 
 ## Configure GitHub Copilot
 
@@ -159,6 +159,19 @@ not recommended for multi-user systems.
         "NixOS",
         "--",
         "markitdown-mcp"
+      ]
+    },
+    "playwright": {
+      "type": "local",
+      "command": "wsl",
+      "args": [
+        "-d",
+        "NixOS",
+        "--",
+        "mcp-server-playwright"
+      ],
+      "tools": [
+        "*"
       ]
     }
   }
