@@ -10,6 +10,7 @@
   imports = [
     "${self}/modules/defaults.nix"
     "${self}/modules/markitdown-mcp/default.nix"
+    "${self}/modules/context7/env-var-wrapper.nix"
   ];
 
   nixpkgs = {
@@ -85,7 +86,6 @@
         azure-cli
         inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
         pkgs.python313Packages.markitdown
-        context7
         azure-mcp-server
         github-mcp-server
       ];

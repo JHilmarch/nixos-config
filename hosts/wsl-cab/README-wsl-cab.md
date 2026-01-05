@@ -34,6 +34,42 @@ passwd
 
 The wrapped GitHub MCP Server uses the access token from GitHub CLI to authenticate. Login with `gh auth login`.
 
+## Context7 Authentication
+
+The Context7 MCP server provides up-to-date code documentation. To use it without rate limits, set the `CONTEXT7_TOKEN` environment variable:
+
+### Temporary (current session only)
+
+```bash
+export CONTEXT7_TOKEN="your-context7-token-here"
+```
+
+### Permanent (add to Fish shell)
+
+Create or edit `~/.config/fish/conf.d/context7.fish`:
+
+```fish
+# Context7 MCP token for unlimited access
+# Get your token from: https://context7.upstash.com
+if not set -q CONTEXT7_TOKEN
+    set -gx CONTEXT7_TOKEN "your-context7-token-here"
+end
+```
+
+Then reload your shell:
+
+```bash
+source ~/.config/fish/conf.d/context7.fish
+```
+
+### Verify the token is set
+
+```bash
+echo $CONTEXT7_TOKEN
+```
+
+**Note:** The token is stored in plain text in your Fish config. This is acceptable for WSL development environments but not recommended for multi-user systems.
+
 ## Configure GitHub Copilot
 
 ```json
@@ -45,7 +81,7 @@ The wrapped GitHub MCP Server uses the access token from GitHub CLI to authentic
         "-d",
         "NixOS",
         "--",
-        "context7"
+        "context7-with-env"
       ]
     },
     "nuget": {
