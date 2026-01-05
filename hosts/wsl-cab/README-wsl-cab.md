@@ -34,9 +34,10 @@ passwd
 
 The wrapped GitHub MCP Server uses the access token from GitHub CLI to authenticate. Login with `gh auth login`.
 
-## Context7 Authentication
+## Context7 Authentication (optional)
 
-The Context7 MCP server provides up-to-date code documentation. To use it without rate limits, set the `CONTEXT7_TOKEN` environment variable:
+The Context7 MCP server provides up-to-date code documentation. To use it without rate limits, set the `CONTEXT7_TOKEN`
+environment variable:
 
 ### Temporary (current session only)
 
@@ -56,19 +57,38 @@ if not set -q CONTEXT7_TOKEN
 end
 ```
 
-Then reload your shell:
+Then reload your shell and verify:
 
 ```bash
 source ~/.config/fish/conf.d/context7.fish
-```
-
-### Verify the token is set
-
-```bash
 echo $CONTEXT7_TOKEN
 ```
 
-**Note:** The token is stored in plain text in your Fish config. This is acceptable for WSL development environments but not recommended for multi-user systems.
+### Permanent (Windows environment variable)
+
+Alternatively, set the environment variable in Windows so it's available to WSL and the Context7 MCP module:
+
+1. Open PowerShell and run (sets user-level variable):
+
+```powershell
+[System.Environment]::SetEnvironmentVariable('CONTEXT7_TOKEN', 'your-token-here', 'User')
+```
+
+1. Restart your WSL session for the change to take effect:
+
+```powershell
+wsl --shutdown
+```
+
+**Notes:**
+
+- User-level variables are stored in `HKEY_CURRENT_USER\Environment`
+- To set system-wide (all users): use `'Machine'` instead of `'User'` (requires admin)
+- You can also set variables via Windows Settings GUI: Settings > System > About > Advanced system settings >
+  Environment Variables
+
+**Note:** The token is stored in plain text in your Fish config. This is acceptable for WSL development environments but
+not recommended for multi-user systems.
 
 ## Configure GitHub Copilot
 
