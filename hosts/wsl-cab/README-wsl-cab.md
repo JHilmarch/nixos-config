@@ -95,6 +95,15 @@ The wrapped GitHub MCP Server uses the access token from GitHub CLI to authentic
         "streamablehttp",
         "https://learn.microsoft.com/api/mcp"
       ]
+    },
+    "markitdown": {
+      "command": "wsl",
+      "args": [
+        "-d",
+        "NixOS",
+        "--",
+        "markitdown-mcp"
+      ]
     }
   }
 }
