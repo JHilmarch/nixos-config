@@ -236,7 +236,7 @@ in {
     # UPower D-Bus service for power management
     upower.enable = true;
 
-    # markitdown-mcp Docker image (managed via oci-containers, runs on-demand for stdio)
+    # markitdown-mcp native Python package (installed via Nix, runs on-demand for stdio)
     markitdown-mcp.enable = true;
 
     # Power Profiles Daemon for power management
