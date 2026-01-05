@@ -20,6 +20,7 @@ in {
     ./modules/openrazer.nix
     "${self}/modules/context7/sops-wrapper.nix"
     "${self}/modules/claude/default.nix"
+    "${self}/modules/markitdown-mcp/default.nix"
     "${self}/modules/nfs/fileshare.nix"
     "${self}/modules/systemd/no-sleep.nix"
     "${self}/modules/systemd/wake-on-lan.nix"
@@ -234,6 +235,9 @@ in {
 
     # UPower D-Bus service for power management
     upower.enable = true;
+
+    # markitdown-mcp Docker image (managed via oci-containers, runs on-demand for stdio)
+    markitdown-mcp.enable = true;
 
     # Power Profiles Daemon for power management
     power-profiles-daemon.enable = true;
