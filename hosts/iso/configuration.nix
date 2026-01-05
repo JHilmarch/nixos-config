@@ -61,15 +61,14 @@
     extraModulePackages = [];
   };
 
-  isoImage = {
-    isoName = lib.mkForce "${username}-nixos-${config.system.stateVersion}-${system}.iso";
-    contents = [
-      {
-        source = ./installation-guidelines.md;
-        target = "README.md";
-      }
-    ];
-  };
+  image.fileName = lib.mkForce "${username}-nixos-${config.system.stateVersion}-${system}.iso";
+
+  isoImage.contents = [
+    {
+      source = ./installation-guidelines.md;
+      target = "README.md";
+    }
+  ];
 
   environment.systemPackages = with pkgs; [
     util-linux
