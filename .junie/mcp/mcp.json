@@ -15,6 +15,13 @@
     "markitdown": {
       "type": "stdio",
       "command": "markitdown-mcp"
+    },
+    "playwright": {
+      "type": "local",
+      "command": "mcp-server-playwright",
+      "tools": [
+        "*"
+      ]
     }
   }
 }
