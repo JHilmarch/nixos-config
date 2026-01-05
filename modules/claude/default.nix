@@ -213,6 +213,10 @@ in {
           type = "stdio";
           command = "markitdown-mcp";
         };
+        playwright = {
+          type = "stdio";
+          command = "mcp-server-playwright";
+        };
       };
     };
   };
