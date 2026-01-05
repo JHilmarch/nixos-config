@@ -17,6 +17,7 @@ Configuration and documentation for NixOS dual boot with Windows 11 on Acer Pred
 - [Bluetooth](#bluetooth)
 - [Fan control](#fan-control)
 - [GNOME](#gnome)
+- [Docker](#docker)
 - [Handle secrets](#handle-secrets)
   - [Deploying secrets](#deploying-secrets)
   - [Encrypt & decrypt secrets using sops, age & YubiKey](#encrypt--decrypt-secrets-using-sops-age--yubikey)
@@ -247,6 +248,34 @@ https://docs.coolercontrol.org/wiki/config-files.html#backup-import
 I've struggled a lot with a tiling window setup. I couldn't get Hyprland to work, so I have to come back to that at a
 later point. I'm now using the GNOME extension tiling-shell, with shortcuts for opening workspaces and apps. GNOME
 settings can be found in `./modules/dconf/default.nix`.
+
+## Docker
+
+Rootless Docker is configured in `./modules/docker.nix`. The daemon runs as a user service with the socket at
+`/run/user/1000/docker.sock`.
+
+**After rebuilding NixOS**, the systemd user service symlink may point to a garbage-collected Nix store path. This
+causes Docker to fail with:
+
+```
+Cannot connect to the Docker daemon at unix:///run/user/1000/docker.sock
+```
+
+**Fix:** Remove the stale symlink and reload the user systemd daemon:
+
+```bash
+rm ~/.config/systemd/user/docker.service
+systemctl --user daemon-reload
+systemctl --user start docker.service
+```
+
+**Prevention:** Include this cleanup step after each rebuild:
+
+```bash
+sudo nixos-rebuild switch --flake .#nixos-orion
+rm ~/.config/systemd/user/*.service 2>/dev/null
+systemctl --user daemon-reload
+```
 
 ## Handle secrets
 
