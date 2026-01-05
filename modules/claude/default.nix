@@ -209,6 +209,10 @@ in {
             "https://learn.microsoft.com/api/mcp"
           ];
         };
+        markitdown = {
+          type = "stdio";
+          command = "markitdown-mcp";
+        };
       };
     };
   };
