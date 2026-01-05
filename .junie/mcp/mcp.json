@@ -11,6 +11,10 @@
     "github-personal": {
       "type": "stdio",
       "command": "github-personal-mcp"
+    },
+    "markitdown": {
+      "type": "stdio",
+      "command": "markitdown-mcp"
     }
   }
 }
