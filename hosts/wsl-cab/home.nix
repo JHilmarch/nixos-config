@@ -36,6 +36,7 @@
         dotnetCorePackages.dotnet_9.sdk
         dotnetCorePackages.dotnet_10.sdk
       ])
+      unstable.nodejs_24
     ];
   };
 
