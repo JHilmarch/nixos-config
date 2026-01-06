@@ -22,6 +22,7 @@
     packages = with pkgs; [
       git
       gh
+      openssl
       tree-sitter
       pinentry-tty
       grc
