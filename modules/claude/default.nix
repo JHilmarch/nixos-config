@@ -49,6 +49,9 @@ in {
             "Bash(git push:*)"
             "Bash(rm:*)"
             "Bash(mv:*)"
+            "WebFetch"
+            "Bash(curl:*)"
+            "Bash(wget:*)"
           ];
           defaultMode = "acceptEdits";
           deny = [
@@ -170,11 +173,6 @@ in {
             # Windows alternate data streams
             "Read(./**/*.Zone.Identifier)"
             "Edit(./**/*.Zone.Identifier)"
-
-            # Dangerous commands
-            "WebFetch"
-            "Bash(curl:*)"
-            "Bash(wget:*)"
           ];
           disableBypassPermissionsMode = "disable";
         };
