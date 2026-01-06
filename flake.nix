@@ -28,10 +28,13 @@
     };
   };
 
-  outputs = inputs @ {self, ...}: {
-    packages.x86_64-linux = let
-      system = "x86_64-linux";
-      nixpkgsWithOverlays = import inputs.nixpkgs {
+  outputs = inputs @ {self, ...}: let
+    inherit (inputs.nixpkgs) lib;
+
+    forAllSystems = lib.genAttrs lib.systems.flakeExposed;
+
+    mkPkgs = system:
+      import inputs.nixpkgs {
         inherit system;
         config = {
           allowUnfree = true;
@@ -42,25 +45,25 @@
         overlays = [
           (_final: prev: {
             unstable = import inputs.nixpkgs-unstable {
-              inherit (prev) system;
+              system = prev.stdenv.hostPlatform.system;
               config = prev.config;
             };
           })
-          (import ./overlays/context7)
           (import ./overlays/awesome-copilot)
           (import ./overlays/nuget-mcp-server)
           (import ./overlays/azure-mcp-server)
           (import ./overlays/github-mcp-server)
         ];
       };
-    in {
-      context7 = nixpkgsWithOverlays.context7;
-      awesome-copilot = nixpkgsWithOverlays.awesome-copilot;
-      mcp-nuget = nixpkgsWithOverlays.mcp-nuget;
-      azure-mcp-server = nixpkgsWithOverlays.azure-mcp-server;
-      github-mcp-server = nixpkgsWithOverlays.github-mcp-server;
-      default = nixpkgsWithOverlays.context7;
-    };
+
+    mkPackages = system: let
+      pkgs = mkPkgs system;
+    in
+      pkgs.callPackages ./packages {};
+  in {
+    packages = forAllSystems mkPackages;
+
+    formatter = forAllSystems (system: inputs.nixpkgs.legacyPackages.${system}.alejandra);
 
     nixosConfigurations = let
       nixpkgsConfig = {
@@ -84,8 +87,16 @@
         };
       in
         inputs.nixpkgs.lib.nixosSystem {
-          inherit system specialArgs;
+          specialArgs = specialArgs;
           modules = [
+            {
+              nixpkgs.hostPlatform.system = system;
+              nixpkgs.overlays = [
+                (_final: prev: {
+                  local = self.packages.${prev.stdenv.hostPlatform.system};
+                })
+              ];
+            }
             ./hosts/orion/configuration.nix
             inputs.sops-nix.nixosModules.sops
             inputs.home-manager.nixosModules.home-manager
@@ -108,8 +119,16 @@
         };
       in
         inputs.nixpkgs.lib.nixosSystem {
-          inherit system specialArgs;
+          specialArgs = specialArgs;
           modules = [
+            {
+              nixpkgs.hostPlatform.system = system;
+              nixpkgs.overlays = [
+                (_final: prev: {
+                  local = self.packages.${prev.stdenv.hostPlatform.system};
+                })
+              ];
+            }
             inputs.nixos-wsl.nixosModules.wsl
             ./hosts/wsl-cab/configuration.nix
             inputs.home-manager.nixosModules.home-manager
@@ -125,42 +144,25 @@
 
       iso = let
         system = "x86_64-linux";
-        nixpkgsWithOverlays = import inputs.nixpkgs {
-          inherit system;
-          config = {
-            allowUnfree = true;
-            permittedInsecurePackages = [
-              # Add any insecure packages you absolutely need here
-            ];
-          };
-          overlays = [
-            (_final: prev: {
-              unstable = import inputs.nixpkgs-unstable {
-                inherit (prev) system;
-                config = prev.config;
-              };
-            })
-          ];
-        };
-
         specialArgs = {
-          inherit inputs system self;
+          inherit inputs self;
           username = "jonatan";
           hostname = "iso";
         };
       in
         inputs.nixpkgs.lib.nixosSystem {
-          inherit system specialArgs;
-          pkgs = nixpkgsWithOverlays;
+          specialArgs = specialArgs;
+          pkgs = mkPkgs system;
 
           modules = [
+            {
+              nixpkgs.hostPlatform.system = system;
+            }
             "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
             "${inputs.nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
             ./hosts/iso/configuration.nix
           ];
         };
     };
-
-    formatter.x86_64-linux = inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
   };
 }

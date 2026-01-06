@@ -4,7 +4,6 @@
   username,
   hostname,
   lib,
-  system,
   self,
   ...
 }: {
@@ -61,7 +60,7 @@
     extraModulePackages = [];
   };
 
-  image.fileName = lib.mkForce "${username}-nixos-${config.system.stateVersion}-${system}.iso";
+  image.fileName = lib.mkForce "${username}-nixos-${config.system.stateVersion}-${config.stdenv.hostPlatform.system}.iso";
 
   isoImage.contents = [
     {

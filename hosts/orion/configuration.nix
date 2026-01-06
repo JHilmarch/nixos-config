@@ -37,11 +37,10 @@ in {
     overlays = [
       (_final: prev: {
         unstable = import inputs.nixpkgs-unstable {
-          inherit (prev.stdenv.hostPlatform) system;
+          system = prev.stdenv.hostPlatform.system;
           config = prev.config;
         };
       })
-      (import ./../../overlays/context7)
       (import ./../../overlays/nuget-mcp-server)
       (import ./../../overlays/github-mcp-server)
       (import ./../../overlays/azure-mcp-server)

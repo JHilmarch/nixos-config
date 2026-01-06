@@ -70,7 +70,7 @@
     coolercontrol.coolercontrol-ui-data
     coolercontrol.coolercontrol-gui
 
-    context7 # Context7 MCP CLI (packaged via overlay)
+    local.context7-mcp # Context7 MCP CLI (packaged via overlay)
     mcp-nuget # NuGet MCP Server (packaged via overlay)
     github-personal-mcp # GitHub MCP Server for personal account (wrapped via overlay)
     github-work-mcp # GitHub MCP Server for work account (wrapped via overlay)

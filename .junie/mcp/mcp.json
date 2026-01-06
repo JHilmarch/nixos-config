@@ -6,7 +6,7 @@
     },
     "context7": {
       "type": "stdio",
-      "command": "context7"
+      "command": "context7-with-sops"
     },
     "github-personal": {
       "type": "stdio",

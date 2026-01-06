@@ -37,7 +37,10 @@ The wrapped GitHub MCP Server uses the access token from GitHub CLI to authentic
 ## Context7 Authentication (optional)
 
 The Context7 MCP server provides up-to-date code documentation. To use it without rate limits, set the `CONTEXT7_TOKEN`
-environment variable:
+environment variable.
+
+**Note:** The `--transport stdio` flag is included by default in the context7 wrapper, as required when using `node`
+instead of `npx`.
 
 ### Temporary (current session only)
 
