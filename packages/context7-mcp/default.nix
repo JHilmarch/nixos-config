@@ -19,9 +19,12 @@ in
     inherit pname version src;
 
     nativeBuildInputs = [
-      nodejs
       openssl
       pnpm_10.configHook
+    ];
+
+    propagatedBuildInputs = [
+      nodejs
     ];
 
     pnpmWorkspaces = "packages/mcp";
