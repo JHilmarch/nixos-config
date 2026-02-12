@@ -37,6 +37,7 @@
         dotnetCorePackages.dotnet_10.sdk
       ])
       unstable.nodejs_24
+      local.context7-mcp
     ];
   };
 

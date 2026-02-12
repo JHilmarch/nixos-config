@@ -10,7 +10,6 @@
   imports = [
     "${self}/modules/defaults.nix"
     "${self}/modules/markitdown-mcp/default.nix"
-    "${self}/modules/context7/env-var-wrapper.nix"
   ];
 
   nixpkgs = {
