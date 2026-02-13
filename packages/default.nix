@@ -10,4 +10,5 @@
   mcp-nuget = mcp-nuget;
   azure-mcp-server = azure-mcp-server;
   github-mcp-server = github-mcp-server;
+  azure-devops-mcp = callPackage ./azure-devops-mcp {};
 }

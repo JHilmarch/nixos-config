@@ -38,6 +38,7 @@
       ])
       unstable.nodejs_24
       local.context7-mcp
+      local.azure-devops-mcp
     ];
   };
 
