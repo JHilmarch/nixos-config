@@ -1,12 +1,12 @@
 [
   {
     "name": "nuget.mcp.server.linux-x64",
-    "version": "1.1.12",
-    "sha256": "11338gms8viyybniz089pfy8cc7zmkqyxixzmhqv501fd3ahxv05"
+    "version": "1.1.29",
+    "sha256": "07ziypdbykqbx3apmrmv4ijb2sx341qbjaaw6glqpgsacbw4q2f9"
   },
   {
     "name": "nuget.mcp.server",
-    "version": "1.1.12",
-    "sha256": "1vqqrgrdzfdx1sypbykx9an83plqx47a6jm6rsji5nmmls03hpcl"
+    "version": "1.1.29",
+    "sha256": "0fn9y13rdwpilydar46alg8cg1qbm79vba7sagf1c7hgwcqrmn3k"
   }
 ]
