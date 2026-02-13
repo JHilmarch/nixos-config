@@ -6,8 +6,8 @@ self: super: let
   src = super.fetchFromGitHub {
     owner = "microsoft";
     repo = "mcp-dotnet-samples";
-    rev = "6f0e66c81c5a6e48964ed006a645ad4e84e638fb";
-    hash = "sha256-TrJ2Iuj3sUZsyq6B5qRaRAWnvkFTimrrZd3wlHqjGH4=";
+    rev = "8b405cd0c54dbbbbcc61af21a63d2559b880fd73";
+    hash = "sha256-haXZuSHRD6b4fpFRJE5FWDbDDjcqh/TAW/NHSEY4nYg=";
   };
 
   phases = (import ./lib.nix) {
@@ -17,7 +17,7 @@ self: super: let
 in {
   awesome-copilot = super.buildDotnetModule rec {
     pname = "awesome-copilot";
-    version = "1.0.0";
+    version = "2026-02-13";
 
     inherit src;
 

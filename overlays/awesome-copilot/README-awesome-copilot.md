@@ -30,8 +30,8 @@ revision.
 1. Update `overlays/awesome-copilot/default.nix` with the new revision and hash:
 
    - Update the `rev` field with the new commit hash.
-   - Update the `hash` field (you can get this by running `nix-prefetch-url --type sha256 <tarball-url>` or by
-     temporarily setting the hash to `lib.fakeHash` and letting the build fail with the correct hash).
+   - Update the `hash` by temporarily setting the hash to `lib.fakeHash` and letting the build fail with the correct
+     hash).
 
 1. Build the package:
 
