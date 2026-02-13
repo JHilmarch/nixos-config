@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'wsl-cab-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.2.3)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -18,22 +24,29 @@ jobs:
     name: Build & Release
     runs-on: ubuntu-24.04
     steps:
-      - name: Derive version from tag
+      - name: Derive version from tag or input
         id: meta
         shell: bash
         run: |
           set -euo pipefail
-          ref="${GITHUB_REF_NAME}"
-          if [[ "$ref" =~ ^wsl-cab-v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            version="v${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            version="v${{ inputs.version }}"
+            echo "Using manual input version: $version"
           else
-            echo "Tag name must be wsl-cab-vx.y.z, got: $ref" >&2
-            exit 1
+            ref="${GITHUB_REF_NAME}"
+            if [[ "$ref" =~ ^wsl-cab-v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              version="v${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
+            else
+              echo "Tag name must be wsl-cab-vx.y.z, got: $ref" >&2
+              exit 1
+            fi
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
@@ -85,10 +98,20 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref_name }}
           version: ${{ steps.meta.outputs.version }}
         run: |
           set -euo pipefail
+
+          tag="${{ steps.meta.outputs.version }}"
+
+          # Create and push tag if manually triggered
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "Creating and pushing tag: $tag"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -a "$tag" -m "Release $tag"
+            git push origin "$tag"
+          fi
 
           notes=$(cat <<EOF
           Download the WSL artifact from this workflow run (Artifacts section):
