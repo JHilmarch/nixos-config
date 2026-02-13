@@ -3,3 +3,4 @@
 result
 *.nix.Zone.Identifier
 *.wsl
+.claude/plans
