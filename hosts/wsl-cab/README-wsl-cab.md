@@ -45,6 +45,28 @@ variable in Windows.
    [context7-mcp-wsl-wrapper.ps1](https://gist.github.com/JHilmarch/1968c745d36e265a4ef75bb5f6d2dc0f)
 1. Save the wrapper to `C:\Users\%USERNAME%\.copilot\context7-mcp-wsl-wrapper.ps1`
 
+```powershell
+$token = [Environment]::GetEnvironmentVariable("CONTEXT7_TOKEN", "User")
+
+if (-not $token) {
+    $token = [Environment]::GetEnvironmentVariable("CONTEXT7_TOKEN", "Machine")
+}
+
+if (-not $token) {
+    $token = $env:CONTEXT7_TOKEN
+}
+
+if (-not $token) {
+    Write-Error "CONTEXT7_TOKEN not found in User, Machine, or current environment" -ErrorAction Stop
+    exit 1
+}
+
+$process = Start-Process -FilePath "wsl.exe" -ArgumentList "-d", "NixOS", "--", "context7-mcp", "--api-key", $token -NoNewWindow -PassThru -Wait
+exit $process.ExitCode
+```
+
+*context7-mcp-wsl-wrapper.ps1*
+
 ### Set CONTEXT7_TOKEN environment variable
 
 Open PowerShell and run:
