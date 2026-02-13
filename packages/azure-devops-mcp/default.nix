@@ -5,7 +5,6 @@
 }: let
   pname = "azure-devops-mcp";
   version = "2.4.0";
-
 in
   pkgs.buildNpmPackage {
     inherit pname version nodejs;

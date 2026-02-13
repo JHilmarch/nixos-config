@@ -1,6 +1,7 @@
 # Azure DevOps MCP Server
 
-This package provides [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp) for interacting with Azure DevOps from LLMs.
+This package provides [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp) for interacting with
+Azure DevOps from LLMs.
 
 ## Build targets
 
@@ -36,6 +37,7 @@ The Azure DevOps MCP Server supports filtering by domains to load only areas you
 - `advanced-security` - Advanced security features
 
 Add `-d` with domain names to limit loaded tools:
+
 ```fish
 azure-devops-mcp my-org -d core,work,work-items
 ```
@@ -43,8 +45,8 @@ azure-devops-mcp my-org -d core,work,work-items
 ## Bump version and rebuild
 
 1. Check latest version: https://www.npmjs.com/package/@azure-devops/mcp
-2. Update version in `packages/azure-devops-mcp/default.nix`
-3. Get new hashes (change version and reset hashes to dummy values first):
+1. Update version in `packages/azure-devops-mcp/default.nix`
+1. Get new hashes (change version and reset hashes to dummy values first):
    ```fish
    # In packages/azure-devops-mcp/default.nix, set:
    # version = "x.y.z";
@@ -53,8 +55,8 @@ azure-devops-mcp my-org -d core,work,work-items
 
    nix build .#azure-devops-mcp
    ```
-4. Update `hash` and `npmDepsHash` values from the error messages.
-5. Build:
+1. Update `hash` and `npmDepsHash` values from the error messages.
+1. Build:
    ```fish
    nix build .#azure-devops-mcp
    ```
