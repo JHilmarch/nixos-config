@@ -48,11 +48,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Purge bloat
+        uses: wimpysworld/nothing-but-nix@main
+
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
+        uses: NixOS/nix-installer-action@main
         with:
           extra-conf: |
             experimental-features = nix-command flakes
+            accept-flake-config = true
 
       - name: Verify Nix
         run: nix --version
