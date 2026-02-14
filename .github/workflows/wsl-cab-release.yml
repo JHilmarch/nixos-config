@@ -50,6 +50,9 @@ jobs:
 
       - name: Purge bloat
         uses: wimpysworld/nothing-but-nix@main
+        with:
+          hatchet-protocol: 'rampage'
+          witness-carnage: true
 
       - name: Install Nix
         uses: NixOS/nix-installer-action@main
