@@ -9,12 +9,44 @@
 }: let
   claude-with-secrets = pkgs.writeShellApplication {
     name = "claude";
-    runtimeInputs = [pkgs.unstable.claude-code];
+    runtimeInputs = [pkgs.unstable.claude-code pkgs.pinentry-gnome3];
     text = ''
       # shellcheck disable=SC1091
       source ${config.sops.templates."claude.env".path}
       export ANTHROPIC_AUTH_TOKEN
       export CONTEXT7_TOKEN
+
+      # Ensure DISPLAY is set for GUI pinentry
+      [ -z "$DISPLAY" ] && export DISPLAY=:0
+
+      # Use a separate GPG agent configuration for Claude Code with GNOME pinentry
+      # This keeps the default TTY pinentry for SSH/initrd
+      export GNUPGHOME="''${GNUPGHOME:-$HOME/.gnupg}"
+      CLAUDE_GNUPG="$HOME/.gnupg-claude"
+
+      # Create Claude-specific GPG home if it doesn't exist
+      mkdir -p "$CLAUDE_GNUPG"
+
+      # Symlink the private-keys-v1.d directory so keys are accessible
+      if [ ! -L "$CLAUDE_GNUPG/private-keys-v1.d" ]; then
+        ln -sf "$GNUPGHOME/private-keys-v1.d" "$CLAUDE_GNUPG/private-keys-v1.d"
+      fi
+
+      # Symlink only the keyring and trust database (not gpg.conf to avoid socket conflicts)
+      for f in pubring.kbx trustdb.gpg sshcontrol; do
+        if [ -f "$GNUPGHOME/$f" ] && [ ! -e "$CLAUDE_GNUPG/$f" ]; then
+          ln -sf "$GNUPGHOME/$f" "$CLAUDE_GNUPG/$f"
+        fi
+      done
+
+      # Create gpg-agent.conf with GNOME pinentry for Claude
+      cat > "$CLAUDE_GNUPG/gpg-agent.conf" << EOF
+pinentry-program ${pkgs.pinentry-gnome3}/bin/pinentry-gnome3
+EOF
+
+      # Use the Claude-specific GPG home
+      export GNUPGHOME="$CLAUDE_GNUPG"
+
       exec claude "$@"
     '';
   };
