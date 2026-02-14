@@ -12,6 +12,7 @@
     playwright-mcp # Playwright MCP server
     mcp-proxy # MCP server which proxies other MCP servers from stdio to SSE or from SSE to stdio
     nodejs_24
+    codeql # Semantic code analysis engine for security research and vulnerability detection
   ];
 
   stable-packages = with pkgs; [
