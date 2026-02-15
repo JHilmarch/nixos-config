@@ -18,8 +18,8 @@ in {
     ./modules/sops.nix
     ./modules/docker.nix
     ./modules/openrazer.nix
+    ./modules/claude.nix
     "${self}/modules/context7/sops-wrapper.nix"
-    "${self}/modules/claude/default.nix"
     "${self}/modules/markitdown-mcp/default.nix"
     "${self}/modules/nfs/fileshare.nix"
     "${self}/modules/systemd/no-sleep.nix"

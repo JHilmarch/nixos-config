@@ -93,6 +93,7 @@ in {
     "${self}/home-modules/gpg"
     "${self}/home-modules/ssh"
     "${self}/home-modules/git"
+    "${self}/home-modules/claude"
     "${self}/home-modules/xorg/allow-root.nix"
     ./modules/file.nix
     inputs.nix-index-database.homeModules.nix-index
