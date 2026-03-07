@@ -1,6 +1,7 @@
 keys:
   - &users:
     - &jonatan-yubikey-23839166 age1yubikey1q0uurmnvmdn7x49z84r369t4hv0y7njypwhhzzdwnzxqnst6lcnucvtsl8n
+    - &jonatan-ssh-nixos-wsl-cab "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFlzuRfJ6DYs7aTGgRxujw4d0z3klTszPQIbnyIrf0dN jonatan@wsl-cab"
   - &hosts:
     - &local age1qnpen7gae337skxucpx4y2grujh8a0pjl2l4rhp07fz38573ag6sfha3q9
 creation_rules:
@@ -8,4 +9,10 @@ creation_rules:
     key_groups:
       - age:
           - *jonatan-yubikey-23839166
+          - *local
+  - path_regex: secrets/wsl-cab/[^/]+\.(yaml|yml|json|env|ini)$
+    key_groups:
+      - age:
+          - *jonatan-yubikey-23839166
+          - *jonatan-ssh-nixos-wsl-cab
           - *local

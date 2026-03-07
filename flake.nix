@@ -26,6 +26,11 @@
       url = "github:nix-community/NixOS-WSL";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ {self, ...}: let
@@ -114,8 +119,11 @@
         system = "x86_64-linux";
         specialArgs = {
           inherit inputs self;
-          username = "tux";
+          username = "jonatan";
           hostname = "wsl-cab";
+          functions = import ./functions {
+            pkgs = import inputs.nixpkgs {inherit system;};
+          };
         };
       in
         inputs.nixpkgs.lib.nixosSystem {

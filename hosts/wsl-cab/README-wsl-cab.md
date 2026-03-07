@@ -7,7 +7,8 @@
 To build the WSL tarball with Nix:
 
 ```bash
-sudo nix run .#nixosConfigurations.wsl-cab.config.system.build.tarballBuilder
+cd ~
+sudo nix run /home/jonatan/code/nixos-config/#nixosConfigurations.wsl-cab.config.system.build.tarballBuilder
 ```
 
 ## Install WSL and import NixOS
@@ -107,6 +108,56 @@ This configuration tells GitHub Copilot CLI to:
 
 1. Use `pwsh` to run the PowerShell wrapper script
 1. Script handles token retrieval and passes `--api-key` to `context7-mcp` automatically
+
+## SSH Key Setup for Secret Decryption
+
+The `decrypt-secrets` systemd service decrypts secrets using your SSH key. The encrypted secrets file
+(`secrets/wsl-cab/secrets.yml`) is copied into the tarball at `/etc/nixos/secrets/wsl-cab/secrets.yml` during build.
+
+The service starts automatically with the user session after WSL reboot. Decrypted secrets are stored in
+`/run/user/1000/secrets/` and persist as long as the WSL instance is running.
+
+### 1. Copy your SSH private key
+
+Copy your age-compatible SSH private key to the default location:
+
+```bash
+cp /path/to/your/key ~/.ssh/id_ed25519
+```
+
+### 2. Set correct permissions
+
+```bash
+chmod 600 ~/.ssh/id_ed25519
+```
+
+### 3. Convert line endings (if copied from Windows)
+
+If you copied the key from Windows, convert CRLF to LF:
+
+```bash
+sed -i 's/\r$//' ~/.ssh/id_ed25519
+```
+
+### 4. Verify the service (optional)
+
+The service starts automatically after WSL reboot. To check if it's running or manually restart it:
+
+```bash
+# Check service status
+systemctl --user status decrypt-secrets.service
+
+# Manually restart if needed
+systemctl --user restart decrypt-secrets.service
+```
+
+### 5. Verify decrypted secrets
+
+Decrypted secrets are stored in `$XDG_RUNTIME_DIR/secrets/` (usually `/run/user/1000/secrets/`):
+
+```bash
+ls -la /run/user/(id -u)/secrets/
+```
 
 ## Other MCP Servers
 

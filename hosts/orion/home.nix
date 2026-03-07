@@ -22,6 +22,7 @@
     sops # Simple and flexible tool for managing secrets
     age # Modern encryption tool with small explicit keys
     age-plugin-yubikey # YubiKey plugin for age
+    ssh-to-age # Convert SSH keys to age recipients
     bruno # Open-source IDE For exploring and testing APIs
     bruno-cli # CLI of the open-source IDE For exploring and testing APIs
     tree-sitter # A parser generator tool
@@ -113,6 +114,7 @@ in {
       stable-packages
       ++ unstable-packages
       ++ [
+        inputs.agenix.packages.${pkgs.system}.default
         (pkgs.writeShellScriptBin "attach-yubikey" (builtins.readFile ./boot-initrd-scripts/attach-yubikey.sh))
         (pkgs.writeShellScriptBin "detach-yubikey" (builtins.readFile ./boot-initrd-scripts/detach-yubikey.sh))
         (pkgs.writeShellScriptBin "boot-windows" (builtins.readFile "${self}/scripts/reboot-to-windows.sh"))

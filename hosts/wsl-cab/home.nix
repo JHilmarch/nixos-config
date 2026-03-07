@@ -9,6 +9,8 @@
   imports = [
     "${self}/home-modules/fish"
     "${self}/home-modules/git/cab.nix"
+    "${self}/home-modules/ssh"
+    "${self}/hosts/wsl-cab/modules/systemd/decrypt-secrets.nix"
   ];
 
   home = {
@@ -39,6 +41,13 @@
       unstable.nodejs_24
       local.context7-mcp
       local.azure-devops-mcp
+      local.github-personal-mcp
+      local.github-work-mcp
+      age
+      age-plugin-yubikey
+      yubikey-manager
+      libfido2
+      sops
     ];
   };
 

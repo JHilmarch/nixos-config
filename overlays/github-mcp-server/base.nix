@@ -15,7 +15,12 @@ super.writeShellApplication {
   };
 
   text = ''
-    GITHUB_PERSONAL_ACCESS_TOKEN="$(xargs </run/secrets/${patSecret})"
+    SECRET_FILE="''${XDG_RUNTIME_DIR}/secrets/${patSecret}"
+    if [ ! -f "$SECRET_FILE" ]; then
+      SECRET_FILE="/run/secrets/${patSecret}"
+    fi
+
+    GITHUB_PERSONAL_ACCESS_TOKEN="$(xargs <"$SECRET_FILE")"
     export GITHUB_PERSONAL_ACCESS_TOKEN
     exec github-mcp-server stdio
   '';
