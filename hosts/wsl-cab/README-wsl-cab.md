@@ -17,7 +17,9 @@ sudo nix run /home/jonatan/code/nixos-config/#nixosConfigurations.wsl-cab.config
   ```powershell
   wsl --install --no-distribution
   ```
+
 - Double-click on the downloaded `.wsl` file to import it.
+  - Or from the Terminal to select a custom name: `wsl --install --from-file "C:\Temp\nixos.wsl" --name NixOS-personal`
 - Verify result:
   ```powershell
   wsl -l -v
