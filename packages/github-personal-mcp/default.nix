@@ -36,6 +36,7 @@ in
             exit 1
           fi
 
+          echo "github-personal-mcp: using token from $token_file" >&2
           GITHUB_PERSONAL_ACCESS_TOKEN="$(tr -d "\n\r" < "$token_file")"
           export GITHUB_PERSONAL_ACCESS_TOKEN
         '

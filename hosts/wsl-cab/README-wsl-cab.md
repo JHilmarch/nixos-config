@@ -184,13 +184,14 @@ ls -la /run/user/(id -u)/secrets/
         "azure-mcp-server"
       ]
     },
-    "github": {
+    "github-personal": {
       "command": "wsl",
       "args": [
         "-d",
-        "NixOS",
+        "NixOS-personal",
         "--",
-        "github-mcp-server"
+        "github-personal-mcp",
+        "stdio"
       ]
     },
     "awesome-copilot": {
