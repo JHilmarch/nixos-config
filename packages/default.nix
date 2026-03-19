@@ -11,6 +11,6 @@
   azure-mcp-server = azure-mcp-server;
   github-mcp-server = github-mcp-server;
   azure-devops-mcp = callPackage ./azure-devops-mcp {};
-  github-personal-mcp = callPackage ./github-personal-mcp {};
-  github-work-mcp = callPackage ./github-work-mcp {};
+  github-personal-mcp = callPackage ./github-mcp/personal.nix {};
+  github-work-mcp = callPackage ./github-mcp/work.nix {};
 }

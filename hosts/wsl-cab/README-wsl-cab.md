@@ -35,7 +35,7 @@ passwd
 
 ## GitHub authentication
 
-The wrapped GitHub MCP Server uses the access token from GitHub CLI to authenticate. Login with `gh auth login`.
+Login with `gh auth login`.
 
 ## Context7 Authentication
 
@@ -127,33 +127,27 @@ Copy your age-compatible SSH private key to the default location:
 cp /path/to/your/key ~/.ssh/id_ed25519
 ```
 
-### 2. Set correct permissions
+### 2. Verify the services
+
+The `prepare-ssh-key` systemd service automatically:
+- Sets correct permissions (chmod 600) on the SSH key
+- Converts CRLF to LF line endings (for keys copied from Windows)
+
+This service runs before `decrypt-secrets` when you log in. To check if the services are running or manually restart them:
 
 ```bash
-chmod 600 ~/.ssh/id_ed25519
-```
+# Check prepare-ssh-key service status
+systemctl --user status prepare-ssh-key.service
 
-### 3. Convert line endings (if copied from Windows)
-
-If you copied the key from Windows, convert CRLF to LF:
-
-```bash
-sed -i 's/\r$//' ~/.ssh/id_ed25519
-```
-
-### 4. Verify the service (optional)
-
-The service starts automatically after WSL reboot. To check if it's running or manually restart it:
-
-```bash
-# Check service status
+# Check decrypt-secrets service status
 systemctl --user status decrypt-secrets.service
 
 # Manually restart if needed
+systemctl --user restart prepare-ssh-key.service
 systemctl --user restart decrypt-secrets.service
 ```
 
-### 5. Verify decrypted secrets
+### 3. Verify decrypted secrets
 
 Decrypted secrets are stored in `$XDG_RUNTIME_DIR/secrets/` (usually `/run/user/1000/secrets/`):
 
@@ -191,6 +185,16 @@ ls -la /run/user/(id -u)/secrets/
         "NixOS-personal",
         "--",
         "github-personal-mcp",
+        "stdio"
+      ]
+    },
+    "github-work": {
+      "command": "wsl",
+      "args": [
+        "-d",
+        "NixOS-personal",
+        "--",
+        "github-work-mcp",
         "stdio"
       ]
     },

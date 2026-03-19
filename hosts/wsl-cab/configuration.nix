@@ -16,6 +16,7 @@ in {
   imports = [
     "${self}/modules/defaults.nix"
     "${self}/modules/markitdown-mcp/default.nix"
+    "${self}/hosts/wsl-cab/modules/systemd/prepare-ssh-key.nix"
     "${self}/hosts/wsl-cab/modules/systemd/decrypt-secrets.nix"
   ];
 
@@ -83,6 +84,10 @@ in {
   services = {
     markitdown-mcp.enable = true;
     pcscd.enable = true;
+
+    prepare-ssh-key = {
+      enable = true;
+    };
 
     openssh = {
       enable = true;
