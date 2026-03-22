@@ -90,7 +90,7 @@
   };
 in {
   imports = [
-    "${self}/home-modules/fish"
+    "${self}/home-modules/fish/dev.nix"
     "${self}/home-modules/gpg"
     "${self}/home-modules/ssh"
     "${self}/home-modules/git"

@@ -1,13 +1,12 @@
 {
-  pkgs,
   config,
-  lib,
+  pkgs,
   self,
   ...
 }: {
   programs.fish = {
     enable = true;
-    interactiveShellInit = builtins.readFile "${self}/home-modules/fish/base-shell-init.fish";
+    interactiveShellInit = builtins.readFile "${self}/home-modules/fish/dev-shell-init.fish";
 
     plugins = with pkgs.fishPlugins; [
       {
@@ -28,4 +27,6 @@
       }
     ];
   };
+
+  home.file.".config/fish/conf.d/base-shell-init.fish".source = "${self}/home-modules/fish/base-shell-init.fish";
 }

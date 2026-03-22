@@ -7,7 +7,7 @@
   ...
 }: {
   imports = [
-    "${self}/home-modules/fish"
+    "${self}/home-modules/fish/dev.nix"
     "${self}/home-modules/git/cab.nix"
   ];
 
