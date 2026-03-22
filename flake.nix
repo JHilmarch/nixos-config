@@ -163,6 +163,27 @@
             ./hosts/iso/configuration.nix
           ];
         };
+
+      hl-jump = let
+        system = "x86_64-linux";
+        specialArgs = {
+          inherit inputs self;
+          username = "jonatan";
+          hostname = "hl-jump";
+          functions = import ./functions {
+            pkgs = import inputs.nixpkgs {inherit system;};
+          };
+        };
+      in
+        inputs.nixpkgs.lib.nixosSystem {
+          specialArgs = specialArgs;
+          modules = [
+            {
+              nixpkgs.hostPlatform.system = system;
+            }
+            ./hosts/hl-jump/configuration.nix
+          ];
+        };
     };
   };
 }
