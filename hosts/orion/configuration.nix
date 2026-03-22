@@ -30,7 +30,7 @@ in {
     "${self}/modules/systemd/nvidia-coolbits.nix"
     "${self}/modules/systemd/power-profile.nix"
     "${self}/modules/spotify/firewall.nix"
-    "${self}/modules/defaults.nix"
+    "${self}/templates/desktop.nix"
   ];
 
   nixpkgs = {
@@ -183,7 +183,6 @@ in {
     enableAllTerminfo = true;
 
     systemPackages = with pkgs; [
-      vim # Most popular clone of the VI editor
       util-linux # Set of system utilities for Linux
       ripgrep # Utility that combines the usability of The Silver Searcher with the raw speed of grep
       pipewire # Server and user space API to deal with multimedia pipelines
@@ -191,7 +190,6 @@ in {
       usbutils # Tools for working with USB devices, such as lsusb
       pciutils # Collection of programs for inspecting and manipulating configuration of PCI devices
       linuxKernel.packages.linux_zen.usbip # Allows to pass USB device from server to client over the network
-      coreutils # A collection of basic file, shell, and text manipulation utilities. ls, cat, rm, cp...
       findutils # A set of tools for finding files and directories based on various criteria
       htop # An interactive process viewer for Unix systems
       killall # A command that sends a signal to all processes running a specified command
@@ -224,8 +222,6 @@ in {
       yelp # Help view
       geary # Mail client for GNOME 3
     ];
-
-    shells = with pkgs; [fish bash];
   };
 
   services = {
@@ -312,11 +308,6 @@ in {
   };
 
   programs = {
-    fish.enable = true;
-    nix-ld = {
-      enable = true;
-    };
-
     _1password-gui = {
       enable = true;
       # Certain features, including CLI integration and system authentication support,
@@ -330,23 +321,16 @@ in {
   };
 
   security = {
-    sudo.wheelNeedsPassword = true;
     rtkit.enable = true;
-    polkit.enable = true;
-
     pki.certificateFiles = [
       "${self}/hosts/orion/aspnetcore-https-development.pem"
     ];
   };
 
   users = {
-    defaultUserShell = pkgs.fish;
     groups.usbusers = {};
     users.${username} = {
-      isNormalUser = true;
       extraGroups = [
-        "wheel"
-        "networkmanager"
         "docker"
         "openrazer"
         "video"
@@ -356,14 +340,9 @@ in {
       packages = with pkgs; [
         tree
       ];
-
-      openssh = {
-        authorizedKeys.keys =
-          authorizedSSHKeys
-          ++ [
-            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhXKd/Bp3e0yFS8WU2v2ul4/2nsWSQOoLdYVJWPPHWn jonatan@nixos-orion"
-          ];
-      };
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhXKd/Bp3e0yFS8WU2v2ul4/2nsWSQOoLdYVJWPPHWn jonatan@nixos-orion"
+      ];
     };
   };
 
