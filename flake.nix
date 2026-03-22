@@ -182,6 +182,7 @@
               nixpkgs.hostPlatform.system = system;
             }
             ./hosts/hl-jump/configuration.nix
+            inputs.sops-nix.nixosModules.sops
           ];
         };
     };
