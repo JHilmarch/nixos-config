@@ -42,6 +42,11 @@
       enableFishIntegration = config.programs.fish.enable;
     };
 
-    starship.enable = true;
+    starship = {
+      enable = true;
+      settings = {
+        container.disabled = true;
+      };
+    };
   };
 }
