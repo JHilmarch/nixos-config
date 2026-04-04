@@ -21,6 +21,8 @@ Configuration and documentation for NixOS dual boot with Windows 11 on Acer Pred
 - [Handle secrets](#handle-secrets)
   - [Deploying secrets](#deploying-secrets)
   - [Encrypt & decrypt secrets using sops, age & YubiKey](#encrypt--decrypt-secrets-using-sops-age--yubikey)
+- [Troubleshooting](#troubleshooting)
+  - [Stuck in "emergency mode" at boot](#stuck-in-emergency-mode-at-boot)
 
 ## Installation
 
@@ -352,6 +354,24 @@ To check the secret in the nix store after rebuild:
 
 ```
 sudo cat /run/secrets/secret1
+```
+
+## Troubleshooting
+
+### Stuck in "emergency mode" at boot
+
+Use the bootable USB (see the iso host) to start NixOS installation. Then unlock the LUKS encrypted root and scan for
+errors. If needed; perform a repair and run a scrub.
+
+```
+lsblk -f
+sudo cryptsetup luksOpen /dev/disk/by-uuid/e8bb29...
+sudo btrfs check --readonly /dev/disk/by-label/NIXROOT
+# if error:
+sudo btrfs check --repair /dev/disk/by-label/NIXROOT
+sudo mkdir -p /mnt/temp
+sudo mount /dev/disk/by-label/NIXROOT /mnt/temp
+sudo btrfs scrub start -B /mnt/temp
 ```
 
 ______________________________________________________________________
