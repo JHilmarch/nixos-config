@@ -1,6 +1,8 @@
 {
   lib,
-  super,
+  writeText,
+  replaceVars,
+  runtimeShell,
   dotnet,
   icu,
   src,
@@ -10,18 +12,18 @@
   installPhaseScript = ./install-phase.sh;
   wrapperScript = ./wrapper.sh;
 
-  patchScriptFile = super.writeText "patch-mcp-logging.sh" (builtins.readFile patchScript);
+  patchScriptFile = writeText "patch-mcp-logging.sh" (builtins.readFile patchScript);
 
-  wrapper' = super.replaceVars wrapperScript {
+  wrapper' = replaceVars wrapperScript {
     inherit dotnet icu;
-    runtimeShell = super.runtimeShell;
+    inherit runtimeShell;
   };
 
-  buildPhase' = super.replaceVars buildPhaseScript {
+  buildPhase' = replaceVars buildPhaseScript {
     inherit dotnet patchScriptFile;
   };
 
-  installPhase' = super.replaceVars installPhaseScript {
+  installPhase' = replaceVars installPhaseScript {
     wrapperScript = wrapper';
   };
 in {

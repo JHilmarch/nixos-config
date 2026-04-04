@@ -47,10 +47,6 @@ in {
           config = prev.config;
         };
       })
-      (import ./../../overlays/nuget-mcp-server)
-      (import ./../../overlays/github-mcp-server)
-      (import ./../../overlays/azure-mcp-server)
-      (import ./../../overlays/awesome-copilot/patched.nix)
     ];
     config = {
       allowUnfree = true;

@@ -20,10 +20,6 @@
           config = prev.config;
         };
       })
-      (import ./../../overlays/awesome-copilot)
-      (import ./../../overlays/nuget-mcp-server)
-      (import ./../../overlays/azure-mcp-server)
-      (import ./../../overlays/github-mcp-server/gh-cli.nix)
     ];
     config = {
       allowUnfree = true;
@@ -84,11 +80,12 @@
         azure-cli
         inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
         pkgs.python313Packages.markitdown
-        azure-mcp-server
-        github-mcp-server
+        local.azure-mcp-server
+        local.github-mcp-server
+        local.mcp-nuget
       ];
     in
-      base ++ lib.optional (pkgs ? mcp-nuget) pkgs.mcp-nuget;
+      base;
 
     shells = with pkgs; [fish bash];
   };

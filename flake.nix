@@ -54,10 +54,6 @@
               config = prev.config;
             };
           })
-          (import ./overlays/awesome-copilot)
-          (import ./overlays/nuget-mcp-server)
-          (import ./overlays/azure-mcp-server)
-          (import ./overlays/github-mcp-server)
         ];
       };
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generate overlays/<pkg>/deps.json with pinned NuGet deps for a .NET tool
+# Generate packages/<pkg>/deps.json with pinned NuGet deps for a .NET tool
 # Resolves dependencies via 'dotnet tool install' (no fallback to nuget)
 # Usage:
 #   nix-shell -p dotnet-sdk unzip jq nix --run \
@@ -11,9 +11,9 @@
 #                          store (repeatable).
 # Examples:
 #   nix-shell -p dotnet-sdk unzip jq nix --run \
-#     "bash scripts/generate-nuget-deps.sh --ensure-sibling azure.mcp:azure.mcp.linux-x64 Azure.Mcp 0.8.6 overlays/azure-mcp-server/deps.json"
+#     "bash scripts/generate-nuget-deps.sh --ensure-sibling azure.mcp:azure.mcp.linux-x64 Azure.Mcp 0.8.6 packages/azure-mcp-server/deps.json"
 #   nix-shell -p dotnet-sdk unzip jq nix --run \
-#     "bash scripts/generate-nuget-deps.sh NuGet.Mcp.Server 1.0.0 overlays/nuget-mcp-server/deps.json"
+#     "bash scripts/generate-nuget-deps.sh NuGet.Mcp.Server 1.0.0 packages/nuget-mcp-server/deps.json"
 
 set -euo pipefail
 

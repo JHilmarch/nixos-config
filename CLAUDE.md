@@ -14,7 +14,7 @@ This is a NixOS flake-based configuration repository with multiple hosts:
 hosts/              # Host-specific configurations (configuration.nix, home.nix, README-*.md)
 modules/            # Reusable NixOS system modules
 home-modules/       # Home Manager modules (user-level config)
-overlays/           # Custom package overlays (context7, awesome-copilot, MCP servers)
+packages/           # Custom packages (context7, awesome-copilot, MCP servers)
 functions/          # Shared helper functions (e.g., GitHub SSH key fetcher)
 scripts/            # Helper scripts (e.g., reboot-to-windows.sh)
 secrets/            # SOPS-encrypted secrets (never read/edit these)
@@ -118,7 +118,8 @@ When giving guidelines for commands to be used in the Terminal, make them availa
 ## Important Notes
 
 - **Secrets**: All secrets in `secrets/` are SOPS-encrypted with age. Never attempt to read or edit them directly.
-- **Overlays**: Custom overlays are defined in `flake.nix` under `overlays = [...]`.
+- **Custom Packages**: All custom packages are defined in `packages/` and exposed as flake outputs via `callPackage`.
+  Hosts access them via `pkgs.local.<name>`.
 - **Dual Boot**: Orion has Windows dual boot; `scripts/reboot-to-windows.sh` uses `bootctl` to switch UEFI boot entry.
 - **YubiKey**: Assumed for SSH (FIDO2) and GPG. See README.md for setup.
 - **NFS**: `modules/nfs/fileshare.nix` configures shares for private NAS at fileshare.se.

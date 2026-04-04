@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generate overlays/<pkg>/deps.json with pinned NuGet deps for a .NET project
+# Generate packages/<pkg>/deps.json with pinned NuGet deps for a .NET project
 # Resolves dependencies via 'dotnet restore' on a project file
 # Automatically includes linux-x64 RID siblings for all packages
 # Usage:
@@ -10,7 +10,7 @@
 #   nix-shell -p dotnet-sdk jq nix --run \
 #     "bash scripts/generate-nuget-deps-from-project.sh \
 #        /path/to/mcp-dotnet-samples/awesome-copilot/src/McpSamples.AwesomeCopilot.HybridApp \
-#        overlays/awesome-copilot/deps.json"
+#        packages/awesome-copilot/deps.json"
 
 set -euo pipefail
 
@@ -31,7 +31,7 @@ Arguments:
   OutputPath    Path to output deps.json (default: deps.json)
 
 Examples:
-  $0 /path/to/mcp-dotnet-samples/awesome-copilot/src/McpSamples.AwesomeCopilot.HybridApp overlays/awesome-copilot/deps.json
+  $0 /path/to/mcp-dotnet-samples/awesome-copilot/src/McpSamples.AwesomeCopilot.HybridApp packages/awesome-copilot/deps.json
 EOF
   exit 1
 fi

@@ -1,16 +1,18 @@
 {
+  lib,
+  writeShellApplication,
+  findutils,
+  github-mcp-server,
   serviceName,
   patSecret,
-  self,
-  super,
 }:
-super.writeShellApplication {
+writeShellApplication {
   name = serviceName;
 
   runtimeEnv = {
-    PATH = super.lib.strings.makeBinPath [
-      super.findutils
-      super.github-mcp-server
+    PATH = lib.strings.makeBinPath [
+      findutils
+      github-mcp-server
     ];
   };
 
@@ -21,7 +23,7 @@ super.writeShellApplication {
   '';
 
   meta = {
-    inherit (super.github-mcp-server.meta) description homepage;
-    platforms = super.lib.platforms.all;
+    inherit (github-mcp-server.meta) description homepage;
+    platforms = lib.platforms.all;
   };
 }

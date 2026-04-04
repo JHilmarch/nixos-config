@@ -72,12 +72,12 @@
     coolercontrol.coolercontrol-ui-data
     coolercontrol.coolercontrol-gui
 
-    local.context7-mcp # Context7 MCP CLI (packaged via overlay)
-    mcp-nuget # NuGet MCP Server (packaged via overlay)
-    github-personal-mcp # GitHub MCP Server for personal account (wrapped via overlay)
-    github-work-mcp # GitHub MCP Server for work account (wrapped via overlay)
-    azure-mcp-server # Azure MCP CLI (packaged via overlay)
-    awesome-copilot # Awesome Copilot MCP (packaged via overlay)
+    local.context7-mcp # Context7 MCP CLI
+    local.mcp-nuget # NuGet MCP Server
+    local.github-personal-mcp # GitHub MCP Server for personal account
+    local.github-work-mcp # GitHub MCP Server for work account
+    local.azure-mcp-server # Azure MCP CLI
+    local.awesome-copilot-patched # Awesome Copilot MCP (with MCP logging patch)
   ];
 
   firefoxDefaultMime = {
