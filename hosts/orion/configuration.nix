@@ -41,6 +41,12 @@ in {
           config = prev.config;
         };
       })
+      (_final: prev: {
+        pinned = import inputs.nixpkgs-pinned {
+          system = prev.stdenv.hostPlatform.system;
+          config = prev.config;
+        };
+      })
       (import ./../../overlays/nuget-mcp-server)
       (import ./../../overlays/github-mcp-server)
       (import ./../../overlays/azure-mcp-server)

@@ -22,7 +22,7 @@
   config = let
     claude-wrapper = pkgs.writeShellApplication {
       name = "claude";
-      runtimeInputs = [pkgs.unstable.claude-code] ++ config.modules.claude.runtimeInputs;
+      runtimeInputs = [pkgs.pinned.claude-code] ++ config.modules.claude.runtimeInputs;
       checkPhase = "true"; # Skip shellcheck - preSetupScripts may have dynamic paths
       text = ''
         ${lib.concatMapStrings (script: ''
@@ -30,7 +30,7 @@
           '')
           config.modules.claude.preSetupScripts}
 
-        exec ${pkgs.unstable.claude-code}/bin/claude "$@"
+        exec ${pkgs.pinned.claude-code}/bin/claude "$@"
       '';
     };
   in {
@@ -45,9 +45,9 @@
         env = {
           ANTHROPIC_BASE_URL = "https://api.z.ai/api/anthropic";
           API_TIMEOUT_MS = "3000000";
-          ANTHROPIC_DEFAULT_OPUS_MODEL = "GLM-4.7";
-          ANTHROPIC_DEFAULT_SONNET_MODEL = "GLM-4.7";
-          ANTHROPIC_DEFAULT_HAIKU_MODEL = "GLM-4.5-Air";
+          ANTHROPIC_DEFAULT_OPUS_MODEL = "GLM-5.1";
+          ANTHROPIC_DEFAULT_SONNET_MODEL = "GLM-5.1";
+          ANTHROPIC_DEFAULT_HAIKU_MODEL = "GLM-5-Turbo";
         };
         permissions = {
           additionalDirectories = [

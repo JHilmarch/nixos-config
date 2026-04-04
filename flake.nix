@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-pinned.url = "github:NixOS/nixpkgs/ab2bcff420f677f1d13872a67cff700e88e926fa";
     nur.url = "github:nix-community/NUR";
     mcp-nixos.url = "github:utensils/mcp-nixos";
 
@@ -48,6 +49,10 @@
               system = prev.stdenv.hostPlatform.system;
               config = prev.config;
             };
+            pinned = import inputs.nixpkgs-pinned {
+              system = prev.stdenv.hostPlatform.system;
+              config = prev.config;
+            };
           })
           (import ./overlays/awesome-copilot)
           (import ./overlays/nuget-mcp-server)
@@ -74,6 +79,11 @@
         system = "x86_64-linux";
         specialArgs = {
           pkgs-unstable = import inputs.nixpkgs-unstable {
+            inherit system;
+            config = nixpkgsConfig;
+          };
+
+          pkgs-pinned = import inputs.nixpkgs-pinned {
             inherit system;
             config = nixpkgsConfig;
           };
