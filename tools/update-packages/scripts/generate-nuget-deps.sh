@@ -3,7 +3,7 @@
 # Resolves dependencies via 'dotnet tool install' (no fallback to nuget)
 # Usage:
 #   nix-shell -p dotnet-sdk unzip jq nix --run \
-#     "bash scripts/generate-nuget-deps.sh [--ensure-sibling <LeftId>:<RightId>]... <PackageId> [Version] [OutputPath]"
+#     "bash tools/update-packages/scripts/generate-nuget-deps.sh [--ensure-sibling <LeftId>:<RightId>]... <PackageId> [Version] [OutputPath]"
 # Options:
 #   --ensure-sibling L:R   Ensure package R is included for every version of L
 #                          discovered in the dependency graph. This is useful
@@ -11,9 +11,9 @@
 #                          store (repeatable).
 # Examples:
 #   nix-shell -p dotnet-sdk unzip jq nix --run \
-#     "bash scripts/generate-nuget-deps.sh --ensure-sibling azure.mcp:azure.mcp.linux-x64 Azure.Mcp 0.8.6 packages/azure-mcp-server/deps.json"
+#     "bash tools/update-packages/scripts/generate-nuget-deps.sh --ensure-sibling azure.mcp:azure.mcp.linux-x64 Azure.Mcp 0.8.6 packages/azure-mcp-server/deps.json"
 #   nix-shell -p dotnet-sdk unzip jq nix --run \
-#     "bash scripts/generate-nuget-deps.sh NuGet.Mcp.Server 1.0.0 packages/nuget-mcp-server/deps.json"
+#     "bash tools/update-packages/scripts/generate-nuget-deps.sh NuGet.Mcp.Server 1.0.0 packages/nuget-mcp-server/deps.json"
 
 set -euo pipefail
 

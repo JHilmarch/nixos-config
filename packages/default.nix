@@ -3,8 +3,7 @@
 in {
   context7-mcp = callPackage ./context7-mcp {};
   azure-devops-mcp = callPackage ./azure-devops-mcp {};
-
-  awesome-copilot = awesome-copilot;
+  inherit awesome-copilot;
   awesome-copilot-patched = callPackage ./awesome-copilot/patched.nix {inherit awesome-copilot;};
   mcp-nuget = callPackage ./nuget-mcp-server {};
   azure-mcp-server = callPackage ./azure-mcp-server {};

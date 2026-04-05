@@ -40,46 +40,11 @@ and:
 
 Used by: `wsl-cab`
 
-## Bump version and rebuild
+## Update
 
-1. Check the latest release on GitHub: https://github.com/upstash/context7/releases
-
-1. Update the version and hashes in `packages/context7-mcp/default.nix`:
-
-   ```nix
-   pname = "context7-mcp";
-   version = "x.x.x";  # Update this
-
-   src = fetchFromGitHub {
-     owner = "upstash";
-     repo = "context7";
-     rev = "@upstash/context7-mcp@x.x.x";  # Update this
-     hash = lib.fakeHash;  # Update this (nix-prefetch-github)
-   };
-
-   pnpmDeps = pnpm_10.fetchDeps {
-     inherit pname version src;
-     hash = lib.fakeHash;  # Update this
-     fetcherVersion = 1;
-   };
-   ```
-
-1. Get the new hashes:
-
-   ```bash
-   # Source hash
-   nix run nixpkgs#nix-prefetch-github -- --rev refs/tags/@upstash/context7-mcp@x.x.x upstash context7
-
-   # pnpmDeps hash (prefetch the package, then look at the hash)
-   nix build .#context7-mcp 2>&1 | grep "got:" | head -1
-   ```
-
-1. Build and test:
-
-   ```bash
-   nix build .#context7-mcp
-   ./result/bin/context7-mcp --help
-   ```
+```fish
+fish tools/update-packages/update-packages.fish update context7-mcp
+```
 
 ## Package details
 

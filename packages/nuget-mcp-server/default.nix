@@ -43,7 +43,7 @@ in
   then
     throw ''      mcp-nuget: packages/nuget-mcp-server/deps.json is empty.
       Please generate it with:
-        bash scripts/generate-nuget-deps.sh NuGet.Mcp.Server <Version> packages/nuget-mcp-server/deps.json''
+        bash tools/update-packages/scripts/generate-nuget-deps.sh NuGet.Mcp.Server <Version> packages/nuget-mcp-server/deps.json''
   else
     stdenvNoCC.mkDerivation {
       pname = "mcp-nuget";

@@ -42,24 +42,11 @@ Add `-d` with domain names to limit loaded tools:
 azure-devops-mcp my-org -d core,work,work-items
 ```
 
-## Bump version and rebuild
+## Update
 
-1. Check latest version: https://www.npmjs.com/package/@azure-devops/mcp
-1. Update version in `packages/azure-devops-mcp/default.nix`
-1. Get new hashes (change version and reset hashes to dummy values first):
-   ```fish
-   # In packages/azure-devops-mcp/default.nix, set:
-   # version = "x.y.z";
-   # hash = lib.fakeHash;
-   # npmDepsHash = lib.fakeHash;
-
-   nix build .#azure-devops-mcp
-   ```
-1. Update `hash` and `npmDepsHash` values from the error messages.
-1. Build:
-   ```fish
-   nix build .#azure-devops-mcp
-   ```
+```fish
+fish tools/update-packages/update-packages.fish update azure-devops-mcp
+```
 
 ## Package details
 

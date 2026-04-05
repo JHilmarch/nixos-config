@@ -4,11 +4,11 @@
 # Automatically includes linux-x64 RID siblings for all packages
 # Usage:
 #   nix-shell -p dotnet-sdk jq nix --run \
-#     "bash scripts/generate-nuget-deps-from-project.sh <ProjectPath> [OutputPath]"
+#     "bash tools/update-packages/scripts/generate-nuget-deps-from-project.sh <ProjectPath> [OutputPath]"
 #
 # Examples:
 #   nix-shell -p dotnet-sdk jq nix --run \
-#     "bash scripts/generate-nuget-deps-from-project.sh \
+#     "bash tools/update-packages/scripts/generate-nuget-deps-from-project.sh \
 #        /path/to/mcp-dotnet-samples/awesome-copilot/src/McpSamples.AwesomeCopilot.HybridApp \
 #        packages/awesome-copilot/deps.json"
 

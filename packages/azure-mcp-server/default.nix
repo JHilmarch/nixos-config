@@ -43,7 +43,7 @@ in
   then
     throw ''        azure-mcp-server: packages/azure-mcp-server/deps.json is empty.
       Please generate it with:
-        bash scripts/generate-nuget-deps.sh Azure.Mcp <Version> packages/azure-mcp-server/deps.json''
+        bash tools/update-packages/scripts/generate-nuget-deps.sh Azure.Mcp <Version> packages/azure-mcp-server/deps.json''
   else
     stdenvNoCC.mkDerivation {
       pname = "azure-mcp-server";

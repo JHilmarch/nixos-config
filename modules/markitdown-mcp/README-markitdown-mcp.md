@@ -22,38 +22,11 @@ This module can be toggled per host via the `services.markitdown-mcp.enable` opt
 
 When enabled, the `markitdown-mcp` command is available system-wide.
 
-## Bump version and rebuild
+## Update
 
-1. Pick the new version from GitHub releases: https://github.com/microsoft/markitdown/releases
-
-1. Update `markitdownVersion` in `modules/markitdown-mcp/default.nix`
-
-1. Update the source hash:
-
-   - Temporarily set a fake hash: `hash = lib.fakeHash;`
-   - Run `nix flake check` or build for the host
-   - Copy the wanted hash from the error into `markitdownSrc.hash`
-
-1. If the MCP SDK version needs updating, update the `mcp` package override:
-
-   - Find the new version from PyPI: https://pypi.org/project/mcp/
-   - Update `version` and `src.hash` in the `mcp` override
-
-1. Apply the configuration:
-
-   ```fish
-   sudo nixos-rebuild switch --flake .#nixos-orion
-   ```
-
-1. Verify it works:
-
-   ```fish
-   markitdown-mcp --help
-   ```
-
-Conventional commit suggestion (for when you commit)
-
-- feat(modules/markitdown-mcp): bump to vX.Y.Z
+```fish
+fish tools/update-packages/update-packages.fish update markitdown-mcp
+```
 
 ## Notes
 
