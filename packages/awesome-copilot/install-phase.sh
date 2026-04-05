@@ -9,7 +9,8 @@ installPhase() {
 
   # Install built DLLs
   mkdir -p "$out/lib"
-  cp -r "$buildRoot/awesome-copilot/src/McpSamples.AwesomeCopilot.HybridApp/bin/Release/net9.0/"* "$out/lib/"
+  local tfmDir=$(find "$buildRoot/awesome-copilot/src/McpSamples.AwesomeCopilot.HybridApp/bin/Release/" -mindepth 1 -maxdepth 1 -type d | head -1)
+  cp -r "$tfmDir/"* "$out/lib/"
 
   # Install wrapper script
   mkdir -p "$out/bin"
