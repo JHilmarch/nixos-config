@@ -7,10 +7,10 @@ installPhase() {
   # The build output is in the source directory
   local buildRoot="$NIX_BUILD_TOP/source"
 
-  # Install built DLLs
-  mkdir -p "$out/lib"
+  # Install built DLLs in a package-specific subdirectory to avoid conflicts
+  mkdir -p "$out/lib/awesome-copilot"
   local tfmDir=$(find "$buildRoot/awesome-copilot/src/McpSamples.AwesomeCopilot.HybridApp/bin/Release/" -mindepth 1 -maxdepth 1 -type d | head -1)
-  cp -r "$tfmDir/"* "$out/lib/"
+  cp -r "$tfmDir/"* "$out/lib/awesome-copilot/"
 
   # Install wrapper script
   mkdir -p "$out/bin"

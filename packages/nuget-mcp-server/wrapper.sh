@@ -6,6 +6,7 @@ BIN_DIR=$(dirname "$(readlink -f "$0")")
 PREFIX=$(dirname "$BIN_DIR")
 
 # ICU for .NET globalization
+export LD_LIBRARY_PATH="$PREFIX/lib/mcp-nuget${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export LD_LIBRARY_PATH="@icu@/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
 
@@ -20,8 +21,4 @@ export DOTNET_NOLOGO=1
 export DOTNET_PRINT_TELEMETRY_MESSAGE=false
 export PATH="@dotnet@/bin:$PATH"
 
-# ASP.NET Core logging
-export ASPNETCORE_ENVIRONMENT=Production
-export ASPNETCORELogging__LogLevel__Default=Warning
-
-exec @dotnet@/bin/dotnet "$PREFIX/lib/awesome-copilot/McpSamples.AwesomeCopilot.HybridApp.dll" "$@"
+exec @dotnet@/bin/dotnet exec "$PREFIX/lib/mcp-nuget/NuGet.Mcp.Server.dll" -- mcp-nuget server start "$@"

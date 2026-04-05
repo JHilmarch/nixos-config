@@ -1,35 +1,28 @@
 {
   lib,
   stdenvNoCC,
-  makeWrapper,
   fetchurl,
+  unzip,
   dotnetCorePackages,
   icu,
+  writeText,
+  replaceVars,
+  runtimeShell,
 }: let
   dotnet = dotnetCorePackages.dotnet_10.sdk;
   depsPath = ./deps.json;
   deps = builtins.fromJSON (builtins.readFile depsPath);
 
-  # Fetch all pinned nuget packages defined in deps.json
-  fetched =
-    lib.map (
-      p:
-        fetchurl {
-          url = "https://www.nuget.org/api/v2/package/${p.name}/${p.version}";
-          sha256 = p.sha256;
-          name = "${p.name}.${p.version}.nupkg";
-        }
-    )
-    deps;
+  # Find the linux-x64 RID package (contains all DLLs for native execution)
+  ridPkg = builtins.head (
+    lib.filter (p: lib.hasInfix "linux-x64" p.name) deps
+  );
 
-  # Build copy commands to populate a local nuget source folder
-  nupkgNames = lib.map (p: "${p.name}.${p.version}.nupkg") deps;
-  nupkgPairs = lib.lists.zipLists fetched nupkgNames;
-  copyLines =
-    lib.concatMapStrings (pair: ''
-      cp -v ${pair.fst} "$out/nuget-source/${pair.snd}"
-    '')
-    nupkgPairs;
+  fetchedRidPkg = fetchurl {
+    url = "https://www.nuget.org/api/v2/package/${ridPkg.name}/${ridPkg.version}";
+    sha256 = ridPkg.sha256;
+    name = "${ridPkg.name}.${ridPkg.version}.nupkg";
+  };
 
   # Determine tool version from deps when present
   toolVersion = let
@@ -38,6 +31,10 @@
     if entries != []
     then (lib.head entries).version
     else "unknown";
+
+  phases = import ./lib.nix {
+    inherit lib writeText replaceVars runtimeShell dotnet icu fetchedRidPkg;
+  };
 in
   if deps == []
   then
@@ -48,27 +45,15 @@ in
     stdenvNoCC.mkDerivation {
       pname = "mcp-nuget";
       version = toolVersion;
-      nativeBuildInputs = [makeWrapper];
+      nativeBuildInputs = [unzip];
       dontUnpack = true;
       installPhase = ''
-        runHook preInstall
-        mkdir -p $out/bin $out/nuget-source
-        ${copyLines}
-        makeWrapper ${dotnet}/bin/dotnet $out/bin/mcp-nuget \
-          --prefix LD_LIBRARY_PATH : ${icu}/lib \
-          --set DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 0 \
-          --add-flags "dnx" \
-          --add-flags "NuGet.Mcp.Server" \
-          --add-flags "--source" \
-          --add-flags "file://$out/nuget-source" \
-          --add-flags "--ignore-failed-sources" \
-          --add-flags "--yes" \
-          --add-flags "--" \
-          --add-flags "mcp-nuget" \
-          --add-flags "server" \
-          --add-flags "start"
-        runHook postInstall
+        source ${phases.installPhase'}
+        installPhase
       '';
+      passthru = {
+        inherit (phases) installPhase' wrapper';
+      };
       meta = with lib; {
         description = "NuGet MCP Server";
         homepage = "https://www.nuget.org/packages/NuGet.Mcp.Server";
