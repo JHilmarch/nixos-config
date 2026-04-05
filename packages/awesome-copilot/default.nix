@@ -8,13 +8,13 @@
   replaceVars,
   runtimeShell,
 }: let
-  dotnet = dotnetCorePackages.dotnet_9.sdk;
+  dotnet = dotnetCorePackages.dotnet_10.sdk;
 
   src = fetchFromGitHub {
     owner = "microsoft";
     repo = "mcp-dotnet-samples";
-    rev = "8b405cd0c54dbbbbcc61af21a63d2559b880fd73";
-    hash = "sha256-haXZuSHRD6b4fpFRJE5FWDbDDjcqh/TAW/NHSEY4nYg=";
+    rev = "7dc89b8b0ebee5dc9307c12d7442ca5ad699c30a";
+    hash = "sha256-h/MN8OUHJ5HbMh0nUiPxCG38HMzXTtp7gHr3YkIGKdo=";
   };
 
   phases = import ./lib.nix {
@@ -24,7 +24,7 @@
 in
   buildDotnetModule rec {
     pname = "awesome-copilot";
-    version = "2026-02-13";
+    version = "2026-04-01";
 
     inherit src;
 
@@ -32,7 +32,7 @@ in
     nugetDeps = ./deps.json;
 
     dotnet-sdk = dotnet;
-    dotnet-runtime = dotnetCorePackages.dotnet_9.runtime;
+    dotnet-runtime = dotnetCorePackages.dotnet_10.runtime;
 
     runtimeDeps = [icu];
 
@@ -51,7 +51,7 @@ in
     };
 
     meta = with lib; {
-      description = "Awesome Copilot MCP packaged with a .NET 9 wrapper";
+      description = "Awesome Copilot MCP packaged with a .NET 10 wrapper";
       homepage = "https://github.com/microsoft/mcp-dotnet-samples/tree/main/awesome-copilot";
       license = licenses.mit;
       platforms = platforms.unix;
