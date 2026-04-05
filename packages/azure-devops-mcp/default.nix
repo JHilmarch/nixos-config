@@ -4,7 +4,7 @@
   nodejs,
 }: let
   pname = "azure-devops-mcp";
-  version = "2.4.0";
+  version = "2.5.0";
 in
   pkgs.buildNpmPackage {
     inherit pname version nodejs;
@@ -13,10 +13,10 @@ in
       owner = "microsoft";
       repo = "azure-devops-mcp";
       rev = "v${version}";
-      hash = "sha256-I5EOPTxWJcfPV8I1Lwvyj3ljo8Y9W7GojtTWCAreU/g=";
+      hash = "sha256-tIIPKjxAp5+rnl+WCfGaSlMt71A+v2Saq/E+pinBJqU=";
     };
 
-    npmDepsHash = "sha256-zr6k0ZaE/TZpgSW/FB2zX61t09h8t0xyJyxuaURrCkI=";
+    npmDepsHash = "sha256-I8eCzTXjOw+91aOTcO5L5Ha4s59E2oJ69jpl+8aZij8=";
 
     postInstall = ''
       mv $out/bin/mcp-server-azuredevops $out/bin/azure-devops-mcp

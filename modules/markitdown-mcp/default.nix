@@ -6,7 +6,7 @@
 }: let
   cfg = config.services.markitdown-mcp;
 
-  markitdownVersion = "0.1.4";
+  markitdownVersion = "0.1.5";
 
   python-custom = pkgs.unstable.python3.override {
     packageOverrides = final: prev: {
@@ -29,7 +29,7 @@
     owner = "microsoft";
     repo = "markitdown";
     rev = "v${markitdownVersion}";
-    hash = "sha256-WKA2eY8wY3SM9xZ7Cek5eUcJbO5q6eMDx2aTKfQnFvE=";
+    hash = "sha256-sqWfft/yaI/0FavhIbAHqltgVfTNk0GJk/phyvdn7Ck=";
   };
 
   markitdown-mcp-python = python-custom.pkgs.buildPythonPackage {
