@@ -4,116 +4,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Structure
 
-This is a NixOS flake-based configuration repository with multiple hosts:
+NixOS flake-based configuration with four hosts:
 
-- **`nixos-orion`** - Main desktop (NixOS dual boot with Windows, LUKS+FIDO2, YubiKey, GNOME, NVIDIA)
-- **`wsl-cab`** - WSL configuration for development
-- **`iso`** - Installation ISO image
+- **nixos-orion** - Desktop (GNOME, NVIDIA, LUKS+FIDO2, YubiKey, dual boot)
+- **wsl-cab** - WSL development environment
+- **iso** - Installation ISO image
+- **hl-jump** - Proxmox LXC/VM jump host
 
 ```
-hosts/              # Host-specific configurations (configuration.nix, home.nix, README-*.md)
-modules/            # Reusable NixOS system modules
-home-modules/       # Home Manager modules (user-level config)
-packages/           # Custom packages (context7, awesome-copilot, MCP servers)
-functions/          # Shared helper functions (e.g., GitHub SSH key fetcher)
-scripts/            # Helper scripts (e.g., reboot-to-windows.sh)
-secrets/            # SOPS-encrypted secrets (never read/edit these)
-.junie/mcp/         # JetBrains Junie MCP server configuration
+hosts/              # Per-host configuration.nix + home.nix
+modules/            # System-level NixOS modules (defaults, context7, markitdown-mcp,
+                    #   nfs, spotify, systemd/*)
+home-modules/       # Home Manager modules (claude, fish, git, gpg, ssh, xorg)
+packages/           # Custom packages exposed as pkgs.local.<name>
+templates/          # Host templates (common, desktop, server, proxmox-lxc)
+users/              # User definitions (jonatan)
+functions/          # Shared helper functions (GitHub SSH key fetcher)
+tools/              # Fish scripts (update-packages, gh-project-manager)
+scripts/            # Shell scripts (reboot-to-windows.sh)
+secrets/            # SOPS-encrypted secrets (never read or edit)
 ```
 
 ## Flake Architecture
 
-The flake defines three NixOS configurations in `flake.nix`. Each host receives `specialArgs`:
+Four nixosConfigurations in flake.nix. Each host receives specialArgs: inputs, self, username, hostname. Orion
+additionally receives pkgs-unstable, pkgs-pinned, functions. hl-jump receives functions.
 
-- `pkgs-unstable` - Unstable nixpkgs channel (orion only)
-- `inputs` - Flake inputs (nixpkgs, home-manager, sops-nix, etc.)
-- `self` - Reference to this flake
-- `username` and `hostname` - Host identification
-- `functions` - Custom helper functions (orion only)
+Key inputs: nixpkgs (25.11), nixpkgs-unstable, nixpkgs-pinned, home-manager, sops-nix, nixos-wsl, nix-index-database,
+NUR.
 
-Home Manager is integrated per-host with `extraSpecialArgs` passed through.
+Home Manager integrated per-host with extraSpecialArgs. Custom packages in packages/ exposed via overlay as
+pkgs.local.<name>.
 
-## Module System
+## Behavioral Rules
 
-- **`modules/`** - System-level NixOS modules (imported in host `configuration.nix`)
+### MCP Integration
 
-  - `defaults.nix` - Default settings (timezone, Nix config)
-  - `nfs/` - NFS shares
-  - `spotify/` - Firewall rules
-  - `systemd/` - Custom services (no-sleep, wake-on-lan, flatpak)
-  - `claude/` - Claude Code configuration
-  - `context7/` - Context7 AI tool integration
+- **nixos**: Always use proactively for Nix package/option/program searches.
+- **context7**: Use for library/API docs, but ask first.
+- **github-personal**: Default for all personal GitHub operations.
+- **github-work**: Only when explicitly told something is work-related.
+- **nuget**: Always use proactively for NuGet package searches.
+- **ms-learn**: Always use proactively for Microsoft official documentation.
+- **markitdown**: Always use proactively to convert documents to markdown.
 
-- **`home-modules/`** - Home Manager modules (imported in host `home.nix`)
+### Terminal & Conventions
 
-  - `fish/` - Fish shell with fuzzy finder and git abbreviations
-  - `git/` - Git with GPG signing
-  - `gpg/` - GPG configuration
-  - `ssh/` - SSH with YubiKey support
-  - `xorg/` - X11 settings
+- Provide commands for fish shell.
 
-## Development Commands
+## Domain Knowledge
 
-```bash
-# Validate
-nix flake check                  # Run flake checks
-sudo nixos-rebuild test --flake .#nixos-orion    # Test build for host
-nix build .#nixosConfigurations.iso.config.system.build.isoImage  # Build ISO
-
-# Apply configuration
-# Note: 'switch' and 'rebuild' is only allowed to be run by a human user.
-sudo nixos-rebuild switch --flake .#nixos-orion  # Switch to new config
-sudo nixos-rebuild boot --flake .                # Set as boot entry
-```
-
-## Conventional Commits
-
-Use Conventional Commits format with scope as the host/module:
-
-```
-feat(orion): add systemd no-sleep module
-fix(wsl-cab): correct PATH configuration
-chore(context7): update to latest version
-```
-
-- Subject line must be at most 50 characters.
-- Leave a blank line between subject and body.
-- The body lines should be at most 72 characters.
-
-## MCP Integration
-
-The repository uses MCP (Model Context Protocol) with servers configured in `.junie/mcp/mcp.json`:
-
-- `nixos` - NixOS package/option search via `mcp-nixos`
-  - Always use NixOS MCP when I need to search for Nix community flakes, Nix packages, options or programs without me
-    having to explicitly ask.
-- `context7` - Context7 AI tool
-  - Use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps but explicitly
-    ask first.
-- `github-personal` - GitHub integration (personal projects)
-  - Always use this MCP for GitHub operations on my personal repositories without me having to explicitly ask.
-  - Prefer this GitHub MCP before `github-work` as long as I don't tell you otherwise.
-- `github-work` - GitHub integration (work/organization projects)
-  - Use this MCP only when I explicitly mention that a repository, issue, pull request, or organization is work-related,
-    or when I explicitly ask you to use `github-work`.
-- `mcp-nuget` - .NET/NuGet packages
-  - Always use the NuGet MCP when I need to search for NuGet packages without me having to explicitly ask.
-- `ms-learn` - Microsoft Learn MCP
-  - Always use the ms-learn MCP for up-to-date Microsoft's official documentation without me having to explicitly ask.
-  - Use the ms-learn MCP to fetch a complete article and search through code samples.
-- `markitdown` - Microsoft MarkItDown MCP
-  - Always use the markitdown MCP to convert documents (PDF, Office, images, etc.) to markdown format without me having
-    to explicitly ask.
-
-## Terminal
-
-When giving guidelines for commands to be used in the Terminal, make them available to be run in fish shell.
-
-## Important Notes
-
-- **Secrets**: All secrets in `secrets/` are SOPS-encrypted with age. Never attempt to read or edit them directly.
-- **Custom Packages**: All custom packages are defined in `packages/` and exposed as flake outputs via `callPackage`.
-  Hosts access them via `pkgs.local.<name>`.
-- **Dual Boot**: Orion has Windows dual boot; `scripts/reboot-to-windows.sh` uses `bootctl` to switch UEFI boot entry.
-- **YubiKey**: Assumed for SSH (FIDO2) and GPG. See README.md for setup.
-- **NFS**: `modules/nfs/fileshare.nix` configures shares for private NAS at fileshare.se.
+- **Secrets**: All files in secrets/ are SOPS-encrypted with age. Never read or edit.
+- **Dual Boot**: Orion has Windows dual boot; scripts/reboot-to-windows.sh uses bootctl to set the next UEFI boot entry.
+- **YubiKey**: Used for SSH (FIDO2) and GPG. See README.md for setup.
+- **NFS**: modules/nfs/fileshare.nix configures shares for private NAS at fileshare.se.
+- **Claude Code**: Configured via home-modules/claude/ with wrapper scripts.
