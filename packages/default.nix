@@ -10,4 +10,7 @@ in {
   github-personal-mcp = callPackage ./github-mcp-server/personal.nix {};
   github-work-mcp = callPackage ./github-mcp-server/work.nix {};
   github-mcp-server = callPackage ./github-mcp-server/gh-cli.nix {};
+  gh-personal = callPackage ./gh-cli/personal.nix {};
+  gh-personal-project-manager = callPackage ./gh-cli/personal-project-manager.nix {};
+  gh-work = callPackage ./gh-cli/work.nix {};
 }

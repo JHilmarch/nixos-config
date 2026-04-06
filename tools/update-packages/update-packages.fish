@@ -27,11 +27,11 @@
 
 # ── Load library ──────────────────────────────────────────────────────────────
 
-set -g UPDATE_JSON false
+set -g JSON_MODE false
 set -g REPO_ROOT
 
 set -l script_dir (dirname (status filename))
-source "$script_dir/lib/log.fish"
+source "$script_dir/../common/log.fish"
 source "$script_dir/lib/nix.fish"
 source "$script_dir/lib/nuget.fish"
 source "$script_dir/lib/repo.fish"
@@ -70,7 +70,7 @@ function cmd_list
         set results (echo "$results" | jq --argjson e "$entry" '. + [$e]')
     end
 
-    if test "$UPDATE_JSON" = true
+    if test "$JSON_MODE" = true
         echo "$results" | jq -c '.'
     else
         echo "$results" | jq -r '.[] | [.name, .current, .latest, .status] | @tsv' \
@@ -122,7 +122,7 @@ function cmd_update
         end
     end
 
-    if test "$UPDATE_JSON" = true
+    if test "$JSON_MODE" = true
         echo "$results" | jq -c '.'
     else
         echo "$results" | jq -r '.[] | "\(.name)\t\(.status)\t\(.previous // "" )\(if .previous and .current then " -> " + .current else "" end)"' \
@@ -132,32 +132,51 @@ end
 
 # ── Main ─────────────────────────────────────────────────────────────────────
 
-# Parse global flags
+# Parse global flags (pre-scan for --json so --help respects it)
+if contains -- --json $argv
+    set JSON_MODE true
+end
 set -l cmd_args
 for arg in $argv
     switch $arg
         case --json
-            set UPDATE_JSON true
+            set JSON_MODE true
         case --help
-            echo "update-packages — Manage custom package versions"
-            echo ""
-            echo "Usage:"
-            echo "  fish tools/update-packages/update-packages.fish list [--json]"
-            echo "  fish tools/update-packages/update-packages.fish update <pkg...> [--json]"
-            echo "  fish tools/update-packages/update-packages.fish update --all [--json]"
-            echo ""
-            echo "Commands:"
-            echo "  list              Show current and latest versions for all packages"
-            echo "  update <pkg...>   Update one or more packages"
-            echo "  update --all      Update all packages that have updates available"
-            echo ""
-            echo "Options:"
-            echo "  --json            Output structured JSON (suppresses all other output)"
-            echo "  --help            Show this help message"
-            echo ""
-            echo "Packages:"
-            for pkg in $ALL_PACKAGES
-                echo "  $pkg"
+            if test "$JSON_MODE" = true
+                echo '{}' | jq '{
+                    name: "update-packages",
+                    description: "Manage custom package versions",
+                    commands: [
+                        {name: "list", description: "Show current and latest versions for all packages"},
+                        {name: "update", params: ["<pkg...>"], description: "Update one or more packages"},
+                        {name: "update", params: ["--all"], description: "Update all packages with updates available"}
+                    ],
+                    global_options: [
+                        {name: "--json", description: "Output structured JSON (suppresses all other output)"},
+                        {name: "--help", description: "Show this help (--help --json for machine-readable)"}
+                    ]
+                }'
+            else
+                echo "update-packages — Manage custom package versions"
+                echo ""
+                echo "Usage:"
+                echo "  fish tools/update-packages/update-packages.fish list [--json]"
+                echo "  fish tools/update-packages/update-packages.fish update <pkg...> [--json]"
+                echo "  fish tools/update-packages/update-packages.fish update --all [--json]"
+                echo ""
+                echo "Commands:"
+                echo "  list              Show current and latest versions for all packages"
+                echo "  update <pkg...>   Update one or more packages"
+                echo "  update --all      Update all packages that have updates available"
+                echo ""
+                echo "Options:"
+                echo "  --json            Output structured JSON (suppresses all other output)"
+                echo "  --help            Show this help message"
+                echo ""
+                echo "Packages:"
+                for pkg in $ALL_PACKAGES
+                    echo "  $pkg"
+                end
             end
             exit 0
         case '*'
@@ -166,13 +185,17 @@ for arg in $argv
 end
 
 # Validate
-require_cmd curl jq nix sed; or exit 1
-set REPO_ROOT (find_repo_root); or exit 1
+require_cmd curl jq nix sed; or die "Missing required command."
+set REPO_ROOT (find_repo_root); or die "Not in a nixos-config repository."
 cd "$REPO_ROOT"
 
 if test (count $cmd_args) -lt 1
-    echo "Usage: fish tools/update-packages/update-packages.fish <command> [OPTIONS]"
-    echo "Run with --help for full usage."
+    if test "$JSON_MODE" = true
+        echo '{}' | jq '{error: "No command specified. Run with --help for usage."}'
+    else
+        echo "Usage: fish tools/update-packages/update-packages.fish <command> [OPTIONS]"
+        echo "Run with --help for full usage."
+    end
     exit 1
 end
 
@@ -184,12 +207,10 @@ switch $command
         cmd_list
     case update
         if test (count $cmd_args) -lt 1
-            log_error "update requires at least one package name or --all"
-            exit 1
+            die "update requires at least one package name or --all"
         end
         cmd_update $cmd_args
     case '*'
-        log_error "Unknown command: $command"
-        log_error "Run with --help for usage"
-        exit 1
+        die "Unknown command: $command. Run with --help for usage."
 end
+exit 0

@@ -23,6 +23,10 @@
         owner = username;
         mode = "0400";
       };
+      gh_personal_project_pat = {
+        owner = username;
+        mode = "0400";
+      };
       gh_work_pat = {
         owner = username;
         mode = "0400";

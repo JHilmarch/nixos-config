@@ -18,7 +18,6 @@
   stable-packages = with pkgs; [
     jetbrains.jdk # OpenJDK fork to better support Jetbrains's products
     git # A distributed version control system
-    gh # GitHub CLI
     sops # Simple and flexible tool for managing secrets
     age # Modern encryption tool with small explicit keys
     age-plugin-yubikey # YubiKey plugin for age
@@ -76,6 +75,9 @@
     local.mcp-nuget # NuGet MCP Server
     local.github-personal-mcp # GitHub MCP Server for personal account
     local.github-work-mcp # GitHub MCP Server for work account
+    local.gh-personal # GitHub CLI authenticated with PAT for the personal GitHub area
+    local.gh-personal-project-manager # GitHub CLI authenticated with classic PAT for project management
+    local.gh-work # GitHub CLI authenticated with PAT for the work GitHub area
     local.azure-mcp-server # Azure MCP CLI
     local.awesome-copilot-patched # Awesome Copilot MCP (with MCP logging patch)
   ];
