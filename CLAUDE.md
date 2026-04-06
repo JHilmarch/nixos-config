@@ -55,12 +55,6 @@ Home Manager is integrated per-host with `extraSpecialArgs` passed through.
 ## Development Commands
 
 ```bash
-# Format code (REQUIRED before committing)
-alejandra .                      # Format all Nix files
-mdformat .                       # Format markdown files
-git diff --name-only --cached -- '*.nix' | xargs -r alejandra -q    # Staged only
-git diff --name-only --cached -- '*.md' | xargs -r mdformat          # Staged only
-
 # Validate
 nix flake check                  # Run flake checks
 sudo nixos-rebuild test --flake .#nixos-orion    # Test build for host
