@@ -28,10 +28,9 @@ secrets/            # SOPS-encrypted secrets (never read or edit)
 ## Flake Architecture
 
 Four nixosConfigurations in flake.nix. Each host receives specialArgs: inputs, self, username, hostname. Orion
-additionally receives pkgs-unstable, pkgs-pinned, functions. hl-jump receives functions.
+additionally receives pkgs-unstable, functions. hl-jump receives functions.
 
-Key inputs: nixpkgs (25.11), nixpkgs-unstable, nixpkgs-pinned, home-manager, sops-nix, nixos-wsl, nix-index-database,
-NUR.
+Key inputs: nixpkgs (25.11), nixpkgs-unstable, home-manager, sops-nix, nixos-wsl, nix-index-database, NUR, llm-agents.
 
 Home Manager integrated per-host with extraSpecialArgs. Custom packages in packages/ exposed via overlay as
 pkgs.local.<name>.

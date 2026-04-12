@@ -41,12 +41,6 @@ in {
           config = prev.config;
         };
       })
-      (_final: prev: {
-        pinned = import inputs.nixpkgs-pinned {
-          system = prev.stdenv.hostPlatform.system;
-          config = prev.config;
-        };
-      })
     ];
     config = {
       allowUnfree = true;
@@ -353,6 +347,8 @@ in {
       trusted-users = [username];
       accept-flake-config = true;
       auto-optimise-store = false;
+      substituters = ["https://cache.numtide.com"];
+      trusted-public-keys = ["niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="];
     };
 
     registry = {

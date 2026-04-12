@@ -3,8 +3,13 @@
   pkgs,
   username,
   lib,
+  inputs,
   ...
-}: {
+}: let
+  readSkillsFrom = dir:
+    builtins.mapAttrs (name: _: dir + "/${name}")
+    (lib.filterAttrs (_: type: type == "directory") (builtins.readDir dir));
+in {
   options.modules.claude = with lib; {
     preSetupScripts = mkOption {
       type = types.listOf types.str;
@@ -22,7 +27,11 @@
   config = let
     claude-wrapper = pkgs.writeShellApplication {
       name = "claude";
-      runtimeInputs = [pkgs.pinned.claude-code] ++ config.modules.claude.runtimeInputs;
+      runtimeInputs =
+        [
+          inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.claude-code
+        ]
+        ++ config.modules.claude.runtimeInputs;
       checkPhase = "true"; # Skip shellcheck - preSetupScripts may have dynamic paths
       text = ''
         ${lib.concatMapStrings (script: ''
@@ -30,7 +39,7 @@
           '')
           config.modules.claude.preSetupScripts}
 
-        exec ${pkgs.pinned.claude-code}/bin/claude "$@"
+        exec ${inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.claude-code}/bin/claude "$@"
       '';
     };
   in {
@@ -230,6 +239,7 @@
           command = "mcp-server-playwright";
         };
       };
+      skills = readSkillsFrom ./skills;
     };
   };
 }

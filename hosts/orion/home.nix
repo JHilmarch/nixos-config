@@ -15,6 +15,10 @@
     codeql # Semantic code analysis engine for security research and vulnerability detection
   ];
 
+  llm-agents-packages = with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [
+    ck # Hybrid code search (semantic, lexical, regex)
+  ];
+
   stable-packages = with pkgs; [
     jetbrains.jdk # OpenJDK fork to better support Jetbrains's products
     git # A distributed version control system
@@ -116,6 +120,7 @@ in {
     packages =
       stable-packages
       ++ unstable-packages
+      ++ llm-agents-packages
       ++ [
         (pkgs.writeShellScriptBin "attach-yubikey" (builtins.readFile ./boot-initrd-scripts/attach-yubikey.sh))
         (pkgs.writeShellScriptBin "detach-yubikey" (builtins.readFile ./boot-initrd-scripts/detach-yubikey.sh))

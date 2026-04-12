@@ -4,9 +4,9 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-pinned.url = "github:NixOS/nixpkgs/ad40d71c2ed70f28ea0f141a95a02cde5dc9685d";
     nur.url = "github:nix-community/NUR";
     mcp-nixos.url = "github:utensils/mcp-nixos";
+    llm-agents.url = "github:numtide/llm-agents.nix";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
@@ -49,10 +49,6 @@
               system = prev.stdenv.hostPlatform.system;
               config = prev.config;
             };
-            pinned = import inputs.nixpkgs-pinned {
-              system = prev.stdenv.hostPlatform.system;
-              config = prev.config;
-            };
           })
         ];
       };
@@ -75,11 +71,6 @@
         system = "x86_64-linux";
         specialArgs = {
           pkgs-unstable = import inputs.nixpkgs-unstable {
-            inherit system;
-            config = nixpkgsConfig;
-          };
-
-          pkgs-pinned = import inputs.nixpkgs-pinned {
             inherit system;
             config = nixpkgsConfig;
           };
