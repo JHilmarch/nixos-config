@@ -74,7 +74,7 @@ function resolve_owner_type
     end
     set -g _OWNER_TYPE organization
     if $GH_CLI api graphql -f query='query($login: String!) { user(login: $login) { id } }' \
-        -f login="$owner" --jq '.data.user.id' >/dev/null 2>&1
+            -f login="$owner" --jq '.data.user.id' >/dev/null 2>&1
         set -g _OWNER_TYPE user
     end
     echo "$_OWNER_TYPE"
@@ -158,7 +158,7 @@ function cmd_create_project
 query(\$login: String!) {
   $owner_type(login: \$login) { id }
 }" -f login="$owner" --jq ".data.$owner_type.id" 2>/dev/null)
-    test -z "$owner_id" -o "$owner_id" = "null"; and die "Failed to resolve owner ID for $owner."
+    test -z "$owner_id" -o "$owner_id" = null; and die "Failed to resolve owner ID for $owner."
 
     set -l data ($GH_CLI api graphql -f query="
 mutation(\$ownerId: ID!, \$title: String!) {
@@ -219,7 +219,7 @@ function cmd_create_field
     set -l owner (resolve_owner "$argv[4]")
 
     set -l project_id (cmd_get_project_id "$number" "$owner" | jq -r '.project_id')
-    test -z "$project_id" -o "$project_id" = "null"; and die "Project #$number not found."
+    test -z "$project_id" -o "$project_id" = null; and die "Project #$number not found."
 
     set -l data
     switch $data_type
@@ -392,10 +392,10 @@ function cmd_add_item
     set -l issue_num $parts[2]
 
     set -l content_id ($GH_CLI api "repos/$repo/issues/$issue_num" --jq '.node_id' 2>/dev/null)
-    test -z "$content_id" -o "$content_id" = "null"; and die "Issue not found: $url"
+    test -z "$content_id" -o "$content_id" = null; and die "Issue not found: $url"
 
     set -l project_id (cmd_get_project_id "$number" "$owner" | jq -r '.project_id')
-    test -z "$project_id" -o "$project_id" = "null"; and die "Project #$number not found."
+    test -z "$project_id" -o "$project_id" = null; and die "Project #$number not found."
 
     set -l item_id ($GH_CLI api graphql -f query='
 mutation($projectId: ID!, $contentId: ID!) {
@@ -403,7 +403,7 @@ mutation($projectId: ID!, $contentId: ID!) {
     item { id }
   }
 }' -f projectId="$project_id" -f contentId="$content_id" --jq '.data.addProjectV2ItemById.item.id' 2>/dev/null)
-    test -z "$item_id" -o "$item_id" = "null"; and die "Failed to add item to project #$number."
+    test -z "$item_id" -o "$item_id" = null; and die "Failed to add item to project #$number."
 
     if test "$JSON_MODE" = true
         echo "{}" | jq --arg id "$item_id" '{item_id: $id, status: "added"}'
@@ -423,7 +423,7 @@ mutation($projectId: ID!, $contentId: ID!) {
     item { id }
   }
 }' -f projectId="$project_id" -f contentId="$content_id" --jq '.data.addProjectV2ItemById.item.id' 2>/dev/null)
-    test -z "$item_id" -o "$item_id" = "null"; and die "Failed to add item to project."
+    test -z "$item_id" -o "$item_id" = null; and die "Failed to add item to project."
 
     if test "$JSON_MODE" = true
         echo "{}" | jq --arg id "$item_id" '{item_id: $id}'
@@ -580,7 +580,7 @@ function cmd_get_content_id
     set -l number "$argv[2]"
 
     set -l content_id ($GH_CLI api "repos/$repo/issues/$number" --jq '.node_id' 2>/dev/null)
-    test -z "$content_id" -o "$content_id" = "null"; and die "Issue #$number not found in $repo."
+    test -z "$content_id" -o "$content_id" = null; and die "Issue #$number not found in $repo."
 
     if test "$JSON_MODE" = true
         echo "{}" | jq --arg cid "$content_id" '{content_id: $cid}'
@@ -755,18 +755,26 @@ function create_labeled_issue
         set i (math $i + 1)
     end
 
-    set -l body (cat)
-    test -z "$body"; and die "Body is empty. Pipe content to stdin."
+    # Write stdin to a temp file to preserve newlines.
+    # Using `set -l body (cat)` splits on newlines in fish, destroying formatting.
+    set -l body_file (mktemp)
+    cat >$body_file
+    if not test -s $body_file
+        rm $body_file
+        die "Body is empty. Pipe content to stdin."
+    end
 
     ensure_label "$repo" "$label"
 
     set -l result
     if not set result ($GH_CLI issue create --repo "$repo" \
             --title "$title" \
-            --body "$body" \
+            --body-file "$body_file" \
             --label "$label" 2>&1)
+        rm $body_file
         die "Failed to create issue: $result"
     end
+    rm $body_file
 
     # gh issue create outputs a URL. Fetch the issue data via API.
     set -l issue_url (echo "$result" | string match -r 'https://github.com/[^ ]+' 2>/dev/null; or echo "$result")
@@ -834,7 +842,7 @@ function cmd_add_to_board
 
     # Call internal function directly instead of spawning a separate script
     set -l project_id (cmd_get_project_id "$project_number" "$owner" | jq -r '.project_id')
-    test -z "$project_id" -o "$project_id" = "null"; and die "Failed to get project ID for #$project_number"
+    test -z "$project_id" -o "$project_id" = null; and die "Failed to get project ID for #$project_number"
 
     set -l success_count 0
     set -l fail_count 0
@@ -844,7 +852,7 @@ function cmd_add_to_board
         set -l item_id_raw (cmd_add_item_by_id "$project_id" "$node_id")
         set -l item_id (echo "$item_id_raw" | jq -r '.item_id // empty')
 
-        if test -n "$item_id" -a "$item_id" != "null"
+        if test -n "$item_id" -a "$item_id" != null
             set -a item_ids "$item_id"
             set success_count (math $success_count + 1)
         else
@@ -895,13 +903,13 @@ query($projectId: ID!) {
         [.data.node.fields.nodes[] | select(.name == $fname)][0].id
     ')
 
-    test -z "$field_id" -o "$field_id" = "null"; and die "Field '$field_name' not found"
+    test -z "$field_id" -o "$field_id" = null; and die "Field '$field_name' not found"
 
     set -l option_id (echo "$field_info" | jq -r --arg fname "$field_name" --arg oname "$option_name" '
         [.data.node.fields.nodes[] | select(.name == $fname)][0].options[] | select(.name == $oname) | .id
     ')
 
-    test -z "$option_id" -o "$option_id" = "null"; and die "Option '$option_name' not found in field '$field_name'"
+    test -z "$option_id" -o "$option_id" = null; and die "Option '$option_name' not found in field '$field_name'"
 
     # Perform the update (suppress inner output — we emit our own summary)
     cmd_update_select "$project_id" "$item_id" "$field_id" "$option_id" >/dev/null
