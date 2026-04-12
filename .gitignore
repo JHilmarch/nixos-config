@@ -5,3 +5,4 @@ result
 *.wsl
 .claude/plans
 nixos/
+.ck/
