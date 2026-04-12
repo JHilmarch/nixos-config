@@ -7,6 +7,7 @@
     nur.url = "github:nix-community/NUR";
     mcp-nixos.url = "github:utensils/mcp-nixos";
     llm-agents.url = "github:numtide/llm-agents.nix";
+    jail-nix.url = "sourcehut:~alexdavid/jail.nix";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";

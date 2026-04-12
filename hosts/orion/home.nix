@@ -17,6 +17,8 @@
 
   llm-agents-packages = with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [
     ck # Hybrid code search (semantic, lexical, regex)
+    opencode # AI coding agent built for the terminal
+    oh-my-opencode # Multi-model orchestration plugin for OpenCode
   ];
 
   stable-packages = with pkgs; [
