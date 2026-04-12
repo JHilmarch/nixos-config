@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-pinned.url = "github:NixOS/nixpkgs/ab2bcff420f677f1d13872a67cff700e88e926fa";
+    nixpkgs-pinned.url = "github:NixOS/nixpkgs/ad40d71c2ed70f28ea0f141a95a02cde5dc9685d";
     nur.url = "github:nix-community/NUR";
     mcp-nixos.url = "github:utensils/mcp-nixos";
 
