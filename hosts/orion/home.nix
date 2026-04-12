@@ -17,8 +17,6 @@
 
   llm-agents-packages = with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [
     ck # Hybrid code search (semantic, lexical, regex)
-    opencode # AI coding agent built for the terminal
-    oh-my-opencode # Multi-model orchestration plugin for OpenCode
   ];
 
   stable-packages = with pkgs; [
@@ -104,6 +102,7 @@ in {
     "${self}/home-modules/ssh"
     "${self}/home-modules/git/ssh.nix"
     "${self}/home-modules/claude"
+    "${self}/home-modules/opencode"
     "${self}/home-modules/xorg/allow-root.nix"
     ./modules/file.nix
     inputs.nix-index-database.homeModules.nix-index
