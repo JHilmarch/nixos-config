@@ -9,6 +9,9 @@
           "~/.ssh/id_ed25519_sk_23839166"
           "~/.ssh/id_ed25519_sk_23839165"
         ];
+        extraOptions = {
+          IdentityAgent = "~/.1password/agent.sock";
+        };
       };
     };
 

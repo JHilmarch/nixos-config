@@ -42,6 +42,7 @@
     dconf-editor # GSettings editor for GNOME
     dconf2nix # Convert dconf files to Nix, as expected by Home Manager
     _1password-gui # Password manager
+    _1password-cli # 1Password command-line tool
     gnomeExtensions.tiling-shell # Tiling window manager
     wmctrl
     gnome-calendar
@@ -95,7 +96,7 @@ in {
     "${self}/home-modules/fish/dev.nix"
     "${self}/home-modules/gpg"
     "${self}/home-modules/ssh"
-    "${self}/home-modules/git"
+    "${self}/home-modules/git/ssh.nix"
     "${self}/home-modules/claude"
     "${self}/home-modules/xorg/allow-root.nix"
     ./modules/file.nix
