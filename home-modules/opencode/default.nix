@@ -5,6 +5,8 @@
   inputs,
   ...
 }: {
+  imports = [./oh-my-openagent.nix];
+
   options.modules.opencode = with lib; {
     preSetupScripts = mkOption {
       type = types.listOf types.str;
