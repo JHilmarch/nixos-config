@@ -19,7 +19,10 @@ in
       agents = {
         sisyphus.model = glm;
         sisyphus-junior.model = glm;
-        hephaestus.model = glm;
+        hephaestus = {
+          model = glm;
+          allow_non_gpt_model = true;
+        };
         oracle.model = glm;
         librarian.model = glm;
         explore.model = glmFlash;
