@@ -41,12 +41,23 @@
       };
     };
 
-    templates."claude.env" = {
-      owner = username;
-      content = ''
-        ANTHROPIC_AUTH_TOKEN=${config.sops.placeholder.zai_anthropic_pat}
-        CONTEXT7_TOKEN=${config.sops.placeholder.context7_pat}
-      '';
+    templates = {
+      "claude.env" = {
+        owner = username;
+        content = ''
+          ANTHROPIC_AUTH_TOKEN=${config.sops.placeholder.zai_anthropic_pat}
+          CONTEXT7_TOKEN=${config.sops.placeholder.context7_pat}
+        '';
+      };
+      "agents.env" = {
+        owner = username;
+        content = ''
+          ANTHROPIC_AUTH_TOKEN=${config.sops.placeholder.zai_anthropic_pat}
+          ANTHROPIC_API_KEY=${config.sops.placeholder.zai_anthropic_pat}
+          ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic/v1
+          CONTEXT7_TOKEN=${config.sops.placeholder.context7_pat}
+        '';
+      };
     };
   };
 }

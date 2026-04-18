@@ -26,6 +26,8 @@
     opencode-pkg =
       inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.opencode;
 
+    settingsJSON = builtins.toJSON config.programs.opencode.settings;
+
     jailed-opencode = jail "opencode" opencode-pkg (
       with jail.combinators; [
         network
@@ -36,7 +38,10 @@
         (try-readonly (noescape "~/.config/git"))
         (try-readonly (noescape "~/.gitconfig"))
         (fwd-env "ANTHROPIC_AUTH_TOKEN")
+        (fwd-env "ANTHROPIC_API_KEY")
+        (fwd-env "ANTHROPIC_BASE_URL")
         (fwd-env "CONTEXT7_TOKEN")
+        (fwd-env "OPENCODE_CONFIG_CONTENT")
         (add-pkg-deps ([
             pkgs.nixd
             pkgs.fish-lsp
@@ -58,6 +63,7 @@
           '')
           cfg.preSetupScripts}
 
+        export OPENCODE_CONFIG_CONTENT='${settingsJSON}'
         exec ${lib.getExe jailed-opencode} "$@"
       '';
     };

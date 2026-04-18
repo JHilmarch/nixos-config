@@ -8,7 +8,7 @@
 }: {
   home-manager.users.${username} = {
     modules.opencode.preSetupScripts = [
-      "${self}/home-modules/claude/scripts/secrets-sops.sh ${config.sops.templates."claude.env".path}"
+      "${self}/scripts/secrets-sops.sh ${config.sops.templates."agents.env".path}"
     ];
 
     programs.opencode = {
@@ -16,20 +16,25 @@
       package = null; # Wrapper module provides the binary
       settings = {
         theme = "catppuccin";
-        model = "zai-coding-plan/glm-5.1";
-        small_model = "zai-coding-plan/glm-5-turbo";
+        model = "anthropic/glm-5.1";
+        small_model = "anthropic/glm-5-turbo";
         agent = {
-          build.model = "zai-coding-plan/glm-5.1";
-          plan.model = "zai-coding-plan/glm-5.1";
-          explore.model = "zai-coding-plan/glm-5-turbo";
-          compaction.model = "zai-coding-plan/glm-5.1";
-          title.model = "zai-coding-plan/glm-5-turbo";
-          summary.model = "zai-coding-plan/glm-5.1";
+          build.model = "anthropic/glm-5.1";
+          plan.model = "anthropic/glm-5.1";
+          explore.model = "anthropic/glm-5-turbo";
+          compaction.model = "anthropic/glm-5.1";
+          title.model = "anthropic/glm-5-turbo";
+          summary.model = "anthropic/glm-5.1";
         };
         provider = {
-          zai-coding-plan = {
+          anthropic = {
+            models = {
+              "glm-5.1" = {};
+              "glm-5-turbo" = {};
+            };
             options = {
-              apiKey = "{env:ANTHROPIC_AUTH_TOKEN}";
+              apiKey = "{env:ANTHROPIC_API_KEY}";
+              baseURL = "https://api.z.ai/api/anthropic/v1";
             };
           };
         };
