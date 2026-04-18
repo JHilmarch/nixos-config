@@ -16,6 +16,9 @@
         inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
         pkgs.local.github-personal-mcp
         pkgs.local.github-work-mcp
+        pkgs.alejandra # Required by native formatter (nix)
+        pkgs.fish # Required by native formatter (fish)
+        pkgs.mdformat # Required by native formatter (markdown)
       ];
     };
 
@@ -44,6 +47,20 @@
               apiKey = "{env:ANTHROPIC_API_KEY}";
               baseURL = "https://api.z.ai/api/anthropic/v1";
             };
+          };
+        };
+        formatter = {
+          nix = {
+            command = [(lib.getExe pkgs.alejandra) "-q" "$FILE"];
+            extensions = [".nix"];
+          };
+          fish = {
+            command = ["fish" "-c" "fish_indent -w $FILE"];
+            extensions = [".fish"];
+          };
+          markdown = {
+            command = [(lib.getExe pkgs.mdformat) "$FILE"];
+            extensions = [".md"];
           };
         };
         lsp = {

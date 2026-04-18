@@ -35,21 +35,27 @@
         network
         no-new-session
         mount-cwd
+        (ro-bind "/nix/store" "/nix/store")
+        (try-readwrite (noescape "~/.cache/opencode"))
         (try-readwrite (noescape "~/.config/opencode"))
         (try-readwrite (noescape "~/.local/share/opencode"))
         (try-readonly (noescape "~/.config/git"))
         (try-readonly (noescape "~/.gitconfig"))
-        (try-readonly (noescape "~/.claude"))
+        (try-readonly (noescape "~/.ssh"))
+        (try-readwrite (noescape "~/.claude"))
         (try-readonly "/run/secrets")
         (fwd-env "ANTHROPIC_API_KEY")
         (fwd-env "CONTEXT7_API_KEY")
         (fwd-env "OPENCODE_CONFIG_CONTENT")
+        (fwd-env "SSH_AUTH_SOCK")
+        (try-readonly (noescape "~/.1password/agent.sock"))
         (add-pkg-deps ([
             pkgs.nixd
             pkgs.fish-lsp
             pkgs.git
             pkgs.ripgrep
             pkgs.bash
+            pkgs._1password-gui
           ]
           ++ cfg.runtimeInputs))
       ]
