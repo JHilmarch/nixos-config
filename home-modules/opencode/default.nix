@@ -39,7 +39,10 @@
         (try-readwrite (noescape "~/.local/share/opencode"))
         (try-readonly (noescape "~/.config/git"))
         (try-readonly (noescape "~/.gitconfig"))
+        (try-readonly (noescape "~/.claude"))
+        (try-readonly "/run/secrets")
         (fwd-env "ANTHROPIC_API_KEY")
+        (fwd-env "CONTEXT7_API_KEY")
         (fwd-env "OPENCODE_CONFIG_CONTENT")
         (add-pkg-deps ([
             pkgs.nixd

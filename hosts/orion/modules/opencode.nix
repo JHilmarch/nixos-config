@@ -2,14 +2,22 @@
   config,
   pkgs,
   lib,
+  inputs,
   self,
   username,
   ...
 }: {
   home-manager.users.${username} = {
-    modules.opencode.preSetupScripts = [
-      "${self}/scripts/secrets-sops.sh ${config.sops.templates."agents.env".path}"
-    ];
+    modules.opencode = {
+      preSetupScripts = [
+        "${self}/scripts/secrets-sops.sh ${config.sops.templates."agents.env".path}"
+      ];
+      runtimeInputs = [
+        inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
+        pkgs.local.github-personal-mcp
+        pkgs.local.github-work-mcp
+      ];
+    };
 
     programs.opencode = {
       enable = true;
@@ -46,6 +54,23 @@
           fish-lsp = {
             command = [(lib.getExe pkgs.fish-lsp)];
             extensions = [".fish"];
+          };
+        };
+        mcp = {
+          mcp-nixos = {
+            enabled = true;
+            type = "local";
+            command = ["mcp-nixos"];
+          };
+          github-personal = {
+            enabled = true;
+            type = "local";
+            command = ["github-personal-mcp"];
+          };
+          github-work = {
+            enabled = true;
+            type = "local";
+            command = ["github-work-mcp"];
           };
         };
       };
