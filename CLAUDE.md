@@ -51,6 +51,14 @@ pkgs.local.<name>.
 
 - Provide commands for fish shell.
 
+### Skill Usage
+
+- **commit**: Always invoke `/commit` when creating git commits. Never run `git commit` directly.
+- **ck**: Prefer `/ck` over Grep/Glob for codebase searches.
+- **using-git-worktrees**: Always invoke `/using-git-worktrees` before starting implementation work. Never edit main
+  directly for scoped tasks.
+- **project-manager**: Use `/project-manager` when managing GitHub Project boards, user stories, or task assignments.
+
 ## Domain Knowledge
 
 - **Secrets**: All files in secrets/ are SOPS-encrypted with age. Never read or edit.
