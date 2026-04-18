@@ -37,10 +37,7 @@
         (try-readwrite (noescape "~/.local/share/opencode"))
         (try-readonly (noescape "~/.config/git"))
         (try-readonly (noescape "~/.gitconfig"))
-        (fwd-env "ANTHROPIC_AUTH_TOKEN")
         (fwd-env "ANTHROPIC_API_KEY")
-        (fwd-env "ANTHROPIC_BASE_URL")
-        (fwd-env "CONTEXT7_TOKEN")
         (fwd-env "OPENCODE_CONFIG_CONTENT")
         (add-pkg-deps ([
             pkgs.nixd
