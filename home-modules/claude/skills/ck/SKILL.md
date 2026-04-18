@@ -6,16 +6,23 @@ ______________________________________________________________________
 
 Use `ck` for finding code by meaning, not just keywords.
 
+## How to use the CLI
+
+```bash
+fish ck --help --json
+```
+
+Important: always use the --json flag.
+
 ## Search Modes
 
-- `ck --sem "concept"` - Semantic search (by meaning)
-- `ck --lex "keyword"` - Lexical search (full-text)
-- `ck --hybrid "query"` - Combined regex + semantic
-- `ck --regex "pattern"` - Traditional regex search
+- `ck --sem "concept" --json` - Semantic search (by meaning)
+- `ck --lex "keyword" --json` - Lexical search (full-text)
+- `ck --hybrid "query" --json` - Combined regex + semantic
+- `ck --regex "pattern" --json` - Traditional regex search
 
 ## Best Practices
 
-1. **Index once per session**: Run `ck --index .` at project start
 1. **Use semantic for concepts**: "error handling", "database queries"
 1. **Use lexical for names**: "getUserById", "AuthController"
 1. **Use hybrid for best results**: Combines both approaches
