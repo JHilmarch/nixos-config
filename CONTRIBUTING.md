@@ -2,47 +2,32 @@
 
 Please follow the steps below before committing.
 
-## 1) Format/lint changed files with alejandra
+## 1) Format changed files
 
-Use alejandra (Nix formatter) to keep the style consistent. Always format the changed .nix files before committing.
+Use `nix fmt` (powered by treefmt) to format all file types consistently.
 
-- Format only the staged/changed .nix files (recommended):
-
-  ```bash
-  git diff --name-only --cached -- '*.nix' | xargs -r alejandra -q
-  ```
-
-- Or format the whole repo:
+- Format only staged files (recommended):
 
   ```bash
-  alejandra .
+  nix fmt -- --staged
   ```
 
-[alejandra on GitHub](https://github.com/kamadorueda/alejandra)
+- Format the whole repo:
 
-## 2) Markdown: format
+  ```bash
+  nix fmt
+  ```
 
-- Formatter: mdformat (configured via `.mdformat.toml`)
+This runs the following formatters automatically:
 
-Recommended (staged files only):
+- **alejandra** for `.nix` files
+- **mdformat** for `.md` files
+- **fish_indent** for `.fish` files
+- **biome** for `.js`, `.ts`, `.json`, `.css`, `.html` files (format + lint)
 
-```bash
-git diff --name-only --cached -- '*.md' | xargs -r mdformat
-```
+Formatting is also validated by `nix flake check`.
 
-Whole repo:
-
-```bash
-mdformat .
-```
-
-If not in PATH, you can run via Nix:
-
-```bash
-nix run nixpkgs#mdformat -- .
-```
-
-## 3) Commit messages
+## 2) Commit messages
 
 Use [Conventional Commits](https://www.conventionalcommits.org/). Keep the subject concise (≤ 50 chars), leave a blank
 line, and wrap the body before 72 chars.
@@ -52,7 +37,7 @@ Examples:
 - feat(orion): add systemd no-sleep module
 - fix(nfs): correct exports for fileshare
 
-## 4) Nix-specific checks
+## 3) Nix-specific checks
 
 When you change .nix files, validate locally before pushing (see README for host targets):
 
@@ -76,7 +61,7 @@ When you change .nix files, validate locally before pushing (see README for host
 
 If any command fails, review the output, fix the issue, and re-run.
 
-## 5) MCP helper (optional but recommended)
+## 4) MCP helper (optional but recommended)
 
 This repo is set up to use a local NixOS MCP helper (see `mcp.json`). If available on your machine, Junie can run it for
 guidance and validation.

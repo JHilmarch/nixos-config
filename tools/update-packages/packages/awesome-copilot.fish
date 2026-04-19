@@ -6,7 +6,7 @@ function _github_commit_date -d "Get commit date from GitHub API, fallback to to
     set -l repo $argv[1]
     set -l sha $argv[2]
     set -l date (curl -s "https://api.github.com/repos/$repo/commits/$sha" | jq -r '.commit.committer.date[:10]')
-    if test -z "$date" -o "$date" = "null"
+    if test -z "$date" -o "$date" = null
         set date (date +%Y-%m-%d)
     end
     echo "$date"
@@ -38,9 +38,15 @@ function update_awesome-copilot
     set -l tmp (mktemp -d)
     log_step "Cloning repo to regenerate deps..."
     if test "$UPDATE_JSON" = true
-        git clone --depth 1 -q https://github.com/microsoft/mcp-dotnet-samples.git "$tmp/source"; or begin; rm -rf "$tmp"; return 1; end
+        git clone --depth 1 -q https://github.com/microsoft/mcp-dotnet-samples.git "$tmp/source"; or begin
+            rm -rf "$tmp"
+            return 1
+        end
     else
-        git clone --depth 1 https://github.com/microsoft/mcp-dotnet-samples.git "$tmp/source"; or begin; rm -rf "$tmp"; return 1; end
+        git clone --depth 1 https://github.com/microsoft/mcp-dotnet-samples.git "$tmp/source"; or begin
+            rm -rf "$tmp"
+            return 1
+        end
     end
 
     set -l csproj (find "$tmp/source" -name "*.csproj" -path "*AwesomeCopilot*" | head -1)

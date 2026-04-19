@@ -16,9 +16,7 @@
         inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
         pkgs.local.github-personal-mcp
         pkgs.local.github-work-mcp
-        pkgs.alejandra # Required by native formatter (nix)
-        pkgs.fish # Required by native formatter (fish)
-        pkgs.mdformat # Required by native formatter (markdown)
+        self.formatter.${pkgs.stdenv.hostPlatform.system} # treefmt wrapper (all formatters)
       ];
     };
 
@@ -50,17 +48,9 @@
           };
         };
         formatter = {
-          nix = {
-            command = [(lib.getExe pkgs.alejandra) "-q" "$FILE"];
-            extensions = [".nix"];
-          };
-          fish = {
-            command = ["fish" "-c" "fish_indent -w $FILE"];
-            extensions = [".fish"];
-          };
-          markdown = {
-            command = [(lib.getExe pkgs.mdformat) "$FILE"];
-            extensions = [".md"];
+          treefmt = {
+            command = [(lib.getExe self.formatter.${pkgs.stdenv.hostPlatform.system}) "$FILE"];
+            extensions = [".nix" ".md" ".fish" ".json" ".js" ".ts" ".mjs" ".mts" ".cjs" ".cts" ".jsx" ".tsx" ".css" ".html"];
           };
         };
         lsp = {

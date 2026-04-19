@@ -3,7 +3,7 @@
 
 function find_repo_root -d "Find the git repo root containing flake.nix"
     set -l dir (pwd)
-    while test "$dir" != "/"
+    while test "$dir" != /
         if test -f "$dir/flake.nix"
             echo "$dir"
             return 0

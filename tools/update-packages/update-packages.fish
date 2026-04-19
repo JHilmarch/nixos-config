@@ -54,7 +54,7 @@ function cmd_list
         set -l current (current_$pkg)
         set -l latest (fetch_latest_$pkg)
 
-        if test -z "$latest" -o "$latest" = "null"
+        if test -z "$latest" -o "$latest" = null
             set latest unknown
         end
         if test -z "$current"
@@ -62,7 +62,7 @@ function cmd_list
         end
 
         set -l pkg_status up-to-date
-        if test "$current" != "$latest" -a "$latest" != "unknown"
+        if test "$current" != "$latest" -a "$latest" != unknown
             set pkg_status outdated
         end
 
@@ -82,7 +82,7 @@ end
 
 function cmd_update
     set -l targets $argv
-    if test (count $targets) -eq 1; and test $targets[1] = "--all"
+    if test (count $targets) -eq 1; and test $targets[1] = --all
         set targets $ALL_PACKAGES
     end
 
@@ -99,7 +99,7 @@ function cmd_update
         set -l current (current_$pkg)
         set -l latest (fetch_latest_$pkg)
 
-        if test -z "$latest" -o "$latest" = "null"
+        if test -z "$latest" -o "$latest" = null
             set -l entry "{\"name\":\"$pkg\",\"status\":\"error\",\"error\":\"Failed to fetch latest version\"}"
             set results (echo "$results" | jq --argjson e "$entry" '. + [$e]')
             continue

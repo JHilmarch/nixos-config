@@ -194,7 +194,9 @@
         "flake-parts": "flake-parts",
         "nixpkgs": "nixpkgs",
         "systems": "systems",
-        "treefmt-nix": "treefmt-nix"
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
       },
       "locked": {
         "lastModified": 1776484001,
@@ -395,7 +397,8 @@
         "nixpkgs": "nixpkgs_3",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "nur": "nur",
-        "sops-nix": "sops-nix"
+        "sops-nix": "sops-nix",
+        "treefmt-nix": "treefmt-nix"
       }
     },
     "sops-nix": {
@@ -436,7 +439,6 @@
     "treefmt-nix": {
       "inputs": {
         "nixpkgs": [
-          "llm-agents",
           "nixpkgs"
         ]
       },

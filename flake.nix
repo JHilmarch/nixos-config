@@ -7,6 +7,7 @@
     nur.url = "github:nix-community/NUR";
     mcp-nixos.url = "github:utensils/mcp-nixos";
     llm-agents.url = "github:numtide/llm-agents.nix";
+    llm-agents.inputs.treefmt-nix.follows = "treefmt-nix";
     jail-nix.url = "sourcehut:~alexdavid/jail.nix";
 
     home-manager = {
@@ -26,6 +27,11 @@
 
     nixos-wsl = {
       url = "github:nix-community/NixOS-WSL";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -58,10 +64,19 @@
       pkgs = mkPkgs system;
     in
       pkgs.callPackages ./packages {};
+
+    treefmtEval = forAllSystems (
+      system:
+        inputs.treefmt-nix.lib.evalModule (mkPkgs system) ./treefmt.nix
+    );
   in {
     packages = forAllSystems mkPackages;
 
-    formatter = forAllSystems (system: inputs.nixpkgs.legacyPackages.${system}.alejandra);
+    formatter = forAllSystems (system: treefmtEval.${system}.config.build.wrapper);
+
+    checks = forAllSystems (system: {
+      formatting = treefmtEval.${system}.config.build.check self;
+    });
 
     nixosConfigurations = let
       nixpkgsConfig = {
