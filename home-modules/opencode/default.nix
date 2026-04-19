@@ -43,6 +43,7 @@
         (try-readonly (noescape "~/.gitconfig"))
         (try-readonly (noescape "~/.ssh"))
         (try-readwrite (noescape "~/.claude"))
+        (try-readwrite (noescape "~/.cache/ck"))
         (try-readonly "/run/secrets")
         (fwd-env "ANTHROPIC_API_KEY")
         (fwd-env "CONTEXT7_API_KEY")

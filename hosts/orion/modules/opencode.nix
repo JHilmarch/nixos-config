@@ -17,6 +17,8 @@
         pkgs.local.github-personal-mcp
         pkgs.local.github-work-mcp
         self.formatter.${pkgs.stdenv.hostPlatform.system} # treefmt wrapper (all formatters)
+        pkgs.findutils # find, xargs, locate
+        inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.ck # hybrid code search (semantic, lexical, regex)
       ];
     };
 
