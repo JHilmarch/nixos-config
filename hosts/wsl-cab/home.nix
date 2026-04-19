@@ -8,7 +8,8 @@
 }: {
   imports = [
     "${self}/home-modules/fish/dev.nix"
-    "${self}/home-modules/git/cab.nix"
+    "${self}/home-modules/git/cab-ssh.nix"
+    "${self}/home-modules/ssh/cab.nix"
     "${self}/home-modules/copilot-cli"
     ./modules/copilot-cli.nix
   ];
@@ -32,6 +33,8 @@
       nuget
       unstable.playwright-mcp
       unstable.mcp-proxy
+      unstable.jetbrains.rider
+      jetbrains.jdk
       (dotnetCorePackages.combinePackages [
         dotnetCorePackages.dotnet_9.sdk
         dotnetCorePackages.dotnet_10.sdk
