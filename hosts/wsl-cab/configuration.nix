@@ -56,7 +56,47 @@
 
   programs = {
     fish.enable = true;
-    nix-ld.enable = true;
+    nix-ld = {
+      enable = true;
+      libraries = with pkgs; [
+        stdenv.cc.cc.lib
+        zlib
+        zstd
+        curl
+        openssl
+        libxml2
+        fontconfig
+        freetype
+        libxkbcommon
+        xorg.libX11
+        xorg.libXext
+        xorg.libXrender
+        xorg.libXi
+        xorg.libXtst
+        xorg.libXrandr
+        xorg.libICE
+        xorg.libSM
+        libGL
+        alsa-lib
+        expat
+      ];
+    };
+  };
+
+  services = {
+    openssh = {
+      enable = true;
+      settings = {
+        PermitRootLogin = "prohibit-password";
+        PasswordAuthentication = false;
+        AllowTcpForwarding = true;
+      };
+    };
+
+    vscode-server = {
+      enable = true;
+      enableFHS = true;
+    };
   };
 
   environment = {
@@ -76,7 +116,6 @@
         icu
         azure-cli
         inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
-        local.azure-mcp-server
       ];
     in
       base;

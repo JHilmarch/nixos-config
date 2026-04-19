@@ -42,8 +42,29 @@ The Copilot CLI runs inside a `jail-nix` sandbox (`copilot-jailed`). The jail pr
 
 ### Authentication
 
+#### GitHub
+
 GitHub Copilot CLI authenticates via `gh auth login` (native flow). No PATs or sops-nix needed — GitHub Enterprise
 licensing provides the AI models.
+
+Commits to GitHub repositories are signed with an SSH key (`~/.ssh/id_ed25519_github`).
+
+#### Azure DevOps
+
+Git operations to Azure DevOps use SSH authentication with a password-less key (`~/.ssh/id_ed25519_azuredevops`).
+Configure your SSH key in Azure DevOps under **User Settings → SSH Public Keys**.
+
+The `url.insteadOf` rule in git config rewrites `https://dev.azure.com/` URLs to `git@ssh.dev.azure.com:v3/`
+automatically. Azure DevOps commits are **not** signed.
+
+### SSH Keys
+
+Place these keys manually in `~/.ssh/`:
+
+| Key | Purpose | |---|---| | `id_ed25519_azuredevops` | Azure DevOps git push/pull via SSH | | `id_ed25519_github` |
+GitHub commit signing (SSH signature) |
+
+GitHub authentication uses HTTPS via `gh auth login` — not SSH.
 
 ### Azure DevOps MCP authentication
 
@@ -67,20 +88,48 @@ authentication.
 After rebuilding, the generated `~/.copilot/mcp-config.json` will contain an `azure-devops` MCP entry that launches the
 server through the in-jail `copilot-azure-devops-mcp` wrapper.
 
+## VS Code Remote WSL
+
+The `nixos-vscode-server` module is enabled with FHS support. It uses patchelf to fix downloaded VS Code server binaries
+and provides an FHS-compatible environment for extension native modules.
+
+### Setup
+
+1. Install the [Remote - WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl) extension
+   in VS Code on Windows.
+
+1. After the first rebuild, enable the auto-fix systemd user service:
+
+   ```bash
+   systemctl --user enable auto-fix-vscode-server.service
+   ```
+
+1. Open a WSL folder in VS Code — the server will be automatically downloaded and patched.
+
+## JetBrains Remote Development
+
+JetBrains Rider connects from Windows via SSH using JetBrains Gateway. The server-side tooling includes:
+
+- **OpenSSH server** with `AllowTcpForwarding yes` for Gateway connections
+- **JetBrains Rider** (unstable) with the `rider-remote-dev-server` wrapper
+- **JetBrains JDK** for the JBR runtime
+- **Expanded nix-ld libraries** for JetBrains backend compatibility
+
+### Setup
+
+1. Place your SSH public key in `~/.ssh/authorized_keys` on the WSL instance.
+1. Install [JetBrains Gateway](https://www.jetbrains.com/remote-development/gateway/) on Windows.
+1. In Gateway, connect to `tux@localhost` (or the WSL IP) via SSH.
+1. Select Rider as the IDE — Gateway will detect the `rider-remote-dev-server` binary.
+
+> **Note:** The auto-download path (`~/.cache/JetBrains/RemoteDev/`) works with nix-ld providing the dynamic linker. The
+> nixpkgs `jetbrains.rider` package includes a patch that sets `REMOTE_DEV_SERVER_USE_SELF_CONTAINED_LIBS=0`.
+
 ## Other MCP Servers
 
 ```json
 {
   "mcpServers": {
-    "azure": {
-      "command": "wsl",
-      "args": [
-        "-d",
-        "NixOS",
-        "--",
-        "azure-mcp-server"
-      ]
-    },
     "ms-learn": {
       "command": "wsl",
       "args": [
