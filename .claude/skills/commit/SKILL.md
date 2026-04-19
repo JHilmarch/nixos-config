@@ -46,14 +46,29 @@ Never commit secrets (.env, credentials.json, private keys).
 Make small, atomic commits - each commit should address one logical change. If your work spans multiple concerns (e.g.,
 a refactor and a bug fix), break it into separate commits.
 
-If applicable: Reference the relevant GitHub issue as a footer (`#123`).
-
-```bash
-git add <files>
-git commit -m "title" -m "body paragraph"
-```
+If applicable: Reference the relevant GitHub issue as a footer (`Closes #123` or `Refs #123`).
 
 Always create a NEW commit. Never amend unless the user explicitly asks.
+
+#### Commit command format
+
+Use one `-m` flag per **paragraph**. Within each paragraph, wrap lines with literal `\n` at 72 characters.
+
+```bash
+# CORRECT: one -m per paragraph, lines wrapped at 72 chars
+git commit -m "feat(wsl-cab): add copilot-cli with Azure DevOps" \
+  -m "Enable the copilot-cli home module in wsl-cab with\nazure-devops-mcp as a runtime input and MCP server entry.\nAdd PAT authentication docs to README." \
+  -m "Closes #65"
+
+# WRONG: one -m per line (creates separate paragraphs)
+git commit -m "title" \
+  -m "Enable the copilot-cli home module in wsl-cab with" \
+  -m "azure-devops-mcp as a runtime input." \
+  -m "Add PAT authentication docs to README."
+```
+
+NEVER use one `-m` per sentence. That fragments the body into disconnected lines. Each `-m` is a paragraph — wrap within
+it.
 
 ### 3. Conventional Commit Format
 
