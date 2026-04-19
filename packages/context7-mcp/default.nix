@@ -7,12 +7,12 @@
   openssl,
 }: let
   pname = "context7-mcp";
-  version = "2.1.6";
+  version = "2.1.8";
   src = fetchFromGitHub {
     owner = "upstash";
     repo = "context7";
-    rev = "@upstash/context7-mcp@2.1.6";
-    hash = "sha256-IFKh1vZtKXCOC6BJklFyp6TmPSymx3OF/CPoc9MQPQs=";
+    rev = "@upstash/context7-mcp@2.1.8";
+    hash = "sha256-TMvDzDcZd9hoYI84x+jewOJYkSrb1qwVRTdzD2SwG4U=";
   };
 in
   stdenv.mkDerivation {
@@ -31,7 +31,7 @@ in
 
     pnpmDeps = pnpm_10.fetchDeps {
       inherit pname version src;
-      hash = "sha256-oCDmW0c9g2fbtTKbvxzYbiuJ799D2Y5KXsbjciwdO6c=";
+      hash = "sha256-IPNSM9ihQ3qFS31rVWjUdnHwWV+n48Zsoq4tg01GHaI=";
       fetcherVersion = 1;
     };
 
