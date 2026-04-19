@@ -41,15 +41,10 @@
       ];
       checkPhase = "true";
       text = ''
-        if [ $# -gt 0 ]; then
-          org="$1"
-          shift
-        else
-          org="${AZURE_DEVOPS_ORG:-}"
-        fi
+        org="${AZURE_DEVOPS_ORG:-}"
 
         if [ -z "$org" ]; then
-          echo "AZURE_DEVOPS_ORG must be set (or passed as the first argument)." >&2
+          echo "AZURE_DEVOPS_ORG must be set before starting Azure DevOps MCP." >&2
           exit 1
         fi
 
@@ -60,7 +55,7 @@
 
         # Azure DevOps MCP expects PERSONAL_ACCESS_TOKEN to be base64("<non-empty-user>:<pat>").
         # The username value is ignored by Azure DevOps, so we use the stable placeholder "copilot".
-        export PERSONAL_ACCESS_TOKEN="$(printf 'copilot:%s' "$AZURE_DEVOPS_PAT" | base64 -w0)"
+        export PERSONAL_ACCESS_TOKEN="$(printf 'copilot:%s' "$AZURE_DEVOPS_PAT" | base64 | tr -d '\n')"
         exec ${lib.getExe pkgs.local.azure-devops-mcp} "$org" --authentication pat "$@"
       '';
     };
