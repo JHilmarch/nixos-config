@@ -9,7 +9,7 @@
 }: {
   imports = [
     "${self}/modules/defaults.nix"
-    "${self}/modules/markitdown-mcp/default.nix"
+    ./modules/copilot-cli.nix
   ];
 
   nixpkgs = {
