@@ -132,7 +132,7 @@
         system = "x86_64-linux";
         specialArgs = {
           inherit inputs self;
-          username = "tux";
+          username = "jonatan";
           hostname = "wsl-cab";
         };
       in

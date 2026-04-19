@@ -119,7 +119,7 @@ JetBrains Rider connects from Windows via SSH using JetBrains Gateway. The serve
 
 1. Place your SSH public key in `~/.ssh/authorized_keys` on the WSL instance.
 1. Install [JetBrains Gateway](https://www.jetbrains.com/remote-development/gateway/) on Windows.
-1. In Gateway, connect to `tux@localhost` (or the WSL IP) via SSH.
+1. In Gateway, connect to `jonatan@localhost` (or the WSL IP) via SSH.
 1. Select Rider as the IDE — Gateway will detect the `rider-remote-dev-server` binary.
 
 > **Note:** The auto-download path (`~/.cache/JetBrains/RemoteDev/`) works with nix-ld providing the dynamic linker. The
