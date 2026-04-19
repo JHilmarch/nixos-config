@@ -9,6 +9,8 @@
   imports = [
     "${self}/home-modules/fish/dev.nix"
     "${self}/home-modules/git/cab.nix"
+    "${self}/home-modules/copilot-cli"
+    ./modules/copilot-cli.nix
   ];
 
   home = {
