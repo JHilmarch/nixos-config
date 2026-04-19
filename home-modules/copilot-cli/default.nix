@@ -3,11 +3,11 @@
   pkgs,
   lib,
   inputs,
+  self,
   ...
 }: let
-  readSkillsFrom = dir:
-    builtins.mapAttrs (name: _: dir + "/${name}")
-    (lib.filterAttrs (_: type: type == "directory") (builtins.readDir dir));
+  sharedLib = import ../lib.nix {inherit lib;};
+  sharedSkills = sharedLib.readSkillsFrom (self + "/ai/skills");
 in {
   options.modules.copilot-cli = with lib; {
     enable = mkEnableOption "GitHub Copilot CLI with jail sandbox";
@@ -113,7 +113,7 @@ in {
             source = path;
             recursive = true;
           })
-        (readSkillsFrom ./skills))
+        sharedSkills)
       ];
     };
 }
