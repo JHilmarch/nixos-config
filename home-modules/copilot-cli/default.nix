@@ -33,7 +33,7 @@
       mcpServers = cfg.mcpServers;
     };
 
-    azure-devops-mcp-wrapper = pkgs.writeShellApplication {
+    copilot-azure-devops-mcp-wrapper = pkgs.writeShellApplication {
       name = "copilot-azure-devops-mcp";
       runtimeInputs = [
         pkgs.coreutils
@@ -87,7 +87,7 @@
             pkgs.bash
             pkgs.github-copilot-cli
             pkgs.fishPlugins.github-copilot-cli-fish
-            azure-devops-mcp-wrapper
+            copilot-azure-devops-mcp-wrapper
           ]
           ++ cfg.runtimeInputs))
       ]

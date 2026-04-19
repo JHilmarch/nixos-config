@@ -124,7 +124,8 @@ set -Ux AZURE_DEVOPS_PAT your-pat
 
 The `copilot-jailed` wrapper forwards these variables into the jail and converts `AZURE_DEVOPS_PAT` into the
 `PERSONAL_ACCESS_TOKEN` format expected by `azure-devops-mcp` by base64-encoding `copilot:<your-pat>`. The `copilot`
-prefix is only a non-empty placeholder username; Azure DevOps uses the PAT portion for authentication.
+prefix is a required non-empty placeholder username; Azure DevOps ignores it and uses only the PAT portion for
+authentication.
 
 After rebuilding, the generated `~/.copilot/mcp-config.json` will contain an `azure-devops` MCP entry that launches the
 server through the in-jail `copilot-azure-devops-mcp` wrapper.
