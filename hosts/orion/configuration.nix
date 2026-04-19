@@ -222,6 +222,13 @@ in {
   };
 
   services = {
+    # Btrfs auto-scrub: checks data integrity on the 1st and 15th of each month
+    btrfs.autoScrub = {
+      enable = true;
+      interval = "*-*-1,15 15:00:00";
+      fileSystems = ["/"];
+    };
+
     # Enable PCSC-Lite daemon, to access smart cards using SCard API (PC/SC).
     pcscd.enable = true;
 
