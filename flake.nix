@@ -30,6 +30,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    vscode-server = {
+      url = "github:nix-community/nixos-vscode-server";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -143,6 +148,7 @@
               ];
             }
             inputs.nixos-wsl.nixosModules.wsl
+            inputs.vscode-server.nixosModules.default
             ./hosts/wsl-cab/configuration.nix
             inputs.home-manager.nixosModules.home-manager
             {
