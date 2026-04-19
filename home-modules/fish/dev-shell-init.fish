@@ -6,4 +6,5 @@ end
 
 if test -f /run/secrets/gh_personal_pat
     set -gx GH_TOKEN (string trim (cat /run/secrets/gh_personal_pat))
+    set -gx GITHUB_TOKEN $GH_TOKEN
 end

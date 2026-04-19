@@ -58,6 +58,10 @@ in {
           gpgsign = true;
         };
 
+        "credential \"https://github.com\"" = {
+          helper = "!f() { echo \"password=$GITHUB_TOKEN\"; }; f";
+        };
+
         core = {
           editor = "vim";
           hooksPath = "${config.home.homeDirectory}/.config/git/hooks";
