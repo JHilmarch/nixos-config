@@ -27,10 +27,9 @@ ls -d ./worktrees 2>/dev/null # Alternative
 
 **If found:** Use that directory. If both exist, `~/.worktrees` wins.
 
-### 2. Check CLAUDE.md / AGENTS.md
+### 2. Check AGENTS.md
 
 ```bash
-grep -i "worktree.*director" CLAUDE.md 2>/dev/null
 grep -i "worktree.*director" AGENTS.md 2>/dev/null
 ```
 
@@ -38,7 +37,7 @@ grep -i "worktree.*director" AGENTS.md 2>/dev/null
 
 ### 3. Ask User
 
-If no directory exists and no CLAUDE.md preference:
+If no directory exists and no AGENTS.md preference:
 
 ```
 No worktree directory found. Where should I create worktrees?
@@ -98,8 +97,8 @@ cd "$path"
 
 ### 3. Run Project Setup
 
-Auto-detect (check README.md / CLAUDE.md / AGENTS.md) and run appropriate setup. This could be installing node
-dependencies, using dotnet build, etc.
+Auto-detect (check README.md / AGENTS.md) and run appropriate setup. This could be installing node dependencies, using
+dotnet build, etc.
 
 ### 4. Verify Clean Baseline
 
@@ -126,7 +125,7 @@ Ready to implement <feature>
 ## Quick Reference
 
 | Situation | Action | | --- | --- | | `~/.worktrees/` exists | Use it | | Both exist | Use `~/.worktrees/` | | Neither
-exists | Check CLAUDE.md → Ask user | | Directory not ignored | Add to .gitignore + commit | | Tests fail during
+exists | Check AGENTS.md → Ask user | | Directory not ignored | Add to .gitignore + commit | | Tests fail during
 baseline | Report failures + ask | | No package.json/Cargo.toml | Skip dependency install |
 
 ## Common Mistakes
@@ -139,7 +138,7 @@ baseline | Report failures + ask | | No package.json/Cargo.toml | Skip dependenc
 ### Assuming directory location
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
+- **Fix:** Follow priority: existing > AGENTS.md > ask
 
 ### Proceeding with failing tests
 
@@ -154,7 +153,7 @@ baseline | Report failures + ask | | No package.json/Cargo.toml | Skip dependenc
 ## Example Workflow
 
 ```
-You: I'm using the using-git-worktrees skill to set up an isolated workspace.
+I'm using the using-git-worktrees skill to set up an isolated workspace.
 [Check ~/.worktrees/ - exists]
 [Verify ignored - git check-ignore confirms .worktrees/ is ignored] (if using project-local)
 [Create worktree: git worktree add ~/.worktrees/<project>-fix-auth -b feature/fix-auth]
@@ -174,11 +173,11 @@ Ready to implement auth feature
 - Skip baseline test verification
 - Proceed with failing tests without asking
 - Assume directory location when ambiguous
-- Skip CLAUDE.md check
+- Skip AGENTS.md check
 
 **Always:**
 
-- Follow directory priority: existing > CLAUDE.md > ask
+- Follow directory priority: existing > AGENTS.md > ask
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline

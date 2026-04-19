@@ -4,11 +4,12 @@
   username,
   lib,
   inputs,
+  self,
   ...
 }: let
-  readSkillsFrom = dir:
-    builtins.mapAttrs (name: _: dir + "/${name}")
-    (lib.filterAttrs (_: type: type == "directory") (builtins.readDir dir));
+  sharedLib = import ../lib.nix {inherit lib;};
+  sharedSkills = sharedLib.readSkillsFrom (self + "/ai/skills");
+  privateSkills = sharedLib.readSkillsFrom ./skills;
 in {
   options.modules.claude = with lib; {
     preSetupScripts = mkOption {
@@ -239,7 +240,7 @@ in {
           command = "mcp-server-playwright";
         };
       };
-      skills = readSkillsFrom ./skills;
+      skills = sharedSkills // privateSkills;
     };
   };
 }
