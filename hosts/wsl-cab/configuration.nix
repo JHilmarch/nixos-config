@@ -9,7 +9,6 @@
 }: {
   imports = [
     "${self}/modules/defaults.nix"
-    "${self}/modules/markitdown-mcp/default.nix"
   ];
 
   nixpkgs = {
@@ -60,8 +59,6 @@
     nix-ld.enable = true;
   };
 
-  services.markitdown-mcp.enable = true;
-
   environment = {
     systemPackages = let
       base = with pkgs; [
@@ -79,10 +76,7 @@
         icu
         azure-cli
         inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
-        pkgs.python313Packages.markitdown
         local.azure-mcp-server
-        local.github-mcp-server
-        local.mcp-nuget
       ];
     in
       base;
