@@ -56,6 +56,7 @@
             pkgs.git
             pkgs.ripgrep
             pkgs.bash
+            pkgs.fish
             pkgs._1password-gui
           ]
           ++ cfg.runtimeInputs))
