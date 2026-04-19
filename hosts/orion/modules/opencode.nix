@@ -16,8 +16,12 @@
         inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
         pkgs.local.github-personal-mcp
         pkgs.local.github-work-mcp
+        pkgs.local.gh-personal # GitHub CLI authenticated with PAT for personal account
+        pkgs.local.gh-personal-project-manager # GitHub CLI with classic PAT for project management
+        pkgs.local.gh-work # GitHub CLI authenticated with PAT for work account
         self.formatter.${pkgs.stdenv.hostPlatform.system} # treefmt wrapper (all formatters)
         pkgs.findutils # find, xargs, locate
+        pkgs.jq # command-line JSON processor
         inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.ck # hybrid code search (semantic, lexical, regex)
       ];
     };
