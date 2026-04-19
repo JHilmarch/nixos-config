@@ -33,7 +33,6 @@ ls -d ./.worktrees 2>/dev/null # Alternative
 ```bash
 grep -i "worktree.*directory" AGENTS.md 2>/dev/null
 grep -i "worktree.*directory" README.md 2>/dev/null
-grep -i "worktree.*directory" .github/copilot-instructions.md 2>/dev/null
 ```
 
 **If a preference is specified:** use it without asking.
@@ -97,8 +96,16 @@ cd "$path"
 
 ### 3. Run Project Setup
 
-Auto-detect setup from repository instructions (`AGENTS.md`, `README.md`, package manifests) and run the
-project-appropriate commands. This might be dependency installation, a build bootstrap, or another setup step.
+Auto-detect setup from repository instructions (`AGENTS.md`, `README.md`) and package manifests before hardcoding a
+command. For example:
+
+- `package.json`: inspect scripts and use the documented package manager (`npm`, `pnpm`, etc.)
+- `Cargo.toml`: use Cargo commands
+- `pyproject.toml`: use the documented Python environment/bootstrap flow
+- `flake.nix`: use the repository's documented Nix checks or dev-shell workflow
+
+Then run the project-appropriate setup command, such as dependency installation, entering a dev shell, or another
+bootstrap step.
 
 ### 4. Verify Clean Baseline
 
