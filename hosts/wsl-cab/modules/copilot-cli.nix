@@ -3,7 +3,11 @@
     enable = true;
 
     runtimeInputs = [
-      pkgs.local.azure-devops-mcp
+      pkgs.nodejs_24
+      (pkgs.dotnetCorePackages.combinePackages [
+        pkgs.dotnetCorePackages.dotnet_9.sdk
+        pkgs.dotnetCorePackages.dotnet_10.sdk
+      ])
     ];
 
     mcpServers = {
