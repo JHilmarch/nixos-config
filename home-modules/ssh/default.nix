@@ -41,7 +41,8 @@ in {
 
   # Replace the Nix store symlink with a regular file so SSH accepts the config.
   # SSH rejects ~/.ssh/config owned by nobody (Nix store); this copies it as a user-owned file.
-  home.activation.fixSshConfig = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  # Must run after "linkGeneration" which creates the symlink.
+  home.activation.fixSshConfig = lib.hm.dag.entryAfter ["linkGeneration"] ''
     run rm -f $VERBOSE_ARG ~/.ssh/config
     run cat ${sshConfigFile} > ~/.ssh/config
     run chmod 600 $VERBOSE_ARG ~/.ssh/config
