@@ -3,7 +3,11 @@
   lib,
   config,
   ...
-}: {
+}: let
+  allowedSigners = pkgs.writeText "allowed_signers" ''
+    jonatan.hilmarch@cabhealthcare.se ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMHlhh9Xa4M3RptA+810suDczhI7EEFxIGf5+Eh7S9Co
+  '';
+in {
   programs = {
     delta = {
       enable = true;
@@ -22,6 +26,7 @@
         user = {
           name = "Jonatan Hilmarch";
           email = "jonatan.hilmarch@cabhealthcare.se";
+          signingkey = "~/.ssh/id_ed25519_github";
         };
 
         push = {
@@ -43,10 +48,7 @@
 
         "gpg \"ssh\"" = {
           program = "${pkgs.openssh}/bin/ssh-keygen";
-        };
-
-        user = {
-          signingkey = "~/.ssh/id_ed25519_github";
+          allowedSignersFile = "${allowedSigners}";
         };
 
         commit = {
