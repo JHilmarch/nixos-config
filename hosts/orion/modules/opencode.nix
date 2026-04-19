@@ -23,6 +23,7 @@
         pkgs.findutils # find, xargs, locate
         pkgs.jq # command-line JSON processor
         inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.ck # hybrid code search (semantic, lexical, regex)
+        pkgs.nix # nix flake check, nix build, etc.
       ];
     };
 
