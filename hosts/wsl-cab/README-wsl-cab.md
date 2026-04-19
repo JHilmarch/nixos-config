@@ -61,8 +61,8 @@ automatically. Azure DevOps commits are **not** signed.
 
 Place these keys manually in `~/.ssh/`:
 
-| Key | Purpose | |---|---| | `id_ed25519_azuredevops` | Azure DevOps git push/pull via SSH | | `id_ed25519_github` |
-GitHub commit signing (SSH signature) |
+- `id_ed25519_azuredevops` — Azure DevOps git push/pull via SSH
+- `id_ed25519_github` — GitHub commit signing (SSH signature)
 
 GitHub authentication uses HTTPS via `gh auth login` — not SSH.
 
