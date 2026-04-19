@@ -30,83 +30,20 @@ First login: set your password (needed for sudo).
 passwd
 ```
 
-## GitHub authentication
+## GitHub Copilot CLI (copilot-jailed)
 
-The wrapped GitHub MCP Server uses the access token from GitHub CLI to authenticate. Login with `gh auth login`.
+The Copilot CLI runs inside a `jail-nix` sandbox (`copilot-jailed`). The jail provides:
 
-## Context7 Authentication
+- Network access for API calls
+- Read-write access to `~/.cache/copilot-cli`, `~/.config/copilot-cli`, `~/.copilot`, `~/.local/share/copilot-cli`
+- Read-only access to `~/.gitconfig`, `~/.ssh`, `~/.config/git`
+- MCP servers configured via `~/.copilot/mcp-config.json` (managed by Nix)
+- Skills from `home-modules/copilot-cli/skills/` (auto-loaded)
 
-The Context7 MCP server provides up-to-date code documentation. To use it, set `CONTEXT7_TOKEN` as a User environment
-variable in Windows.
+### Authentication
 
-### Create a PowerShell wrapper script
-
-1. Save the wrapper script from the gist:
-   [context7-mcp-wsl-wrapper.ps1](https://gist.github.com/JHilmarch/1968c745d36e265a4ef75bb5f6d2dc0f)
-1. Save the wrapper to `C:\Users\%USERNAME%\.copilot\context7-mcp-wsl-wrapper.ps1`
-
-```powershell
-$token = [Environment]::GetEnvironmentVariable("CONTEXT7_TOKEN", "User")
-
-if (-not $token) {
-    $token = [Environment]::GetEnvironmentVariable("CONTEXT7_TOKEN", "Machine")
-}
-
-if (-not $token) {
-    $token = $env:CONTEXT7_TOKEN
-}
-
-if (-not $token) {
-    Write-Error "CONTEXT7_TOKEN not found in User, Machine, or current environment" -ErrorAction Stop
-    exit 1
-}
-
-$process = Start-Process -FilePath "wsl.exe" -ArgumentList "-d", "NixOS", "--", "context7-mcp", "--api-key", $token -NoNewWindow -PassThru -Wait
-exit $process.ExitCode
-```
-
-*context7-mcp-wsl-wrapper.ps1*
-
-### Set CONTEXT7_TOKEN environment variable
-
-Open PowerShell and run:
-
-```powershell
-[System.Environment]::SetEnvironmentVariable('CONTEXT7_TOKEN', 'your-token-here', 'User')
-```
-
-**Notes:**
-
-- User-level variables are stored in `HKEY_CURRENT_USER\Environment`
-- To set system-wide (all users): use `'Machine'` instead of `'User'` (requires admin)
-- You can also set variables via Windows Settings GUI: Settings > System > About > Advanced system settings >
-  Environment Variables
-- The variable is immediately available to WSL processes. No restart needed.
-
-### Configure GitHub Copilot CLI MCP
-
-Add the following to your GitHub Copilot CLI MCP configuration (`mcpServers` section):
-
-```json
-{
-  "mcpServers": {
-    "context7": {
-      "command": "pwsh",
-      "args": [
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "C:\\Users\\<USERNAME>\\.copilot\\context7-mcp-wsl-wrapper.ps1"
-      ]
-    }
-  }
-}
-```
-
-This configuration tells GitHub Copilot CLI to:
-
-1. Use `pwsh` to run the PowerShell wrapper script
-1. Script handles token retrieval and passes `--api-key` to `context7-mcp` automatically
+GitHub Copilot CLI authenticates via `gh auth login` (native flow). No PATs or sops-nix needed — GitHub Enterprise
+licensing provides the AI models.
 
 ### Azure DevOps MCP authentication
 
@@ -135,15 +72,6 @@ server through the in-jail `copilot-azure-devops-mcp` wrapper.
 ```json
 {
   "mcpServers": {
-    "nuget": {
-      "command": "wsl",
-      "args": [
-        "-d",
-        "NixOS",
-        "--",
-        "mcp-nuget"
-      ]
-    },
     "azure": {
       "command": "wsl",
       "args": [
@@ -151,24 +79,6 @@ server through the in-jail `copilot-azure-devops-mcp` wrapper.
         "NixOS",
         "--",
         "azure-mcp-server"
-      ]
-    },
-    "github": {
-      "command": "wsl",
-      "args": [
-        "-d",
-        "NixOS",
-        "--",
-        "github-mcp-server"
-      ]
-    },
-    "awesome-copilot": {
-      "command": "wsl",
-      "args": [
-        "-d",
-        "NixOS",
-        "--",
-        "awesome-copilot"
       ]
     },
     "ms-learn": {
@@ -181,15 +91,6 @@ server through the in-jail `copilot-azure-devops-mcp` wrapper.
         "--transport",
         "streamablehttp",
         "https://learn.microsoft.com/api/mcp"
-      ]
-    },
-    "markitdown": {
-      "command": "wsl",
-      "args": [
-        "-d",
-        "NixOS",
-        "--",
-        "markitdown-mcp"
       ]
     },
     "playwright": {
