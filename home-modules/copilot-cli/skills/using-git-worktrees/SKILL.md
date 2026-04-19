@@ -31,9 +31,9 @@ ls -d ./.worktrees 2>/dev/null # Alternative
 ### 2. Check Repository Instructions
 
 ```bash
-grep -i "worktree.*director" AGENTS.md 2>/dev/null
-grep -i "worktree.*director" README.md 2>/dev/null
-grep -i "worktree.*director" .github/copilot-instructions.md 2>/dev/null
+grep -i "worktree.*directory" AGENTS.md 2>/dev/null
+grep -i "worktree.*directory" README.md 2>/dev/null
+grep -i "worktree.*directory" .github/copilot-instructions.md 2>/dev/null
 ```
 
 **If a preference is specified:** use it without asking.
