@@ -74,7 +74,6 @@ in {
         (fwd-env "AZURE_DEVOPS_ORG")
         (fwd-env "AZURE_DEVOPS_PAT")
         (fwd-env "SSH_AUTH_SOCK")
-        (try-readonly (noescape "~/.1password/agent.sock"))
         (add-pkg-deps ([
             pkgs.git
             pkgs.gh
