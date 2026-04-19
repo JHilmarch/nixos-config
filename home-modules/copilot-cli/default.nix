@@ -58,6 +58,8 @@
           exit 1
         fi
 
+        # Azure DevOps MCP expects PERSONAL_ACCESS_TOKEN to be base64("<non-empty-user>:<pat>").
+        # The username value is ignored by Azure DevOps, so we use the stable placeholder "copilot".
         export PERSONAL_ACCESS_TOKEN="$(printf 'copilot:%s' "$AZURE_DEVOPS_PAT" | base64 -w0)"
         exec ${lib.getExe pkgs.local.azure-devops-mcp} "$org" --authentication pat "$@"
       '';
