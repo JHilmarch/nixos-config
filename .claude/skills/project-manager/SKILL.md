@@ -2,12 +2,6 @@ ______________________________________________________________________
 
 ## name: project-manager description: Plan, refine, and delegate work on a GitHub Project board disable-model-invocation: true allowed-tools: Bash, Read, Glob, Grep, Skill
 
-- Use `gh-personal-project-manager` for project board operations via the gh-project-manager CLI
-- Use the `github-personal` MCP for other GitHub operations, not supported by the gh-project-manager CLI
-- Use the `gh-personal` GitHub CLI wrapper for special queries and commands, not supported by the two options mentioned
-  above
-- The `gh-personal` & `gh-work` CLI wrappers are replacements for the `gh` CLI.
-
 ## How to use the gh-project-manager CLI
 
 **Documentation**
@@ -74,3 +68,12 @@ git -C . remote get-url origin | sed 's|.*github.com[/:]||; s|\.git$||'
 - Always wait for user approval before creating issues
 - Flag ambiguous items rather than guessing during refinement
 - Assignment briefs add implementation starting points — the refined issue already has acceptance criteria
+
+## Fallback routines
+
+For operations not supported by the gh-project-manager CLI, use the following:
+
+- **Project board operations** → use `gh-personal-project-manager` (classic PAT via the Fish CLI)
+- **Other GitHub operations** (issues, PRs, repos, etc.) → use the `github-personal` MCP tools
+  - **Fallback for unsupported queries** → use `gh-personal` CLI wrapper
+  - **Never use bare `gh`** — always use `gh-personal` (personal) or `gh-work` (work) wrappers instead
