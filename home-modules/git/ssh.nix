@@ -1,6 +1,7 @@
 {
   pkgs,
   lib,
+  config,
   ...
 }: let
   allowedSigners = pkgs.writeText "allowed_signers" ''
@@ -57,8 +58,16 @@ in {
           gpgsign = true;
         };
 
-        core.editor = "vim";
+        core = {
+          editor = "vim";
+          hooksPath = "${config.home.homeDirectory}/.config/git/hooks";
+        };
       };
     };
+  };
+
+  home.file.".config/git/hooks/commit-msg" = {
+    source = ./../../hooks/commit-msg;
+    executable = true;
   };
 }

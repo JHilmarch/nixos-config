@@ -1,0 +1,33 @@
+#!/bin/sh
+# commit-msg hook: enforce Conventional Commits boundaries.
+# - Subject line: max 50 characters
+# - Body lines: max 72 characters
+
+msg_file="$1"
+lineno=0
+
+while IFS= read -r line; do
+  lineno=$((lineno + 1))
+
+  if [ "$lineno" -eq 1 ]; then
+    subject_len=${#line}
+    if [ "$subject_len" -gt 50 ]; then
+      printf "ERROR: Subject line is %d chars (max 50):\n  %s\n" "$subject_len" "$line" >&2
+      exit 1
+    fi
+    continue
+  fi
+
+  # Skip blank separator (line 2), comment lines, blank lines
+  [ "$lineno" -eq 2 ] && [ -z "$line" ] && continue
+  case "$line" in '#'*) continue ;; esac
+  [ -z "$line" ] && continue
+
+  line_len=${#line}
+  if [ "$line_len" -gt 72 ]; then
+    printf "ERROR: Body line %d is %d chars (max 72):\n  %s\n" "$lineno" "$line_len" "$line" >&2
+    exit 1
+  fi
+done < "$msg_file"
+
+exit 0
