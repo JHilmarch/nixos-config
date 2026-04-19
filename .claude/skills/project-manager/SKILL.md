@@ -6,7 +6,7 @@ ______________________________________________________________________
 - Use the `github-personal` MCP for other GitHub operations, not supported by the gh-project-manager CLI
 - Use the `gh-personal` GitHub CLI wrapper for special queries and commands, not supported by the two options mentioned
   above
-- The `gh-personal` & `gh-work` CLI wrappers is replacements for the `gh` CLI.
+- The `gh-personal` & `gh-work` CLI wrappers are replacements for the `gh` CLI.
 
 ## How to use the gh-project-manager CLI
 
