@@ -54,6 +54,7 @@
             pkgs.nixd
             pkgs.fish-lsp
             pkgs.git
+            pkgs.openssh
             pkgs.ripgrep
             pkgs.bash
             pkgs.fish
