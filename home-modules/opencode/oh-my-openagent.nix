@@ -12,6 +12,7 @@ in
     home.file.".config/opencode/oh-my-openagent.json".text = builtins.toJSON {
       "$schema" = "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/master/assets/oh-my-openagent.schema.json";
       google_auth = false;
+      disabled_skills = ["git-master"];
       ralph_loop = {
         enabled = true;
         default_max_iterations = 25;
