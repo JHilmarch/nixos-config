@@ -41,14 +41,14 @@
       ];
       checkPhase = "true";
       text = ''
-        org="${AZURE_DEVOPS_ORG:-}"
+        org="''${AZURE_DEVOPS_ORG:-}"
 
         if [ -z "$org" ]; then
           echo "AZURE_DEVOPS_ORG must be set before starting Azure DevOps MCP." >&2
           exit 1
         fi
 
-        if [ -z "${AZURE_DEVOPS_PAT:-}" ]; then
+        if [ -z "''${AZURE_DEVOPS_PAT:-}" ]; then
           echo "AZURE_DEVOPS_PAT must be set before starting Azure DevOps MCP." >&2
           exit 1
         fi
