@@ -28,16 +28,13 @@
       grc
       gitleaks
       nuget
-      local.awesome-copilot
       unstable.playwright-mcp
-      unstable.mcp-grafana
       unstable.mcp-proxy
       (dotnetCorePackages.combinePackages [
         dotnetCorePackages.dotnet_9.sdk
         dotnetCorePackages.dotnet_10.sdk
       ])
       unstable.nodejs_24
-      local.context7-mcp
       local.azure-devops-mcp
     ];
   };
