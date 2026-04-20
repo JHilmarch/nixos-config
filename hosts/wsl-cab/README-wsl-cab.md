@@ -32,7 +32,10 @@ cmd /c "copy /b /y E:\cab-*.part-* C:\Temp\cab.wsl & del E:\cab-*.part-*"
   ```powershell
   wsl --install --no-distribution
   ```
-- Double-click on the downloaded `.wsl` file to import it.
+- Install the WSL:
+  ```powershell
+  wsl --install --from-file "C:\\Temp\cab.wsl" --name "NixOS-personal"
+  ```
 - Verify result:
   ```powershell
   wsl -l -v
