@@ -59,6 +59,7 @@
     polychromatic # Graphical front-end and tray applet for configuring Razer peripherals
     lm_sensors # Tools for reading hardware sensors
     nuget # NuGet CLI for managing .NET packages
+    pv # Tool for monitoring the progress of data through a pipeline
     cryptsetup # LUKS for dm-crypt
     nssTools # Set of libraries for development of security-enabled client and server applications
     p11-kit # Library and tools for PKCS#11 modules and trust store

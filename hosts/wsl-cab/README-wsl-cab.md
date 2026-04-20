@@ -4,10 +4,26 @@
 
 ## Build
 
-To build the WSL tarball with Nix:
+Build the WSL tarball and copy to USB (split for FAT32):
 
-```bash
-sudo nix run .#nixosConfigurations.wsl-cab.config.system.build.tarballBuilder
+```fish
+cd ~; and \
+sudo nix run ~/code/nixos-config#nixosConfigurations.wsl-cab.config.system.build.tarballBuilder; and \
+set -l f cab-(date +%s).wsl; and mv ~/nixos.wsl ~/$f; and \
+pv -p -t -r -b ~/$f | split -b 1G - /run/media/jonatan/CORSAIR/$f.part-; and \
+echo "Flushing to disk..."; sync &
+sleep 1
+while test (awk '/^Writeback:/{print $2}' /proc/meminfo) -gt 0
+    printf "\r  %s kB remaining" (awk '/^Writeback:/{print $2}' /proc/meminfo)
+    sleep 1
+end
+echo "Safe to eject."
+```
+
+Rejoin on Windows and copy to Temp folder (PowerShell):
+
+```powershell
+cmd /c "copy /b /y E:\cab-*.part-* C:\Temp\cab.wsl & del E:\cab-*.part-*"
 ```
 
 ## Install WSL and import NixOS
