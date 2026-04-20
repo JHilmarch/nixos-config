@@ -15,7 +15,7 @@ in {
       "ssh.dev.azure.com" = {
         host = "ssh.dev.azure.com";
         identitiesOnly = true;
-        identityFile = ["~/.ssh/id_ed25519_azuredevops"];
+        identityFile = ["~/.ssh/id_rsa_azuredevops"];
         extraOptions = {
           ControlMaster = "auto";
           ControlPath = "~/.ssh/S.%r@%h:%p";

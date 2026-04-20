@@ -70,7 +70,7 @@ Commits to GitHub repositories are signed with an SSH key (`~/.ssh/id_ed25519_gi
 
 #### Azure DevOps
 
-Git operations to Azure DevOps use SSH authentication with a password-less key (`~/.ssh/id_ed25519_azuredevops`).
+Git operations to Azure DevOps use SSH authentication with a password-less RSA key (`~/.ssh/id_rsa_azuredevops`).
 Configure your SSH key in Azure DevOps under **User Settings → SSH Public Keys**.
 
 The `url.insteadOf` rule in git config rewrites `https://dev.azure.com/` URLs to `git@ssh.dev.azure.com:v3/`
@@ -80,7 +80,7 @@ automatically. Azure DevOps commits are **not** signed.
 
 Place these keys manually in `~/.ssh/`:
 
-- `id_ed25519_azuredevops` — Azure DevOps git push/pull via SSH
+- `id_rsa_azuredevops` — Azure DevOps git push/pull via SSH (RSA, required by ADO)
 - `id_ed25519_github` — GitHub commit signing (SSH signature)
 
 GitHub authentication uses HTTPS via `gh auth login` — not SSH.
