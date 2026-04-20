@@ -20,6 +20,7 @@
     homeDirectory = "/home/${username}";
     sessionVariables = {
       EDITOR = "vim";
+      BROWSER = "wslview";
     };
 
     packages = with pkgs; [
@@ -41,6 +42,15 @@
       ])
       unstable.nodejs_24
       local.azure-devops-mcp
+      wslu
+      (symlinkJoin {
+        name = "wsl-browser-wrappers";
+        paths = [
+          (writeShellScriptBin "xdg-open" ''exec ${wslu}/bin/wslview "$@"'')
+          (writeShellScriptBin "x-www-browser" ''exec ${wslu}/bin/wslview "$@"'')
+          (writeShellScriptBin "www-browser" ''exec ${wslu}/bin/wslview "$@"'')
+        ];
+      })
     ];
   };
 
