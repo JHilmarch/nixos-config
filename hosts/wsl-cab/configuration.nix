@@ -39,6 +39,7 @@
     extraGroups = ["wheel" "docker"];
     initialHashedPassword = "";
     shell = pkgs.fish;
+    linger = true;
   };
 
   security.sudo = {
