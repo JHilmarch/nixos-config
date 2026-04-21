@@ -59,6 +59,10 @@
             pkgs.bash
             pkgs.fish
             pkgs._1password-gui
+            pkgs.curl
+            pkgs.gnused
+            pkgs.gawk
+            pkgs.util-linux
           ]
           ++ cfg.runtimeInputs))
       ]
