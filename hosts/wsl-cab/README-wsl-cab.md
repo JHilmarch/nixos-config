@@ -28,10 +28,6 @@ cmd /c "copy /b /y E:\cab-*.part-* C:\Temp\cab.wsl & del E:\cab-*.part-*"
 
 ## Install WSL and import NixOS
 
-- Install WSL
-  ```powershell
-  wsl --install --no-distribution
-  ```
 - Install the WSL:
   ```powershell
   wsl --install --from-file "C:\\Temp\cab.wsl" --name "NixOS-personal"
