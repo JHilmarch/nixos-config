@@ -81,6 +81,7 @@
           '')
           cfg.preSetupScripts}
 
+        export NIX_CONFIG="experimental-features = nix-command flakes"
         export OPENCODE_CONFIG_CONTENT='${settingsJSON}'
         exec ${lib.getExe jailed-opencode} "$@"
       '';
