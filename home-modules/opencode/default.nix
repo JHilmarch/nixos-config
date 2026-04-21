@@ -36,6 +36,9 @@
         no-new-session
         mount-cwd
         (ro-bind "/nix/store" "/nix/store")
+        time-zone
+        fake-passwd
+        (tmpfs "/tmp")
         (try-readwrite (noescape "~/.cache/opencode"))
         (try-readwrite (noescape "~/.config/opencode"))
         (try-readwrite (noescape "~/.local/share/opencode"))
@@ -45,11 +48,11 @@
         (try-readwrite (noescape "~/.claude"))
         (try-readwrite (noescape "~/.cache/ck"))
         (try-readonly "/run/secrets")
-        (fwd-env "ANTHROPIC_API_KEY")
-        (fwd-env "CONTEXT7_API_KEY")
-        (fwd-env "OPENCODE_CONFIG_CONTENT")
-        (fwd-env "SSH_AUTH_SOCK")
         (try-readonly (noescape "~/.1password/agent.sock"))
+        (try-fwd-env "ANTHROPIC_API_KEY")
+        (try-fwd-env "CONTEXT7_API_KEY")
+        (fwd-env "OPENCODE_CONFIG_CONTENT")
+        (try-fwd-env "SSH_AUTH_SOCK")
         (add-pkg-deps ([
             pkgs.nixd
             pkgs.fish-lsp

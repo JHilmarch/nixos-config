@@ -60,6 +60,9 @@ in {
         no-new-session
         mount-cwd
         (ro-bind "/nix/store" "/nix/store")
+        time-zone
+        fake-passwd
+        (tmpfs "/tmp")
         (try-readwrite (noescape "~/.cache/copilot-cli"))
         (try-readwrite (noescape "~/.config/copilot-cli"))
         (try-readwrite (noescape "~/.copilot"))
@@ -67,13 +70,13 @@ in {
         (try-readonly (noescape "~/.config/git"))
         (try-readonly (noescape "~/.gitconfig"))
         (try-readonly (noescape "~/.ssh"))
-        (fwd-env "GH_TOKEN")
-        (fwd-env "GITHUB_TOKEN")
-        (fwd-env "GH_HOST")
-        (fwd-env "COPILOT_CLI_SETTINGS")
-        (fwd-env "AZURE_DEVOPS_ORG")
-        (fwd-env "AZURE_DEVOPS_PAT")
-        (fwd-env "SSH_AUTH_SOCK")
+        (try-fwd-env "GH_TOKEN")
+        (try-fwd-env "GITHUB_TOKEN")
+        (try-fwd-env "GH_HOST")
+        (try-fwd-env "COPILOT_CLI_SETTINGS")
+        (try-fwd-env "AZURE_DEVOPS_ORG")
+        (try-fwd-env "AZURE_DEVOPS_PAT")
+        (try-fwd-env "SSH_AUTH_SOCK")
         (add-pkg-deps ([
             pkgs.git
             pkgs.gh
