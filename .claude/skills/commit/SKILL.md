@@ -52,23 +52,27 @@ Always create a NEW commit. Never amend unless the user explicitly asks.
 
 #### Commit command format
 
-Use one `-m` flag per **paragraph**. Within each paragraph, wrap lines with literal `\n` at 72 characters.
+Use one `-m` flag per **paragraph**. Use `printf '%s\n' 'line1' 'line2'` to wrap body lines at 72 characters within a
+single `-m` paragraph.
 
 ```bash
-# CORRECT: one -m per paragraph, lines wrapped at 72 chars
+# CORRECT: one -m per paragraph, body lines via printf
 git commit -m "feat(wsl-cab): add copilot-cli with Azure DevOps" \
-  -m "Enable the copilot-cli home module in wsl-cab with\nazure-devops-mcp as a runtime input and MCP server entry.\nAdd PAT authentication docs to README." \
+  -m "$(printf '%s\n' \
+    'Enable the copilot-cli home module in wsl-cab with' \
+    'azure-devops-mcp as a runtime input and MCP server entry.' \
+    'Add PAT authentication docs to README.')" \
   -m "Closes #65"
 
-# WRONG: one -m per line (creates separate paragraphs)
+# WRONG: one -m per line (creates separate paragraphs with blank lines)
 git commit -m "title" \
   -m "Enable the copilot-cli home module in wsl-cab with" \
   -m "azure-devops-mcp as a runtime input." \
   -m "Add PAT authentication docs to README."
 ```
 
-NEVER use one `-m` per sentence. That fragments the body into disconnected lines. Each `-m` is a paragraph — wrap within
-it.
+NEVER use one `-m` per sentence. That fragments the body into disconnected paragraphs with blank lines between them.
+Each `-m` is one paragraph — use `printf` to create real newlines within it.
 
 ### 3. Conventional Commit Format
 
