@@ -66,6 +66,7 @@
             pkgs.gnused
             pkgs.gawk
             pkgs.util-linux
+            pkgs.alejandra
           ]
           ++ cfg.runtimeInputs))
       ]
