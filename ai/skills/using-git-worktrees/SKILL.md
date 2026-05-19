@@ -1,6 +1,7 @@
-______________________________________________________________________
-
-## name: using-git-worktrees description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification.
+---
+name: using-git-worktrees
+description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification.
+---
 
 # Using Git Worktrees
 
@@ -138,7 +139,7 @@ baseline | Report failures + ask | | No package.json/Cargo.toml | Skip dependenc
 ### Assuming directory location
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > AGENTS.md > ask
+- **Fix:** Follow priority: existing > AGENTS.md → ask
 
 ### Proceeding with failing tests
 

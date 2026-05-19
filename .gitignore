@@ -4,7 +4,9 @@ result
 *.nix.Zone.Identifier
 *.wsl
 .claude/plans
+.opencode/plans
 nixos/
 .ck/
+.claude/worktrees/
 .worktrees/
 /.sisyphus/

@@ -32,9 +32,10 @@
     "*.html"
   ];
 
-  # Global excludes — never touch encrypted/generated files
+  # Global excludes — never touch encrypted/generated/skill files
   settings.excludes = [
     "secrets/*"
     "*.age"
+    "ai/skills/*"
   ];
 }
