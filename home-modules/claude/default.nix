@@ -248,6 +248,12 @@ in {
       };
     };
 
-    home.file = skillFiles;
+    home.file =
+      skillFiles
+      // {
+        ".claude/CLAUDE.md".text =
+          lib.strings.removeSuffix "\n"
+          (builtins.readFile ../opencode/global-prompt-append.md);
+      };
   };
 }
