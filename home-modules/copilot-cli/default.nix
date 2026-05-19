@@ -10,7 +10,7 @@
   sharedSkills = sharedLib.readSkillsFrom (self + "/ai/skills");
 in {
   options.modules.copilot-cli = with lib; {
-    enable = mkEnableOption "GitHub Copilot CLI with jail sandbox";
+    enable = mkEnableOption "GitHub Copilot CLI with fence sandbox";
 
     preSetupScripts = mkOption {
       type = types.listOf types.str;
@@ -21,7 +21,7 @@ in {
     runtimeInputs = mkOption {
       type = types.listOf types.package;
       default = [];
-      description = "Additional packages to add to PATH inside the jail";
+      description = "Additional packages to add to PATH for Copilot CLI";
     };
 
     mcpServers = mkOption {
@@ -33,13 +33,46 @@ in {
 
   config = let
     cfg = config.modules.copilot-cli;
-    jail = inputs.jail-nix.lib.init pkgs;
 
-    copilot-pkg = pkgs.github-copilot-cli;
+    fence-pkg =
+      inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.fence;
+    copilot-pkg =
+      inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.copilot-cli;
 
-    settingsJSON = builtins.toJSON {
+    mcpSettingsJSON = builtins.toJSON {
       mcpServers = cfg.mcpServers;
     };
+
+    fenceSettings = pkgs.writeText "fence.json" (builtins.toJSON {
+      extends = "code";
+      network = {
+        allowedDomains = [
+          "*.visualstudio.com"
+          "dev.azure.com"
+          "ssh.dev.azure.com"
+        ];
+        allowLocalOutbound = false;
+      };
+      filesystem = {
+        allowRead = [
+          "~/.ssh"
+          "/run/secrets"
+          "/run/current-system/sw"
+          "/nix/store"
+        ];
+        allowExecute = [
+          "/nix/store"
+        ];
+      };
+      command = {
+        allow = [
+          "git push"
+        ];
+        acceptSharedBinaryCannotRuntimeDeny = [
+          "chroot"
+        ];
+      };
+    });
 
     copilot-azure-devops-mcp-wrapper = pkgs.writeShellApplication {
       name = "copilot-azure-devops-mcp";
@@ -54,62 +87,52 @@ in {
       '';
     };
 
-    jailed-copilot = jail "copilot" copilot-pkg (
-      with jail.combinators; [
-        network
-        no-new-session
-        mount-cwd
-        (ro-bind "/nix/store" "/nix/store")
-        time-zone
-        fake-passwd
-        (tmpfs "/tmp")
-        (try-readwrite (noescape "~/.cache/copilot-cli"))
-        (try-readwrite (noescape "~/.config/copilot-cli"))
-        (try-readwrite (noescape "~/.copilot"))
-        (try-readwrite (noescape "~/.local/share/copilot-cli"))
-        (try-readonly (noescape "~/.config/git"))
-        (try-readonly (noescape "~/.gitconfig"))
-        (try-readonly (noescape "~/.ssh"))
-        (try-fwd-env "GH_TOKEN")
-        (try-fwd-env "GITHUB_TOKEN")
-        (try-fwd-env "GH_HOST")
-        (try-fwd-env "COPILOT_CLI_SETTINGS")
-        (try-fwd-env "AZURE_DEVOPS_ORG")
-        (try-fwd-env "AZURE_DEVOPS_PAT")
-        (try-fwd-env "SSH_AUTH_SOCK")
-        (add-pkg-deps ([
-            pkgs.git
-            pkgs.gh
-            pkgs.ripgrep
-            pkgs.bash
-            pkgs.fish
-            copilot-pkg
-            pkgs.fishPlugins.github-copilot-cli-fish
-            copilot-azure-devops-mcp-wrapper
-          ]
-          ++ cfg.runtimeInputs))
-      ]
-    );
-
     copilot-wrapper = pkgs.writeShellApplication {
-      name = "copilot-jailed";
-      runtimeInputs = [jailed-copilot];
-      checkPhase = "true"; # Skip shellcheck - preSetupScripts may have dynamic paths
+      name = "copilot-fenced";
+      runtimeInputs =
+        [
+          fence-pkg
+          copilot-pkg
+          pkgs.coreutils
+          pkgs.socat
+          pkgs.git
+          pkgs.gh
+          pkgs.ripgrep
+          pkgs.bash
+          pkgs.fish
+          pkgs.cacert
+          pkgs.fishPlugins.github-copilot-cli-fish
+          copilot-azure-devops-mcp-wrapper
+        ]
+        ++ cfg.runtimeInputs;
+      checkPhase = "true";
       text = ''
         ${lib.concatMapStrings (script: ''
             . ${script}
           '')
           cfg.preSetupScripts}
 
-        exec ${lib.getExe jailed-copilot} "$@"
+        export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+        export NODE_EXTRA_CA_CERTS="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+
+        args=()
+        for arg in "$@"; do
+          if [ "$arg" = "--debug" ]; then
+            args+=("--log-level" "debug")
+          else
+            args+=("$arg")
+          fi
+        done
+
+        exec fence --settings ${fenceSettings} -- copilot "''${args[@]}"
       '';
     };
   in
     lib.mkIf cfg.enable {
-      home.packages = [copilot-wrapper];
+      home.packages = [copilot-wrapper copilot-pkg];
 
       home.file = lib.mkMerge [
-        {".copilot/mcp-config.json".text = settingsJSON;}
+        {".copilot/mcp-config.json".text = mcpSettingsJSON;}
         (lib.mapAttrs' (name: path:
           lib.nameValuePair ".copilot/skills/${name}" {
             source = path;
