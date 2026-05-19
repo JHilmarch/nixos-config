@@ -8,6 +8,7 @@
         pkgs.dotnetCorePackages.dotnet_9.sdk
         pkgs.dotnetCorePackages.dotnet_10.sdk
       ])
+      pkgs.unstable.playwright-mcp
     ];
 
     mcpServers = {
@@ -16,6 +17,12 @@
         command = "copilot-azure-devops-mcp";
         args = [];
         # Intentional: allow all Azure DevOps MCP tools (full project access)
+        tools = ["*"];
+      };
+      playwright = {
+        type = "local";
+        command = "mcp-server-playwright";
+        args = ["--headless"];
         tools = ["*"];
       };
     };
