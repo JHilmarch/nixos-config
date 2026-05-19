@@ -1,72 +1,116 @@
 # AGENTS.md
 
-This file provides guidance to AI agents when working with code in this repository. Applies to: Claude Code, OpenCode
-(oh-my-openagent), GitHub Copilot CLI.
+**Commit:** cdb3b52 **Branch:** main
 
-## Repository Structure
+NixOS flake-based configuration. Four hosts, custom packages, AI agent sandboxing. Applies to: Claude Code, OpenCode,
+GitHub Copilot CLI.
 
-NixOS flake-based configuration with four hosts:
-
-- **nixos-orion** - Desktop (GNOME, NVIDIA, LUKS+FIDO2, YubiKey, dual boot)
-- **wsl-cab** - WSL development environment
-- **iso** - Installation ISO image
-- **hl-jump** - Proxmox LXC/VM jump host
+## Structure
 
 ```
 hosts/              # Per-host configuration.nix + home.nix
-modules/            # System-level NixOS modules (defaults, context7, markitdown-mcp,
-                    #   nfs, spotify, systemd/*)
-home-modules/       # Home Manager modules (claude, copilot-cli, fish, git, gpg, ssh, xorg)
-packages/           # Custom packages exposed as pkgs.local.<name>
-templates/          # Host templates (common, desktop, server, proxmox-lxc)
+├── orion/          # Desktop (GNOME, NVIDIA, LUKS+FIDO2, YubiKey, dual boot) → [AGENTS.md]
+├── wsl-cab/        # WSL dev env (work identity, Copilot CLI, Azure DevOps)
+├── iso/            # Minimal installation ISO (no Home Manager)
+└── hl-jump/        # Proxmox LXC jump host (nginx, static IP)
+modules/            # System-level NixOS modules → [AGENTS.md]
+home-modules/       # Home Manager modules → [AGENTS.md]
+packages/           # Custom packages (pkgs.local.*) → [AGENTS.md]
+templates/          # Composable host bases (common→desktop/server→proxmox-lxc)
 users/              # User definitions (jonatan)
-functions/          # Shared helper functions (GitHub SSH key fetcher)
-tools/              # Fish scripts (update-packages, gh-project-manager)
-scripts/            # Shell scripts (reboot-to-windows.sh)
-secrets/            # SOPS-encrypted secrets (never read or edit)
-ai/skills/          # Shared skills for AI agents (claude, copilot-cli, opencode)
+functions/          # Build-time helpers (GitHub SSH key fetcher, NuGet builder)
+tools/              # Fish CLI scripts (update-packages, gh-project-manager)
+scripts/            # Shell scripts (reboot-to-windows.sh, secrets-sops.sh)
+hooks/              # Git hooks (commit-msg conventional commits enforcer)
+secrets/            # SOPS-encrypted secrets (NEVER read or edit)
+ai/skills/          # Shared AI agent skills (SKILL.md per directory)
 ```
+
+## Where to Look
+
+- **Add a system-level feature** → `modules/` — use `mkEnableOption` pattern, see AGENTS.md there
+- **Add a home-manager feature** → `home-modules/` — see AGENTS.md for jail/skill patterns
+- **Add/update a custom package** → `packages/` — exposed as `pkgs.local.<name>`, see AGENTS.md
+- **Configure a specific host** → `hosts/<name>/` — Orion has its own AGENTS.md
+- **Add a shared AI skill** → `ai/skills/<name>/SKILL.md` — auto-discovered by `readSkillsFrom`
+- **Add a Claude-specific skill** → `home-modules/claude/skills/<name>/SKILL.md` — Claude-only
+- **Update a package version** → `tools/update-packages/` — Fish CLI, per-package .fish files
+- **Add a new user** → `users/<name>.nix` — register in `users/default.nix` attrset
+- **Add a new host** → `hosts/<name>/` — add nixosConfiguration in flake.nix
+- **Change formatting rules** → `treefmt.nix` — alejandra, mdformat, fish_indent, biome
+- **Manage GitHub Projects** → `tools/gh-project-manager/` — Fish CLI with --json output
 
 ## Flake Architecture
 
-Four nixosConfigurations in flake.nix. Each host receives specialArgs: inputs, self, username, hostname. Orion
-additionally receives pkgs-unstable, functions. hl-jump receives functions.
+**Inputs (12):** nixpkgs (25.11), nixpkgs-unstable, home-manager (25.11), sops-nix, nixos-wsl, nix-index-database, NUR,
+mcp-nixos, llm-agents, jail-nix, treefmt-nix, vscode-server. All follow nixpkgs except llm-agents→treefmt-nix.
 
-Key inputs: nixpkgs (25.11), nixpkgs-unstable, home-manager, sops-nix, nixos-wsl, nix-index-database, NUR, llm-agents.
+**specialArgs matrix:**
 
-Home Manager integrated per-host with extraSpecialArgs. Custom packages in packages/ exposed via overlay as
-pkgs.local.<name>.
+- **orion**: inputs/self ✓, username jonatan, hostname nixos-orion, pkgs-unstable ✓, functions ✓, local overlay ✓
+- **wsl-cab**: inputs/self ✓, username jonatan, hostname wsl-cab, pkgs-unstable ✗, functions ✗, local overlay ✓
+- **iso**: inputs/self ✓, username jonatan, hostname iso, pkgs-unstable ✗, functions ✗, local overlay ✗
+- **hl-jump**: inputs/self ✓, username jonatan, hostname hl-jump, pkgs-unstable ✗, functions ✓, local overlay ✗
 
-## Behavioral Rules
+**Template chain:** `desktop.nix`→`common.nix`→`defaults.nix`;
+`proxmox-lxc.nix`→`server.nix`→`common.nix`→`defaults.nix`
 
-### MCP Integration
+## Conventions
 
-- **nixos**: Always use proactively for Nix package/option/program searches.
-- **context7**: Use for library/API docs, but ask first.
-- **github-personal**: Default for all personal GitHub operations.
-- **github-work**: Only when explicitly told something is work-related.
+- **Formatting:** `nix fmt` (alejandra for Nix, mdformat for MD, fish_indent for Fish, biome for JS/TS/JSON/CSS/HTML)
+- **Indentation:** 2 spaces. Line length: 100 (Nix), 120 (everything else). LF endings.
+- **Formatting excludes:** `secrets/*`, `*.age`, `ai/skills/*`
+- **Hooks auto-format on Edit/Write:** .nix→alejandra, .fish→fish_indent, .md→mdformat, .json→biome
+- **Nix naming:** kebab-case files/dirs, camelCase options (`systemdNoSleep`), camelCase variables
+- **Fish naming:** `cmd_<name>` dispatch, `SCREAMING_SNAKE_CASE` globals, `snake_case` locals
+- **Imports:** `"${self}/path"` for shared, `"./path"` for local
+- **HM integration:** NixOS module pattern (not standalone). `extraSpecialArgs = specialArgs` mirrors all system args.
+- **Shell commands:** Always provide for fish.
 
-### Terminal & Conventions
+## Anti-Patterns
 
-- Provide commands for fish shell.
+- **NEVER** read or edit `secrets/` — SOPS-encrypted with age
+- **NEVER** run `git commit` directly — always use `/commit` skill
+- **NEVER** edit main directly — use `/using-git-worktrees` for scoped tasks
+- **NEVER** commit secrets (.env, credentials, private keys, .pem, .key, .age)
+- **NEVER** use bare `gh` — always use `gh-personal` or `gh-work` wrappers
+- **NEVER** hardcode tokens — pass via SOPS env or secrets manager
+- **NEVER** use `as any`, `@ts-ignore` in any code
+- **NEVER** amend commits unless explicitly asked
+- **NEVER** use one `-m` per sentence in commit messages
+- **ALWAYS** use nixos MCP proactively for package/option searches
+- **ALWAYS** use `--json` flag with ck, update-packages, project-manager tools
+- **ALWAYS** format after editing Nix files (hooks do this automatically)
+- **ALWAYS** wait for user approval before creating GitHub issues
+- **Conventional Commits enforced** by hooks/commit-msg (50-char subject, 72-char body)
 
-### Skill Usage
+## Commands
 
-Project-level skills in `.claude/skills/` are available to all agents. Shared skills live in `ai/skills/` and are loaded
-declaratively by Nix. Agent-specific skills remain in `home-modules/<agent>/skills/`.
+```fish
+# Build and switch a host
+sudo nixos-rebuild switch --flake .#nixos-orion
 
-- **commit**: Always invoke `/commit` when creating git commits. Never run `git commit` directly.
-- **ck**: Prefer `/ck` over Grep/Glob/find for codebase searches.
-- **update-packages**: Use `/update-packages` for updating flake inputs.
-- **using-git-worktrees**: Always invoke `/using-git-worktrees` before starting implementation work. Never edit main
-  directly for scoped tasks.
-- **project-manager**: Use `/project-manager` when managing GitHub Project boards, user stories, or task assignments.
+# Format all code
+nix fmt
+
+# Check formatting
+nix flake check
+
+# Update flake inputs
+/update-packages  # or tools/update-packages/update-packages.fish
+```
 
 ## Domain Knowledge
 
-- **Secrets**: All files in secrets/ are SOPS-encrypted with age. Never read or edit.
-- **Dual Boot**: Orion has Windows dual boot; scripts/reboot-to-windows.sh uses bootctl to set the next UEFI boot entry.
-- **YubiKey**: Used for SSH (FIDO2) and GPG. See README.md for setup.
-- **NFS**: modules/nfs/fileshare.nix configures shares for private NAS at fileshare.se.
-- **Claude Code** (Claude): Configured via home-modules/claude/ with wrapper scripts.
-- **Copilot CLI** (Copilot): Configured via home-modules/copilot-cli/ with jail sandbox.
+- **Secrets:** SOPS-encrypted with age. Decrypted by sops-nix to /nix/store. Agent wrappers source via
+  `scripts/secrets-sops.sh`.
+- **Dual Boot:** Orion has Windows dual boot; `scripts/reboot-to-windows.sh` uses bootctl to set next UEFI entry.
+- **YubiKey:** SSH (FIDO2), GPG, LUKS unlock via initrd scripts in `hosts/orion/boot-initrd-scripts/`.
+- **NFS:** `modules/nfs/fileshare.nix` for private NAS at fileshare.se.
+- **AI Agent Sandboxing:** Copilot CLI uses fence (`code` template, from `llm-agents` input). OpenCode uses jail-nix
+  (bubblewrap + seccomp). Claude uses wrapper scripts.
+- **Skill Loading:** `home-modules/lib.nix` provides `readSkillsFrom` — scans directories for skill subdirs.
+- **SSH Config Workaround:** `home-modules/ssh/` copies Nix store symlink to regular file (SSH rejects nobody-owned
+  config).
+- **GitHub MCP:** Personal/work split via base/variant pattern reading PATs from `/run/secrets/`.
+- **Azure DevOps:** Commits are NOT signed (work policy). wsl-cab uses work git identity.
