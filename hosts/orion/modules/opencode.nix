@@ -24,6 +24,10 @@
         pkgs.jq # command-line JSON processor
         inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.ck # hybrid code search (semantic, lexical, regex)
         pkgs.nix # nix flake check, nix build, etc.
+        (pkgs.dotnetCorePackages.combinePackages [
+          pkgs.dotnetCorePackages.dotnet_9.sdk
+          pkgs.dotnetCorePackages.dotnet_10.sdk
+        ]) # .NET SDK bundle for update-packages NuGet deps generation
       ];
     };
 
@@ -32,25 +36,25 @@
       package = null; # Wrapper module provides the binary
       settings = {
         theme = "catppuccin";
-        model = "anthropic/glm-5.1";
-        small_model = "anthropic/glm-5-turbo";
+        model = "zai-coding-plan/glm-5.1";
+        small_model = "zai-coding-plan/glm-5-turbo";
         agent = {
-          build.model = "anthropic/glm-5.1";
-          plan.model = "anthropic/glm-5.1";
-          explore.model = "anthropic/glm-5-turbo";
-          compaction.model = "anthropic/glm-5.1";
-          title.model = "anthropic/glm-5-turbo";
-          summary.model = "anthropic/glm-5.1";
+          build.model = "zai-coding-plan/glm-5.1";
+          plan.model = "zai-coding-plan/glm-5.1";
+          explore.model = "zai-coding-plan/glm-5-turbo";
+          compaction.model = "zai-coding-plan/glm-5.1";
+          title.model = "zai-coding-plan/glm-5-turbo";
+          summary.model = "zai-coding-plan/glm-5.1";
         };
         provider = {
-          anthropic = {
-            models = {
-              "glm-5.1" = {};
-              "glm-5-turbo" = {};
-            };
+          zai-coding-plan = {
             options = {
               apiKey = "{env:ANTHROPIC_API_KEY}";
-              baseURL = "https://api.z.ai/api/anthropic/v1";
+            };
+          };
+          openai = {
+            options = {
+              apiKey = "{env:OPENAI_API_KEY}";
             };
           };
         };

@@ -39,6 +39,10 @@
         owner = username;
         mode = "0400";
       };
+      openai_api_key = {
+        owner = username;
+        mode = "0400";
+      };
     };
 
     templates = {
@@ -53,6 +57,7 @@
         owner = username;
         content = ''
           ANTHROPIC_API_KEY=${config.sops.placeholder.zai_anthropic_pat}
+          OPENAI_API_KEY=${config.sops.placeholder.openai_api_key}
           CONTEXT7_API_KEY=${config.sops.placeholder.context7_pat}
         '';
       };
