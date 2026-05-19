@@ -243,7 +243,7 @@ in {
         };
         playwright = {
           type = "stdio";
-          command = "mcp-server-playwright";
+          command = "playwright-mcp";
         };
       };
     };

@@ -179,7 +179,9 @@ JetBrains Rider connects from Windows via SSH using JetBrains Gateway. The serve
         "-d",
         "NixOS",
         "--",
-        "mcp-server-playwright"
+        "playwright-mcp",
+        "--headless",
+        "--no-sandbox"
       ],
       "tools": [
         "*"

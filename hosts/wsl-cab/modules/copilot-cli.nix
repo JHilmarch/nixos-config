@@ -21,7 +21,7 @@
       };
       playwright = {
         type = "local";
-        command = "mcp-server-playwright";
+        command = "playwright-mcp";
         args = ["--headless"];
         tools = ["*"];
       };
