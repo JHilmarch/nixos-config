@@ -103,7 +103,9 @@ in {
     "${self}/home-modules/gpg"
     "${self}/home-modules/ssh"
     "${self}/home-modules/git/ssh.nix"
+    "${self}/home-modules/git/hooks.nix"
     "${self}/home-modules/claude"
+    "${self}/home-modules/copilot-cli"
     "${self}/home-modules/opencode"
     "${self}/home-modules/xorg/allow-root.nix"
     ./modules/file.nix

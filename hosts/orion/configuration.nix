@@ -19,6 +19,7 @@ in {
     ./modules/docker.nix
     ./modules/openrazer.nix
     ./modules/claude.nix
+    ./modules/copilot-cli.nix
     ./modules/opencode.nix
     "${self}/modules/context7/sops-wrapper.nix"
     "${self}/modules/markitdown-mcp/default.nix"
