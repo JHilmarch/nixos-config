@@ -13,8 +13,8 @@
   src = fetchFromGitHub {
     owner = "microsoft";
     repo = "mcp-dotnet-samples";
-    rev = "f5796a10297c078d523a143f1ef3868b4dc90f48";
-    hash = "sha256-Ux4OdtV2QwKOb4lLeVFrYeU8MzWjGpVKN0pG+1326xo=";
+    rev = "1cd13de8dd783fb86d5945e40cbfeb29985b7aa5";
+    hash = "sha256-mp5AGr1zt8i/1tX/UACwtXQ2bqIi7/9bgDUaDLokNkM=";
   };
 
   phases = import ./lib.nix {
@@ -24,7 +24,7 @@
 in
   buildDotnetModule rec {
     pname = "awesome-copilot";
-    version = "2026-05-01";
+    version = "2026-05-19";
 
     inherit src;
 
