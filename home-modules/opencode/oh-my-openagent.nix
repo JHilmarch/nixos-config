@@ -20,7 +20,7 @@
   gpt55 = "openai/gpt-5.5";
   gpt54 = "openai/gpt-5.4";
 
-  globalPromptAppend = lib.strings.removeSuffix "\n" (builtins.readFile ./global-prompt-append.md);
+  globalPromptAppend = lib.strings.removeSuffix "\n" (builtins.readFile "${self}/ai/global-prompt-append.md");
 
   agentsBase = {
     sisyphus.model = glm;

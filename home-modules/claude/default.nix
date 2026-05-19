@@ -253,7 +253,7 @@ in {
       // {
         ".claude/CLAUDE.md".text =
           lib.strings.removeSuffix "\n"
-          (builtins.readFile ../opencode/global-prompt-append.md);
+          (builtins.readFile "${self}/ai/global-prompt-append.md");
       };
   };
 }
