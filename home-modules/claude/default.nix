@@ -10,6 +10,12 @@
   sharedLib = import ../lib.nix {inherit lib;};
   sharedSkills = sharedLib.readSkillsFrom (self + "/ai/skills");
   privateSkills = sharedLib.readSkillsFrom ./skills;
+
+  # Deploy skills via home.file directly instead of programs.claude-code.skills.
+  skillFiles = lib.mapAttrs' (name: path: {
+    name = ".claude/skills/${name}";
+    value = {source = path;};
+  }) (sharedSkills // privateSkills);
 in {
   options.modules.claude = with lib; {
     preSetupScripts = mkOption {
@@ -240,7 +246,8 @@ in {
           command = "mcp-server-playwright";
         };
       };
-      skills = sharedSkills // privateSkills;
     };
+
+    home.file = skillFiles;
   };
 }
