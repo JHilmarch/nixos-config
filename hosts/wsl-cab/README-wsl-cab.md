@@ -45,15 +45,17 @@ First login: set your password (needed for sudo).
 passwd
 ```
 
-## GitHub Copilot CLI (copilot-jailed)
+## GitHub Copilot CLI (copilot-fenced)
 
-The Copilot CLI runs inside a `jail-nix` sandbox (`copilot-jailed`). The jail provides:
+The Copilot CLI runs inside a `fence` sandbox using the `code` template (`copilot-fenced`). Fence provides:
 
-- Network access for API calls
-- Read-write access to `~/.cache/copilot-cli`, `~/.config/copilot-cli`, `~/.copilot`, `~/.local/share/copilot-cli`
-- Read-only access to `~/.gitconfig`, `~/.ssh`, `~/.config/git`
+- Network filtering via deny-by-default proxy (blocks cloud metadata APIs, restricts outbound destinations)
+- Filesystem write restrictions (workspace + `/tmp`)
+- Dangerous command blocking (`sudo`, etc.)
+- Secret protection
+- WSL auto-detection with `/init` interop support
 - MCP servers configured via `~/.copilot/mcp-config.json` (managed by Nix)
-- Skills from `home-modules/copilot-cli/skills/` (auto-loaded)
+- Skills from `ai/skills/` (auto-loaded)
 
 ### Authentication
 
@@ -81,24 +83,37 @@ Place these keys manually in `~/.ssh/`:
 
 GitHub authentication uses HTTPS via `gh auth login` — not SSH.
 
-### Azure DevOps MCP authentication
+#### Fix permissions and line endings
 
-The jailed Copilot CLI expects these environment variables inside WSL:
+When copying keys from Windows, they may have incorrect permissions and Windows-style line endings (`\r\n`). Fix both:
 
-- `AZURE_DEVOPS_ORG` - your Azure DevOps organization name
-- `AZURE_DEVOPS_PAT` - your raw Azure DevOps Personal Access Token
+```bash
+cd ~/.ssh
+sed -i 's/\r$//' id_rsa_azuredevops id_ed25519_github
+chmod 600 id_rsa_azuredevops id_ed25519_github
+```
+
+### Environment variables
+
+The jailed Copilot CLI forwards these environment variables from the host shell:
+
+- `GH_TOKEN` — GitHub OAuth token (used for git push operations inside the jail)
+- `AZURE_DEVOPS_ORG` — your Azure DevOps organization name
+- `AZURE_DEVOPS_PAT` — your raw Azure DevOps Personal Access Token
 
 To make them survive shell restarts and reboots in fish, set them as universal exported variables:
 
 ```fish
+set -Ux GH_TOKEN (gh auth token)
 set -Ux AZURE_DEVOPS_ORG your-org
 set -Ux AZURE_DEVOPS_PAT your-pat
 ```
 
-The `copilot-jailed` wrapper forwards these variables into the jail and converts `AZURE_DEVOPS_PAT` into the
-`PERSONAL_ACCESS_TOKEN` format expected by `azure-devops-mcp` by base64-encoding `copilot:<your-pat>`. The `copilot`
-prefix is a required non-empty placeholder username; Azure DevOps ignores it and uses only the PAT portion for
-authentication.
+The `copilot-fenced` wrapper sets SSL certificate paths and converts `--debug` to `--log-level debug`. Environment
+variables (`GH_TOKEN`, `AZURE_DEVOPS_ORG`, `AZURE_DEVOPS_PAT`) are inherited by the fence sandbox. The wrapper also
+converts `AZURE_DEVOPS_PAT` into the `PERSONAL_ACCESS_TOKEN` format expected by `azure-devops-mcp` by base64-encoding
+`copilot:<your-pat>`. The `copilot` prefix is a required non-empty placeholder username; Azure DevOps ignores it and
+uses only the PAT portion for authentication.
 
 After rebuilding, the generated `~/.copilot/mcp-config.json` will contain an `azure-devops` MCP entry that launches the
 server through the in-jail `copilot-azure-devops-mcp` wrapper.

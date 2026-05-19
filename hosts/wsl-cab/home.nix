@@ -9,6 +9,7 @@
   imports = [
     "${self}/home-modules/fish/dev.nix"
     "${self}/home-modules/git/cab-ssh.nix"
+    "${self}/home-modules/git/hooks.nix"
     "${self}/home-modules/ssh/cab.nix"
     "${self}/home-modules/copilot-cli"
     ./modules/copilot-cli.nix

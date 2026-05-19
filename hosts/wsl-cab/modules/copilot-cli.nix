@@ -12,7 +12,10 @@
 
     mcpServers = {
       azure-devops = {
+        type = "local";
         command = "copilot-azure-devops-mcp";
+        args = [];
+        # Intentional: allow all Azure DevOps MCP tools (full project access)
         tools = ["*"];
       };
     };
