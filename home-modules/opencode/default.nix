@@ -94,6 +94,6 @@
     };
   in
     lib.mkIf config.programs.opencode.enable {
-      home.packages = [opencode-wrapper];
+      programs.opencode.package = lib.mkForce opencode-wrapper;
     };
 }

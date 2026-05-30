@@ -11,28 +11,22 @@ in {
     enable = true;
     enableDefaultConfig = false;
 
-    matchBlocks = {
+    settings = {
       "ssh.dev.azure.com" = {
-        host = "ssh.dev.azure.com";
-        identitiesOnly = true;
-        identityFile = ["~/.ssh/id_rsa_azuredevops"];
-        extraOptions = {
-          ControlMaster = "auto";
-          ControlPath = "~/.ssh/S.%r@%h:%p";
-          ControlPersist = "60m";
-        };
+        IdentitiesOnly = true;
+        IdentityFile = ["~/.ssh/id_rsa_azuredevops"];
+        ControlMaster = "auto";
+        ControlPath = "~/.ssh/S.%r@%h:%p";
+        ControlPersist = "60m";
       };
 
       "github.com" = {
-        user = "git";
-        host = "github.com";
-        identitiesOnly = true;
-        identityFile = ["~/.ssh/id_ed25519_github"];
-        extraOptions = {
-          ControlMaster = "auto";
-          ControlPath = "~/.ssh/S.%r@%h:%p";
-          ControlPersist = "60m";
-        };
+        User = "git";
+        IdentitiesOnly = true;
+        IdentityFile = ["~/.ssh/id_ed25519_github"];
+        ControlMaster = "auto";
+        ControlPath = "~/.ssh/S.%r@%h:%p";
+        ControlPersist = "60m";
       };
     };
   };

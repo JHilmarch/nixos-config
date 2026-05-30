@@ -24,8 +24,8 @@ in {
       Install = {WantedBy = ["graphical-session.target"];};
       Service = {
         Type = "oneshot";
-        ExecStart = "${pkgs.xorg.xhost}/bin/xhost +SI:localuser:root";
-        ExecStop = lib.mkIf cfg.revokeOnStop "${pkgs.xorg.xhost}/bin/xhost -SI:localuser:root";
+        ExecStart = "${lib.getExe' pkgs.xhost "xhost"} +SI:localuser:root";
+        ExecStop = lib.mkIf cfg.revokeOnStop "${lib.getExe' pkgs.xhost "xhost"} -SI:localuser:root";
         RemainAfterExit = true;
       };
     };

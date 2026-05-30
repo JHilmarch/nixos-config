@@ -2,17 +2,19 @@
   lib,
   stdenv,
   fetchFromGitHub,
+  fetchPnpmDeps,
+  pnpmConfigHook,
   pnpm_10,
   nodejs,
   openssl,
 }: let
   pname = "context7-mcp";
-  version = "2.2.5";
+  version = "3.0.0";
   src = fetchFromGitHub {
     owner = "upstash";
     repo = "context7";
-    rev = "@upstash/context7-mcp@2.2.5";
-    hash = "sha256-ozUFnUFyxQ8M0W2e2Pr+uXrinI4LJoeSEQi3ZMPwPc4=";
+    rev = "@upstash/context7-mcp@3.0.0";
+    hash = "sha256-3Hk3YEXIR6SAEtCeDeaU1fU/CyvxuObZSNbgqrzeJ/o=";
   };
 in
   stdenv.mkDerivation {
@@ -20,19 +22,21 @@ in
 
     nativeBuildInputs = [
       openssl
-      pnpm_10.configHook
+      pnpmConfigHook
+      pnpm_10
     ];
 
     propagatedBuildInputs = [
       nodejs
     ];
 
-    pnpmWorkspaces = "packages/mcp";
+    pnpmWorkspaces = ["packages/mcp"];
 
-    pnpmDeps = pnpm_10.fetchDeps {
+    pnpmDeps = fetchPnpmDeps {
       inherit pname version src;
-      hash = "sha256-Cuh2Ux07jndcmEOH2CkbNlqkVEcabmntv2mbXhjfUhE=";
-      fetcherVersion = 1;
+      pnpm = pnpm_10;
+      hash = "sha256-ugUN1U0OR8dPTq4PADJaq6ElngSlw6PlmYDUFoW+2F4=";
+      fetcherVersion = 3;
     };
 
     buildPhase = ''

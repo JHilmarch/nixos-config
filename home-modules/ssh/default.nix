@@ -11,30 +11,26 @@ in {
     enable = true;
     enableDefaultConfig = false;
 
-    matchBlocks = {
+    settings = {
       "*" = {
-        identityFile = [
+        IdentityFile = [
           "~/.ssh/id_ed25519_sk_23839166"
           "~/.ssh/id_ed25519_sk_23839165"
         ];
-        extraOptions = {
-          IdentityAgent = "~/.1password/agent.sock";
-        };
+        IdentityAgent = "~/.1password/agent.sock";
       };
 
       "github.com" = {
-        user = "git";
-        host = "github.com";
-        identitiesOnly = true;
-        identityFile = [
+        User = "git";
+        HostName = "github.com";
+        IdentitiesOnly = true;
+        IdentityFile = [
           "~/.ssh/id_ed25519_sk_23839166"
           "~/.ssh/id_ed25519_sk_23839165"
         ];
-        extraOptions = {
-          ControlMaster = "auto";
-          ControlPath = "~/.ssh/S.%r@%h:%p";
-          ControlPersist = "60m";
-        };
+        ControlMaster = "auto";
+        ControlPath = "~/.ssh/S.%r@%h:%p";
+        ControlPersist = "60m";
       };
     };
   };

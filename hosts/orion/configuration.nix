@@ -285,8 +285,10 @@ in {
 
     openssh = {
       enable = true;
-      banner = "${username}@${hostname}, log in with your SSH key (YubiKey)!";
       settings = {
+        Banner = builtins.toString (pkgs.writeText "sshd-banner" ''
+          ${username}@${hostname}, log in with your SSH key (YubiKey)!
+        '');
         PermitRootLogin = "prohibit-password";
         PasswordAuthentication = false;
       };
