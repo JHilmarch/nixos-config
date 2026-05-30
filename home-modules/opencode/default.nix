@@ -34,6 +34,7 @@
       with jail.combinators; [
         network
         no-new-session
+        (share-ns "pid")
         mount-cwd
         (ro-bind "/nix/store" "/nix/store")
         time-zone
@@ -55,6 +56,7 @@
         (fwd-env "OPENCODE_CONFIG_CONTENT")
         (try-fwd-env "NIX_CONFIG")
         (try-fwd-env "SSL_CERT_FILE")
+        (try-fwd-env "COLORTERM")
         (add-pkg-deps ([
             pkgs.nixd
             pkgs.fish-lsp

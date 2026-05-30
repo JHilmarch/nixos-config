@@ -60,6 +60,55 @@ in
     home.file =
       skillFiles
       // {
+        ".config/opencode/tui.json".text = builtins.toJSON {
+          "$schema" = "https://opencode.ai/tui.json";
+          theme = "catppuccin";
+          leader_timeout = 2000;
+          keybinds = {
+            leader = "ctrl+x";
+            app_exit = "ctrl+c,ctrl+d,<leader>q";
+            command_list = "ctrl+p";
+            editor_open = "<leader>e";
+            theme_list = "<leader>t";
+            sidebar_toggle = "<leader>b";
+            status_view = "<leader>s";
+            session_new = "<leader>n";
+            session_list = "<leader>l";
+            session_timeline = "<leader>g";
+            session_interrupt = "escape";
+            session_compact = "<leader>c";
+            session_export = "<leader>x";
+            session_rename = "ctrl+r";
+            session_child_first = "<leader>down";
+            session_child_cycle = "right";
+            session_child_cycle_reverse = "left";
+            session_parent = "up";
+            agent_list = "<leader>a";
+            agent_cycle = "tab";
+            agent_cycle_reverse = "shift+tab";
+            variant_cycle = "ctrl+t";
+            model_list = "<leader>m";
+            model_provider_list = "ctrl+a";
+            model_favorite_toggle = "ctrl+f";
+            model_cycle_recent = "f2";
+            model_cycle_recent_reverse = "shift+f2";
+            messages_page_up = "pageup,ctrl+alt+b";
+            messages_page_down = "pagedown,ctrl+alt+f";
+            messages_first = "ctrl+g,home";
+            messages_last = "ctrl+alt+g,end";
+            messages_copy = "<leader>y";
+            messages_undo = "<leader>u";
+            messages_redo = "<leader>r";
+            messages_toggle_conceal = "<leader>h";
+            input_clear = "ctrl+c";
+            input_submit = "return";
+            input_newline = "shift+return,ctrl+return,alt+return,ctrl+j";
+            input_paste = {
+              key = "ctrl+v";
+              preventDefault = false;
+            };
+          };
+        };
         ".config/opencode/oh-my-openagent.json".text = builtins.toJSON {
           "$schema" = "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json";
           skills = {
