@@ -35,7 +35,6 @@
       enable = true;
       package = null; # Wrapper module provides the binary
       settings = {
-        theme = "catppuccin";
         model = "zai-coding-plan/glm-5.1";
         small_model = "zai-coding-plan/glm-5-turbo";
         agent = {
