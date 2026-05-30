@@ -69,14 +69,14 @@
         fontconfig
         freetype
         libxkbcommon
-        xorg.libX11
-        xorg.libXext
-        xorg.libXrender
-        xorg.libXi
-        xorg.libXtst
-        xorg.libXrandr
-        xorg.libICE
-        xorg.libSM
+        libx11
+        libxext
+        libxrender
+        libxi
+        libxtst
+        libxrandr
+        libice
+        libsm
         libGL
         alsa-lib
         expat
