@@ -39,7 +39,8 @@
         (ro-bind "/nix/store" "/nix/store")
         time-zone
         fake-passwd
-        (tmpfs "/tmp")
+        (add-runtime "mkdir -p \"$HOME/.local/share/opencode/tmp\"")
+        (rw-bind (noescape "~/.local/share/opencode/tmp") "/tmp")
         (try-readwrite (noescape "~/.cache/opencode"))
         (try-readwrite (noescape "~/.config/opencode"))
         (try-readwrite (noescape "~/.local/share/opencode"))
