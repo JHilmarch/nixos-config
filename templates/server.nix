@@ -15,11 +15,9 @@
     };
   };
 
-  services.resolved = {
-    extraConfig = ''
-      Cache=true
-      CacheFromLocalhost=true
-    '';
+  services.resolved.settings.Resolve = {
+    Cache = true;
+    CacheFromLocalhost = true;
   };
 
   environment.systemPackages = with pkgs; [
