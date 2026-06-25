@@ -39,6 +39,11 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nix-auth = {
+      url = "github:numtide/nix-auth";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ {self, ...}: let
@@ -82,6 +87,38 @@
     checks = forAllSystems (system: {
       formatting = treefmtEval.${system}.config.build.check self;
     });
+
+    devShells = forAllSystems (
+      system: let
+        pkgs = mkPkgs system;
+      in {
+        default = pkgs.mkShell {
+          packages = with pkgs; [
+            alejandra
+            mdformat
+            biome
+            treefmt
+            git
+            ripgrep
+            jq
+            inputs.nix-auth.packages.${system}.default
+            sops
+            age
+            age-plugin-yubikey
+          ];
+          shellHook = ''
+            echo "Welcome to the NixOS config devshell!"
+            echo "Available tools: alejandra, biome, mdformat, treefmt, git, ripgrep, jq, nix-auth, sops, age, age-plugin-yubikey"
+            echo ""
+            echo "To authenticate with GitHub for Nix:"
+            echo "  nix-auth login github"
+            echo ""
+            echo "To edit secrets:"
+            echo "  sops secrets/<host>/secrets.yml"
+          '';
+        };
+      }
+    );
 
     nixosConfigurations = let
       nixpkgsConfig = {
