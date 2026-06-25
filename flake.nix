@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixos-hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     mcp-nixos.url = "github:utensils/mcp-nixos";
     llm-agents.url = "github:numtide/llm-agents.nix";
@@ -80,6 +81,20 @@
         inputs.treefmt-nix.lib.evalModule (mkPkgs system) ./treefmt.nix
     );
   in {
+    nix.config = {
+      substituters = [
+        "https://cache.nixos.org"
+        "https://cache.numtide.com"
+        "https://nix-community.cachix.org"
+        "https://nixos.cachix.org"
+      ];
+      trusted-public-keys = [
+        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+        "nix-community.cachix.org-1:mB9FSh8qf2dCimDSUo8Zy7bkj5CX+/rkCWyvRCYg3Fs="
+      ];
+    };
+
     packages = forAllSystems mkPackages;
 
     formatter = forAllSystems (system: treefmtEval.${system}.config.build.wrapper);
@@ -161,6 +176,46 @@
               home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "hm-backup";
               home-manager.users.${specialArgs.username} = import ./hosts/orion/home.nix;
+            }
+          ];
+        };
+
+      p51 = let
+        system = "x86_64-linux";
+        specialArgs = {
+          pkgs-unstable = import inputs.nixpkgs-unstable {
+            inherit system;
+            config = nixpkgsConfig;
+          };
+
+          inherit inputs self;
+          username = "jonatan";
+          hostname = "nixos-p51";
+          functions = import ./functions {
+            pkgs = import inputs.nixpkgs {inherit system;};
+          };
+        };
+      in
+        inputs.nixpkgs.lib.nixosSystem {
+          specialArgs = specialArgs;
+          modules = [
+            {
+              nixpkgs.hostPlatform.system = system;
+              nixpkgs.overlays = [
+                (_final: prev: {
+                  local = self.packages.${prev.stdenv.hostPlatform.system};
+                })
+              ];
+            }
+            ./hosts/p51/configuration.nix
+            inputs.sops-nix.nixosModules.sops
+            inputs.home-manager.nixosModules.home-manager
+            {
+              home-manager.extraSpecialArgs = specialArgs;
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.backupFileExtension = "hm-backup";
+              home-manager.users.${specialArgs.username} = import ./hosts/p51/home.nix;
             }
           ];
         };

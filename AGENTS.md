@@ -70,11 +70,13 @@ mcp-nixos, llm-agents, jail-nix, treefmt-nix, vscode-server. All follow nixpkgs 
 ## Anti-Patterns
 
 - **NEVER** read or edit `secrets/` — SOPS-encrypted with age
+- **NEVER** read or edit `.sops.yaml` — controls encryption keys, AI must ignore
 - **NEVER** run `git commit` directly — always use `/commit` skill
 - **NEVER** edit main directly — use `/using-git-worktrees` for scoped tasks
 - **NEVER** commit secrets (.env, credentials, private keys, .pem, .key, .age)
 - **NEVER** use bare `gh` — always use `gh-personal` or `gh-work` wrappers
 - **NEVER** hardcode tokens — pass via SOPS env or secrets manager
+- **NEVER** attempt to encrypt/decrypt secrets without user interaction — requires YubiKey presence
 - **NEVER** use `as any`, `@ts-ignore` in any code
 - **NEVER** amend commits unless explicitly asked
 - **NEVER** use one `-m` per sentence in commit messages
