@@ -14,7 +14,8 @@
     })
     sharedSkills;
 
-  glm = "zai-coding-plan/glm-5.1";
+  glm = "zai-coding-plan/glm-5.2";
+  glmPrev = "zai-coding-plan/glm-5.1";
   glmFlash = "zai-coding-plan/glm-5-turbo";
   glmVision = "zai-coding-plan/glm-5v-turbo";
   gpt55 = "openai/gpt-5.5";
@@ -24,7 +25,7 @@
 
   agentsBase = {
     sisyphus.model = glm;
-    sisyphus-junior.model = glm;
+    sisyphus-junior.model = glmPrev;
     prometheus.model = glm;
     atlas.model = glm;
     hephaestus = {

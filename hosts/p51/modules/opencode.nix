@@ -35,15 +35,15 @@
       enable = true;
       package = null; # Wrapper module provides the binary
       settings = {
-        model = "zai-coding-plan/glm-5.1";
+        model = "zai-coding-plan/glm-5.2";
         small_model = "zai-coding-plan/glm-5-turbo";
         agent = {
-          build.model = "zai-coding-plan/glm-5.1";
-          plan.model = "zai-coding-plan/glm-5.1";
+          build.model = "zai-coding-plan/glm-5.2";
+          plan.model = "zai-coding-plan/glm-5.2";
           explore.model = "zai-coding-plan/glm-5-turbo";
-          compaction.model = "zai-coding-plan/glm-5.1";
+          compaction.model = "zai-coding-plan/glm-5.2";
           title.model = "zai-coding-plan/glm-5-turbo";
-          summary.model = "zai-coding-plan/glm-5.1";
+          summary.model = "zai-coding-plan/glm-5.2";
         };
         provider = {
           zai-coding-plan = {
