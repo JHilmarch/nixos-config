@@ -103,24 +103,6 @@ in {
           gnused # GNU sed, a batch stream editor
           gawk # GNU implementation of the Awk programming language
         ];
-
-        network = {
-          enable = true;
-          wait-online.enable = false;
-          networks.enp0s3 = {
-            matchConfig.Name = "enp0s3";
-            networkConfig.DHCP = "yes";
-          };
-        };
-      };
-
-      network = {
-        enable = true;
-        ssh = {
-          enable = true;
-          authorizedKeys = authorizedSSHKeys;
-          hostKeys = ["/etc/ssh/initrd_ssh_host_ed25519_key"];
-        };
       };
     };
 
@@ -220,6 +202,7 @@ in {
 
     openssh = {
       enable = true;
+      openFirewall = true;
       settings = {
         Banner = builtins.toString (pkgs.writeText "sshd-banner" ''
           ${username}@${hostname}, log in with your SSH key (YubiKey)!
@@ -264,9 +247,7 @@ in {
       packages = with pkgs; [
         tree
       ];
-      openssh.authorizedKeys.keys = [
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPhXKd/Bp3e0yFS8WU2v2ul4/2nsWSQOoLdYVJWPPHWn jonatan@nixos-orion"
-      ];
+      openssh.authorizedKeys.keys = authorizedSSHKeys;
     };
   };
 
