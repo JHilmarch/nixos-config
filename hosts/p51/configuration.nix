@@ -186,7 +186,10 @@ in {
   services = {
     throttled.enable = true;
 
-    pcscd.enable = true;
+    pcscd = {
+      enable = true;
+      plugins = [pkgs.ccid]; # CCID IFD handler required for YubiKey PIV access
+    };
     upower.enable = true;
 
     gvfs.enable = true;
@@ -211,8 +214,7 @@ in {
       enable = true;
       packages = [pkgs.yubikey-personalization];
       extraRules = ''
-        SUBSYSTEM=="usb", ATTR{idVendor}=="1050", MODE="0660", GROUP="usbusers"
-        KERNEL=="hidraw*", SUBSYSTEM=="hidraw", TAG+="uaccess", MODE="0660", GROUP="usbusers"
+        KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1050", TAG+="uaccess", MODE="0660", GROUP="usbusers"
       '';
     };
 

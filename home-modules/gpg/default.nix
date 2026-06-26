@@ -60,6 +60,8 @@ in {
     };
   };
 
+  home.file.".gnupg/scdaemon.conf".text = "disable-ccid\n";
+
   services = {
     gpg-agent = {
       enable = true;

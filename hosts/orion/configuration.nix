@@ -231,7 +231,10 @@ in {
     };
 
     # Enable PCSC-Lite daemon, to access smart cards using SCard API (PC/SC).
-    pcscd.enable = true;
+    pcscd = {
+      enable = true;
+      plugins = [pkgs.ccid]; # CCID IFD handler required for YubiKey PIV access
+    };
 
     # UPower D-Bus service for power management
     upower.enable = true;
@@ -278,8 +281,7 @@ in {
       enable = true;
       packages = [pkgs.yubikey-personalization];
       extraRules = ''
-        SUBSYSTEM=="usb", ATTR{idVendor}=="1050", MODE="0660", GROUP="usbusers"
-        KERNEL=="hidraw*", SUBSYSTEM=="hidraw", TAG+="uaccess", MODE="0660", GROUP="usbusers"
+        KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1050", TAG+="uaccess", MODE="0660", GROUP="usbusers"
       '';
     };
 
