@@ -195,17 +195,31 @@ sudo cryptsetup close luks-4a6bf80a-6ae0-456c-8930-d9957542b4b7
 sudo cryptsetup open --fido2-device=auto /dev/nvme0n1p2 luks-test
 ```
 
-### Initrd SSH Unlock
+### Booted SSH (remote access)
 
-The configuration includes SSH unlock in initrd:
+The P51 is always unlocked locally with the FIDO2 YubiKey at boot, so initrd SSH is intentionally **not** used. After
+the system finishes booting, you can SSH in as `jonatan` from another machine. Authorized keys are pulled from
+`https://github.com/JHilmarch.keys` (see `functions.ssh.getGithubKeys` in `configuration.nix`), which includes the FIDO2
+YubiKey-resident keys.
+
+#### Client SSH configuration
+
+On the Arch client, add a `Host p51` entry to `~/.ssh/config` (replace the placeholder IP with the P51's actual address
+on your network):
+
+```
+Host p51
+      HostName 192.168.x.x
+      User jonatan
+      IdentitiesOnly yes
+      IdentityFile ~/.ssh/id_ed25519_sk_rk_github.com
+      ForwardAgent no
+```
+
+Then connect with:
 
 ```bash
-# Copy your SSH public key to initrd
-sudo cp /home/jonatan/.ssh/id_ed25519.pub /etc/ssh/initrd_ssh_host_ed25519_key.pub
-
-# Test by rebooting and connecting via SSH
-# User: root
-# Key: Your SSH key
+ssh p51
 ```
 
 ## Configuration Details
