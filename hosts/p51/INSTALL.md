@@ -13,7 +13,7 @@ This guide covers the complete installation of NixOS on the Lenovo ThinkPad P51 
 
 **Important:** The NixOS installation USB is a minimal environment. Most packages listed in this configuration (dotnet
 SDKs, JetBrains Rider, communication apps, etc.) are NOT available on the USB. They will be installed automatically when
-you run `nixos-install --flake .#p51`.
+you run `nixos-install --flake .#nixos-p51`.
 
 The USB only provides basic tools for installation. All configured packages from your `home.nix` and `configuration.nix`
 will be installed and available after the first boot into your new system.
@@ -144,7 +144,7 @@ mount | grep /mnt
 
 ```bash
 # Build the system (all packages will be installed now)
-nixos-install --flake .#p51
+nixos-install --flake .#nixos-p51
 
 # If build fails due to missing secrets, you may need to:
 # - Copy secrets from a backup location
@@ -319,13 +319,13 @@ cryptsetup luksHeaderBackup /dev/nvme0n1p2 \
 
 ```bash
 # Rebuild with flake
-sudo nixos-rebuild switch --flake /etc/nixos#p51
+sudo nixos-rebuild switch --flake /etc/nixos#nixos-p51
 
 # Test changes before applying
-sudo nixos-rebuild test --flake /etc/nixos#p51
+sudo nixos-rebuild test --flake /etc/nixos#nixos-p51
 
 # Rollback if needed
-sudo nixos-rebuild rollback --flake /etc/nixos#p51
+sudo nixos-rebuild rollback --flake /etc/nixos#nixos-p51
 ```
 
 ## Additional Resources

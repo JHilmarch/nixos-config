@@ -180,7 +180,7 @@
           ];
         };
 
-      p51 = let
+      nixos-p51 = let
         system = "x86_64-linux";
         specialArgs = {
           pkgs-unstable = import inputs.nixpkgs-unstable {
