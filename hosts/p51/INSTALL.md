@@ -204,12 +204,12 @@ YubiKey-resident keys.
 
 #### Client SSH configuration
 
-On the Arch client, add a `Host p51` entry to `~/.ssh/config` (replace the placeholder IP with the P51's actual address
-on your network):
+On the Arch client, add a `Host p51` entry to `~/.ssh/config`. The P51 has a dynamic IP, so target its local DNS name
+`nixos-p51.lan` (resolved by the router) instead of a hard-coded address:
 
 ```
 Host p51
-      HostName 192.168.x.x
+      HostName nixos-p51.lan
       User jonatan
       IdentitiesOnly yes
       IdentityFile ~/.ssh/id_ed25519_sk_rk_github.com

@@ -109,6 +109,7 @@ in {
     "${self}/home-modules/opencode"
     "${self}/home-modules/xorg/allow-root.nix"
     ./modules/file.nix
+    ./modules/ssh.nix
     inputs.nix-index-database.homeModules.nix-index
     ./modules/dconf
   ];
