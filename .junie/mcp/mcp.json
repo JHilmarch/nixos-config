@@ -1,25 +1,23 @@
 {
-	"mcpServers": {
-		"nixos": {
-			"type": "stdio",
-			"command": "mcp-nixos"
-		},
-		"context7": {
-			"type": "stdio",
-			"command": "context7-with-sops"
-		},
-		"github-personal": {
-			"type": "stdio",
-			"command": "github-personal-mcp"
-		},
-		"markitdown": {
-			"type": "stdio",
-			"command": "markitdown-mcp"
-		},
-		"playwright": {
-			"type": "local",
-			"command": "mcp-server-playwright",
-			"tools": ["*"]
-		}
-	}
+    "mcpServers": {
+        "nixos": {
+            "command": "mcp-nixos"
+        },
+        "context7": {
+            "command": "context7-with-sops",
+            "enabled": false
+        },
+        "github-personal": {
+            "command": "github-personal-mcp",
+            "enabled": false
+        },
+        "markitdown": {
+            "command": "markitdown-mcp",
+            "enabled": false
+        },
+        "playwright": {
+            "command": "mcp-server-playwright",
+            "enabled": false
+        }
+    }
 }
