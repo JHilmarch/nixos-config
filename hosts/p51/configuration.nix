@@ -20,6 +20,7 @@ in {
     ./modules/claude.nix
     ./modules/copilot-cli.nix
     ./modules/opencode.nix
+    "${self}/modules/systemd/flatpak.nix"
     "${self}/modules/systemd/firefox.nix"
     "${self}/templates/desktop.nix"
   ];
@@ -174,7 +175,6 @@ in {
     ];
 
     gnome.excludePackages = with pkgs; [
-      epiphany
       gnome-music
       gnome-tour
       totem
@@ -238,6 +238,7 @@ in {
       pulse.enable = true;
     };
 
+    systemdFlatpak.enable = true;
     systemdFirefox.enable = true;
   };
 
