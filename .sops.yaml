@@ -4,7 +4,7 @@ keys:
   - &hosts:
     - &orion age1qnpen7gae337skxucpx4y2grujh8a0pjl2l4rhp07fz38573ag6sfha3q9
     - &hl-jump age1g7k05egpsaflz0wuppm9fc049cym0xl066uwwzzp2f34drwmg40sj8jnl3
-    - &p51 age18ngczvgefy9sdxdkms5dfjvkf9qqz0q7qafmhyhqmnk9f8t9tseqcyg8p8
+    - &p51 age1aevpum6lnswls8pxk253u265fuumr2j22vhhe2r6jjy2aqsy4d4szjeu3q
 creation_rules:
   - path_regex: secrets/orion/[^/]+\.(yaml|yml|json|env|ini)$
     key_groups:
@@ -17,6 +17,7 @@ creation_rules:
           - *hl-jump
           - *orion
           - *jonatan-yubikey-23839166
+          - *p51
   - path_regex: secrets/p51/[^/]+\.(yaml|yml|json|env|ini)$
     key_groups:
       - age:
