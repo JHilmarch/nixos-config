@@ -15,7 +15,7 @@
   };
 in {
   imports = [
-    inputs.nixos-hardware.nixosModules.lenovo-thinkpad-p51
+    ./hardware.nix
     ./modules/sops.nix
     ./modules/claude.nix
     ./modules/copilot-cli.nix
