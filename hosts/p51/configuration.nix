@@ -169,6 +169,7 @@ in {
       jq # A lightweight and flexible command-line JSON processor
       zip # A utility for creating ZIP archives
       unzip # A utility for extracting files from ZIP archives
+      inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos # MCP-NixOS
       flatpak # Linux application sandboxing and distribution framework
     ];
 
