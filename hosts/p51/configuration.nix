@@ -91,7 +91,7 @@ in {
       kernelModules = ["vfat" "btrfs"];
       luks = {
         devices."encrypted-nix-root" = {
-          device = "/dev/disk/by-uuid/4a6bf80a-6ae0-456c-8930-d9957542b4b7";
+          device = "/dev/disk/by-uuid/d0814586-a92b-4f99-8cae-b495e7a483fa";
           crypttabExtraOpts = ["fido2-device=auto"];
         };
       };
