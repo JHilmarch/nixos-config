@@ -10,3 +10,4 @@ nixos/
 .claude/worktrees/
 .worktrees/
 /.sisyphus/
+.omo/
