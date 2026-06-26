@@ -256,18 +256,8 @@ in {
       trusted-users = [username];
       accept-flake-config = true;
       auto-optimise-store = false;
-      substituters = [
-        "https://cache.nixos.org"
-        "https://cache.numtide.com"
-        "https://nix-community.cachix.org"
-        "https://nixos.cachix.org"
-      ];
-      trusted-public-keys = [
-        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-        "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
-        "nix-community.cachix.org-1:mB9FSh8qf2dCimDSUo8Zy7bkj5CX+/rkCWyvRCYg3Fs="
-        "nixos.cachix.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-      ];
+      extra-substituters = ["https://cache.numtide.com"];
+      extra-trusted-public-keys = ["niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="];
     };
 
     registry = {
