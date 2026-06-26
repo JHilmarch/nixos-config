@@ -109,6 +109,7 @@ in
             };
           };
         };
+        ".config/opencode/tui.json".force = true;
         ".config/opencode/oh-my-openagent.json".text = builtins.toJSON {
           "$schema" = "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json";
           skills = {
