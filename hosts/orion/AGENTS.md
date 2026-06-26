@@ -6,8 +6,8 @@ Desktop host: GNOME, NVIDIA, LUKS+FIDO2, YubiKey, dual boot with Windows.
 
 ```
 orion/
-├── configuration.nix     # 382 lines. Imports 15 system modules, templates/desktop.nix, overlays
-├── home.nix              # 182 lines. Imports 12 HM modules, package lists (stable/unstable/llm-agents)
+├── configuration.nix     # Imports system modules, templates/desktop.nix, overlays; enables services.yubikeyUsbip
+├── home.nix              # Imports 12 HM modules, package lists (stable/unstable/llm-agents)
 ├── modules/              # Orion-specific system modules
 │   ├── sops.nix          # SOPS secret definitions (PATs, API keys, GH_TOKEN)
 │   ├── claude.nix        # Configures HM modules.claude (preSetupScripts, runtimeInputs)
@@ -18,14 +18,9 @@ orion/
 │   └── dconf/            # GNOME dconf settings (391 lines)
 │       ├── default.nix   # Workspace count, keybindings, tiling shell extension
 │       └── tilingshell-layouts.json
-├── boot-initrd-scripts/  # 7 scripts for LUKS+FIDO2 YubiKey unlock during initrd
-│   ├── init-shell.sh     # Shell environment for initrd
-│   ├── attach-yubikey.sh # Attach YubiKey to initrd
-│   ├── detach-yubikey.sh
-│   ├── bind-yubikey.sh   # Bind YubiKey to LUKS
-│   ├── unbind-yubikey.sh
-│   ├── detect-yubikey.sh
-│   └── unlock-luks.sh    # Unlock LUKS with FIDO2 challenge
+├── boot-initrd-scripts/  # Initrd-only helpers (shared USB/IP scripts live in scripts/yubikey-usbip/)
+│   ├── init-shell.sh     # Initrd welcome shell (references shared bind/attach-yubikey commands)
+│   └── unlock-luks.sh    # Runs systemd-tty-ask-password-agent in the initrd
 ├── images/               # Custom boot splash image
 ├── README-orion.md       # Detailed setup docs (SOPS, YubiKey, NVIDIA, dual boot)
 └── aspnetcore-https-development.pem  # ASP.NET dev cert (non-secret)
@@ -38,7 +33,10 @@ orion/
 - **Add a SOPS secret** → `modules/sops.nix` — add to `sops.secrets`, reference in wrapper scripts
 - **Configure Claude** → `modules/claude.nix` — sets preSetupScripts, runtimeInputs on HM module
 - **Configure OpenCode** → `modules/opencode.nix` — sets MCP servers, LSP config, runtimeInputs
-- **Change boot behavior** → `boot-initrd-scripts/` — injected via `boot.initrd.systemd.initrdBin`
+- **Change boot behavior** → `boot-initrd-scripts/` (initrd-only pieces) + `scripts/yubikey-usbip/` (shared USB/IP
+  scripts) — injected via `boot.initrd.systemd.initrdBin`
+- **YubiKey USB/IP forwarding** → `services.yubikeyUsbip` (module in `modules/yubikey-usbip/`) — wraps the shared
+  scripts, sets up `usbusers` group + udev hidraw rule
 - **Fix NVIDIA issues** → `configuration.nix` — `services.xserver.videoDrivers`, nvidia package
 - **Change disk encryption** → `configuration.nix` — LUKS+FIDO2 config in `boot.initrd.luks`
 

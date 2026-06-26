@@ -127,8 +127,6 @@ in {
       ++ unstable-packages
       ++ llm-agents-packages
       ++ [
-        (pkgs.writeShellScriptBin "attach-yubikey" (builtins.readFile ./boot-initrd-scripts/attach-yubikey.sh))
-        (pkgs.writeShellScriptBin "detach-yubikey" (builtins.readFile ./boot-initrd-scripts/detach-yubikey.sh))
         (pkgs.writeShellScriptBin "boot-windows" (builtins.readFile "${self}/scripts/reboot-to-windows.sh"))
       ];
 

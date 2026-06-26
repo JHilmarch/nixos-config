@@ -20,7 +20,7 @@ templates/          # Composable host bases (common→desktop/server→proxmox-l
 users/              # User definitions (jonatan)
 functions/          # Build-time helpers (GitHub SSH key fetcher, NuGet builder)
 tools/              # Fish CLI scripts (update-packages, gh-project-manager)
-scripts/            # Shell scripts (reboot-to-windows.sh, secrets-sops.sh)
+scripts/            # Shell scripts (reboot-to-windows.sh, secrets-sops.sh, yubikey-usbip/*)
 hooks/              # Git hooks (commit-msg conventional commits enforcer)
 secrets/            # SOPS-encrypted secrets (NEVER read or edit)
 ai/skills/          # Shared AI agent skills (SKILL.md per directory)

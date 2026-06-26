@@ -16,6 +16,8 @@ modules/
 │   └── fileshare.nix     # Concrete config for home NAS (fileshare.local)
 ├── spotify/
 │   └── firewall.nix      # services.spotifyFirewall.enable — TCP/UDP 5353, 57621
+├── yubikey-usbip/
+│   └── default.nix       # services.yubikeyUsbip.enable — usbusers group, udev hidraw rule, usbip + wrapped scripts (from scripts/yubikey-usbip/)
 └── systemd/
     ├── no-sleep.nix      # services.systemdNoSleep.enable — disables suspend/hibernate
     ├── wake-on-lan.nix   # services.systemdWakeOnLan.{enable, interface} — ethtool WoL

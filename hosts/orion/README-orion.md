@@ -75,23 +75,18 @@ sudo systemd-cryptenroll --wipe-slot=2 /dev/nvme0n1p6
 sudo systemd-cryptenroll --fido2-device=auto --fido2-with-client-pin=yes --fido2-with-user-presence=yes /dev/nvme0n1p6
 ```
 
-For remote work via SSH, [USB over IP](https://github.com/torvalds/linux/tree/master/tools/usb/usbip) is needed.
+For remote work via SSH, [USB/IP](https://github.com/torvalds/linux/tree/master/tools/usb/usbip) is used to forward the
+YubiKey to the host — both to unlock LUKS during initrd and to sign git commits / run `gpg --card-status` on the booted
+system. The scripts, the `usbusers` group, the udev hidraw rule and the full unlock flow are shared with the p51 host
+and documented in [`scripts/yubikey-usbip/README.md`](../../scripts/yubikey-usbip/README.md).
 
-Use the scripts in `./boot-initrd-scripts` to bind the YubiKey locally and attach the YubiKey to the remote host.
+Orion-specific boot pieces that stay local to this host:
 
-The unlock LUKS on boot experience, step by step:
+- `boot-initrd-scripts/init-shell.sh` — the initrd welcome shell (references the shared `bind-yubikey` /
+  `attach-yubikey` commands).
+- `boot-initrd-scripts/unlock-luks.sh` — runs `systemd-tty-ask-password-agent` in the initrd.
 
-1. Make sure Yubikey is unbound (usbip server)
-1. Connect to host as root with SSH and use the Yubikey private key as identity (ssh config)
-1. Bind Yubikey (usbip server)
-1. Attach Yubikey (usbip client)
-1. Unlock LUKS filesystem
-1. After entering PIN and touching the YubiKey; the system continues to stage two and the SSH connection is broken
-1. Repeat step 1-4 but login to SSH as <user>
-
-The usbip server is running on the SSH client side. Other way around: the usbip client is running on the SSH host side.
-
-**Client SSH configuration**
+**Client SSH configuration (orion)**
 
 ```
 Host orion-boot
@@ -112,10 +107,6 @@ Host orion
       ForwardAgent no
       RemoteForward 3240 localhost:3240
 ```
-
-The _usbusers_ group and the additional device manager rules (udev) ensure that users can remotely use the YubiKey for
-signing git commits, fetching git changes, and running commands such as `usbip port` and `gpg --card-status` without
-requiring root access.
 
 ## Custom Secure Boot
 

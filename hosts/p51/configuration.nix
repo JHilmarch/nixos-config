@@ -22,6 +22,7 @@ in {
     ./modules/opencode.nix
     "${self}/modules/systemd/flatpak.nix"
     "${self}/modules/systemd/firefox.nix"
+    "${self}/modules/yubikey-usbip/default.nix"
     "${self}/templates/desktop.nix"
   ];
 
@@ -143,7 +144,6 @@ in {
       bluez # Official Linux Bluetooth protocol stack
       usbutils # Tools for working with USB devices, such as lsusb
       pciutils # Collection of programs for inspecting and manipulating configuration of PCI devices
-      linuxKernel.packages.linux_zen.usbip # Allows to pass USB device from server to client over the network
       findutils # A set of tools for finding files and directories based on various criteria
       htop # An interactive process viewer for Unix systems
       killall # A command that sends a signal to all processes running a specified command
@@ -192,14 +192,6 @@ in {
       autoLogin.enable = false;
     };
 
-    udev = {
-      enable = true;
-      packages = [pkgs.yubikey-personalization];
-      extraRules = ''
-        KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1050", TAG+="uaccess", MODE="0660", GROUP="usbusers"
-      '';
-    };
-
     openssh = {
       enable = true;
       openFirewall = true;
@@ -222,6 +214,7 @@ in {
     };
 
     systemdFlatpak.enable = true;
+    yubikeyUsbip.enable = true;
     systemdFirefox.enable = true;
   };
 
@@ -237,7 +230,6 @@ in {
   };
 
   users = {
-    groups.usbusers = {};
     users.${username} = {
       extraGroups = [
         "video"

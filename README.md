@@ -192,6 +192,14 @@ The `reboot-to-windows.sh` script uses the `bootctl` tool to set Windows as the 
 system. Since the latest NixOS generation is the default, this script is useful for remotely cold booting into Windows,
 for example, after using Wake On LAN.
 
+### YubiKey USB/IP forwarding
+
+The `scripts/yubikey-usbip/` directory holds shared shell scripts (`detect`/`bind`/`unbind`/`attach`/`detach-yubikey`)
+for forwarding a YubiKey to a remote host over USB/IP — used both to unlock LUKS during initrd and for booted-mode
+YubiKey access (git signing, `gpg --card-status`). They are installed as system packages by the `services.yubikeyUsbip`
+module in `modules/yubikey-usbip/`, currently enabled on the orion and p51 hosts. See
+[`scripts/yubikey-usbip/README.md`](./scripts/yubikey-usbip/README.md) for the full flow.
+
 ## Secrets
 
 Here, SOPS secrets are stored, sorted by host.
