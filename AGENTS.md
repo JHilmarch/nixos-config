@@ -71,6 +71,9 @@ mcp-nixos, llm-agents, jail-nix, treefmt-nix, vscode-server. All follow nixpkgs 
 - **Imports:** `"${self}/path"` for shared, `"./path"` for local
 - **HM integration:** NixOS module pattern (not standalone). `extraSpecialArgs = specialArgs` mirrors all system args.
 - **Shell commands:** Always provide for fish.
+- **Searching code:** The opencode jail lacks GNU `grep`; use **`ck` (preferred)** or `rg` for shell-based code search.
+  The built-in Grep tool wraps `rg` and is always safe. Bare `grep` from a shell fails (`grep: command not found`) and
+  wastes a round-trip.
 
 ## Anti-Patterns
 
@@ -85,6 +88,7 @@ mcp-nixos, llm-agents, jail-nix, treefmt-nix, vscode-server. All follow nixpkgs 
 - **NEVER** use `as any`, `@ts-ignore` in any code
 - **NEVER** amend commits unless explicitly asked
 - **NEVER** use one `-m` per sentence in commit messages
+- **NEVER** call bare `grep` from agent shells — the opencode jail lacks GNU grep; use `ck` (preferred) or `rg`
 - **ALWAYS** use nixos MCP proactively for package/option searches
 - **ALWAYS** use `--json` flag with ck, update-packages, project-manager tools
 - **ALWAYS** format after editing Nix files (hooks do this automatically)
