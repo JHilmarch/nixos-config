@@ -90,6 +90,7 @@
               pkgs.util-linux
               pkgs.alejandra
               pkgs.cacert
+              pkgs.nodejs
             ]
             ++ cfg.runtimeInputs))
         ]
