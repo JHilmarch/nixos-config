@@ -60,10 +60,11 @@ mcp-nixos, llm-agents, jail-nix, treefmt-nix, vscode-server. All follow nixpkgs 
 
 ## Conventions
 
-- **Formatting:** `nix fmt` (alejandra for Nix, mdformat for MD, fish_indent for Fish, biome for JS/TS/JSON/CSS/HTML)
+- **Formatting:** `nix fmt` (alejandra for Nix, mdformat with `mdformat-frontmatter` + `mdformat-gfm` plugins for MD,
+  fish_indent for Fish, biome for JS/TS/JSON/CSS/HTML)
 - **Indentation:** 2 spaces. Line length: 100 (Nix), 120 (everything else). LF endings.
-- **Formatting excludes:** `secrets/*`, `*.age`, `ai/skills/*`, `.claude/skills/*` (skill `SKILL.md` files have YAML
-  frontmatter mdformat mangles)
+- **Formatting excludes:** `secrets/*`, `*.age` (skill `SKILL.md` YAML frontmatter is preserved by
+  `mdformat-frontmatter`; no exclude needed)
 - **Hooks auto-format on Edit/Write:** .nix→alejandra, .fish→fish_indent, .md→mdformat, .json→biome
 - **Nix naming:** kebab-case files/dirs, camelCase options (`systemdNoSleep`), camelCase variables
 - **Fish naming:** `cmd_<name>` dispatch, `SCREAMING_SNAKE_CASE` globals, `snake_case` locals

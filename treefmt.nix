@@ -4,8 +4,15 @@
   # Nix
   programs.alejandra.enable = true;
 
-  # Markdown
-  programs.mdformat.enable = true;
+  # Markdown — with plugins so YAML frontmatter (skill SKILL.md files) and
+  # GFM tables are preserved instead of mangled into horizontal rules / inline.
+  programs.mdformat = {
+    enable = true;
+    plugins = ps: [
+      ps.mdformat-frontmatter
+      ps.mdformat-gfm
+    ];
+  };
 
   # Fish
   programs.fish_indent.enable = true;
@@ -32,16 +39,11 @@
     "*.html"
   ];
 
-  # Global excludes — never touch encrypted/generated/skill files.
-  # Skill SKILL.md files have YAML frontmatter that mdformat mangles
-  # (collapses "---\nname: foo\n---" into "___\n## name: foo"). Both
-  # `ai/skills/` (user-scope, installed via readSkillsFrom) and
-  # `.claude/skills/` (project-scope, scanned natively by opencode +
-  # Claude Code) hold skills and must be excluded identically.
+  # Global excludes — never touch encrypted files.
+  # Note: skill SKILL.md files no longer need an explicit exclude now that
+  # mdformat-frontmatter preserves their YAML frontmatter.
   settings.excludes = [
     "secrets/*"
     "*.age"
-    "ai/skills/*"
-    ".claude/skills/*"
   ];
 }

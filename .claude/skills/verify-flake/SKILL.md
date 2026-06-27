@@ -1,13 +1,16 @@
 ---
 name: verify-flake
-description: "Use after editing .nix files in this repo to verify changes fast without a full toplevel build. Staged recipe — targeted nix eval on the smallest affected attribute, then nix flake check, then nix build only as a final gate. Triggers: \"verify nix change\", \"check flake\", \"verify flake\", \"did this break anything\", and any time you finish editing .nix files."
+description: 'Use after editing .nix files in this repo to verify changes fast without a full toplevel build. Staged recipe — targeted nix eval on the smallest affected attribute, then nix flake check, then nix build only as a final gate. Triggers: "verify nix change", "check flake", "verify flake", "did this break anything", and any time you finish editing .nix files.'
 ---
 
 # Verify Flake
 
 ## Overview
 
-Full `nix build .#nixosConfigurations.<host>.toplevel` takes minutes because it forces the entire system closure. For an edit loop that's wasteful — most changes only touch one attribute. This skill gives the **staged fast-verification recipe**: prove the change type-checks in seconds via `nix eval`, run `nix flake check` for formatting/derivations, and reserve `nix build` for non-trivial or final-gate verification.
+Full `nix build .#nixosConfigurations.<host>.toplevel` takes minutes because it forces the entire system closure. For an
+edit loop that's wasteful — most changes only touch one attribute. This skill gives the **staged fast-verification
+recipe**: prove the change type-checks in seconds via `nix eval`, run `nix flake check` for formatting/derivations, and
+reserve `nix build` for non-trivial or final-gate verification.
 
 **Core principle:** Evaluate the **smallest attribute that exercises your change**. Deeper = faster.
 
@@ -31,7 +34,8 @@ git diff --name-only                 # against staged + unstaged changes
 git diff --name-only main...HEAD     # if working on a feature branch
 ```
 
-Filter to `.nix` files. If `flake.nix` itself changed, treat that as affecting **every** attribute (be conservative — go to stage 5).
+Filter to `.nix` files. If `flake.nix` itself changed, treat that as affecting **every** attribute (be conservative — go
+to stage 5).
 
 ### Stage 2 — Map changed paths to flake attributes
 
@@ -44,25 +48,26 @@ rg -l 'home-modules/opencode' hosts/*/home.nix
 rg -l 'modules/yubikey-usbip' hosts/*/configuration.nix
 ```
 
-| Changed path | Affected flake attribute |
-| --- | --- |
-| `hosts/orion/**` | `.#nixosConfigurations.nixos-orion` |
-| `hosts/p51/**` | `.#nixosConfigurations.nixos-p51` |
-| `hosts/wsl-cab/**` | `.#nixosConfigurations.wsl-cab` |
-| `hosts/iso/**` | `.#nixosConfigurations.iso` |
-| `hosts/hl-jump/**` | `.#nixosConfigurations.hl-jump` |
-| `modules/**` | every host whose `configuration.nix` imports it (grep to find which) |
-| `home-modules/**` | every host whose `home.nix` imports it (grep to find which) |
-| `packages/<name>/**` | `.#packages.${system}.<name>` |
-| `templates/**` | every host that imports the template |
-| `treefmt.nix` | `.#formatter.${system}` and `.#checks.${system}.formatting` |
-| `flake.nix` | **everything** — skip to stage 5 |
+| Changed path         | Affected flake attribute                                             |
+| -------------------- | -------------------------------------------------------------------- |
+| `hosts/orion/**`     | `.#nixosConfigurations.nixos-orion`                                  |
+| `hosts/p51/**`       | `.#nixosConfigurations.nixos-p51`                                    |
+| `hosts/wsl-cab/**`   | `.#nixosConfigurations.wsl-cab`                                      |
+| `hosts/iso/**`       | `.#nixosConfigurations.iso`                                          |
+| `hosts/hl-jump/**`   | `.#nixosConfigurations.hl-jump`                                      |
+| `modules/**`         | every host whose `configuration.nix` imports it (grep to find which) |
+| `home-modules/**`    | every host whose `home.nix` imports it (grep to find which)          |
+| `packages/<name>/**` | `.#packages.${system}.<name>`                                        |
+| `templates/**`       | every host that imports the template                                 |
+| `treefmt.nix`        | `.#formatter.${system}` and `.#checks.${system}.formatting`          |
+| `flake.nix`          | **everything** — skip to stage 5                                     |
 
 For this flake, `system` is always `x86_64-linux`.
 
 ### Stage 3 — Targeted `nix eval` (seconds)
 
-Evaluate the **deepest specific attribute** that exercises your change. Deeper = faster because Nix only forces what's referenced.
+Evaluate the **deepest specific attribute** that exercises your change. Deeper = faster because Nix only forces what's
+referenced.
 
 ```bash
 # Fastest: just the option/value you touched (sub-second)
@@ -76,11 +81,14 @@ nix eval --raw .#packages.x86_64-linux.gh-personal.outPath
 nix eval --raw .#nixosConfigurations.nixos-p51.config.system.build.toplevel.outPath
 ```
 
-**Rule of thumb:** if you changed one option in a module, eval that exact option path on a host that uses the module. If you changed a package, eval the package. Only fall back to the full toplevel outPath when your change is broad within a host.
+**Rule of thumb:** if you changed one option in a module, eval that exact option path on a host that uses the module. If
+you changed a package, eval the package. Only fall back to the full toplevel outPath when your change is broad within a
+host.
 
 **Multiple hosts affected?** Eval each one — they're independent and each takes seconds.
 
-A successful `nix eval` proves your change type-checks and the attribute path is valid. It does **not** prove the derivation builds. For that, go to stage 5.
+A successful `nix eval` proves your change type-checks and the attribute path is valid. It does **not** prove the
+derivation builds. For that, go to stage 5.
 
 ### Stage 4 — `nix flake check` (formatting + derivation validity)
 
@@ -88,9 +96,11 @@ A successful `nix eval` proves your change type-checks and the attribute path is
 nix flake check
 ```
 
-This runs `.#checks.${system}.formatting` (treefmt: alejandra for Nix, mdformat for Markdown, fish_indent for Fish, biome for JS/TS/JSON/CSS/HTML) and verifies every derivation. It does **not** build them.
+This runs `.#checks.${system}.formatting` (treefmt: alejandra for Nix, mdformat for Markdown, fish_indent for Fish,
+biome for JS/TS/JSON/CSS/HTML) and verifies every derivation. It does **not** build them.
 
-If this fails on formatting, run `nix fmt` and re-check. The repo's git hooks auto-format on Write/Edit, but `nix flake check` is the source of truth.
+If this fails on formatting, run `nix fmt` and re-check. The repo's git hooks auto-format on Write/Edit, but
+`nix flake check` is the source of truth.
 
 ### Stage 5 — `nix build` (final gate, optional)
 
@@ -109,7 +119,9 @@ nix build --out-link /tmp/p51-toplevel \
 nix build --out-link /tmp/pkg .#packages.x86_64-linux.<name>
 ```
 
-**Skip stage 5 entirely** for pure option-value changes, comment/doc edits, or moves that `nix eval` already proved valid. The agent's time (and the user's tokens) are worth more than belt-and-suspenders build certainty for trivial changes.
+**Skip stage 5 entirely** for pure option-value changes, comment/doc edits, or moves that `nix eval` already proved
+valid. The agent's time (and the user's tokens) are worth more than belt-and-suspenders build certainty for trivial
+changes.
 
 ## Worked examples
 
@@ -176,7 +188,9 @@ Total: ~30 seconds if the build is cached, longer if not.
 ### Evaluating the wrong attribute path
 
 - **Problem:** `nix eval` succeeds but you verified the wrong thing — false confidence.
-- **Fix:** Cross-check the path against `flake.nix` and the module's option namespace. HM options live under `config.home-manager.users.<user>.<...>`, not `config.programs.<...>`, when using the NixOS module integration pattern.
+- **Fix:** Cross-check the path against `flake.nix` and the module's option namespace. HM options live under
+  `config.home-manager.users.<user>.<...>`, not `config.programs.<...>`, when using the NixOS module integration
+  pattern.
 
 ### Jumping straight to `nix build`
 
@@ -190,13 +204,17 @@ Total: ~30 seconds if the build is cached, longer if not.
 
 ### Treating `nix eval` success as "it builds"
 
-- **Problem:** `nix eval` forces the attribute's evaluation, not the build. A derivation can eval fine and still fail to build (missing source, broken builder, etc.).
-- **Fix:** For non-trivial changes, run stage 5 before declaring done. For trivial option-value changes, stage 3 success is sufficient evidence.
+- **Problem:** `nix eval` forces the attribute's evaluation, not the build. A derivation can eval fine and still fail to
+  build (missing source, broken builder, etc.).
+- **Fix:** For non-trivial changes, run stage 5 before declaring done. For trivial option-value changes, stage 3 success
+  is sufficient evidence.
 
 ### Forgetting that `modules/` and `home-modules/` are shared
 
-- **Problem:** You change `home-modules/git/default.nix` and only verify on orion — but the module is imported by 4 hosts. The other 3 might break.
-- **Fix:** Always `rg -l '<path>' hosts/*/home.nix hosts/*/configuration.nix` to find every consumer, and eval each one. Stages 3-4 are cheap enough to do per-host.
+- **Problem:** You change `home-modules/git/default.nix` and only verify on orion — but the module is imported by 4
+  hosts. The other 3 might break.
+- **Fix:** Always `rg -l '<path>' hosts/*/home.nix hosts/*/configuration.nix` to find every consumer, and eval each one.
+  Stages 3-4 are cheap enough to do per-host.
 
 ## Red flags
 
@@ -212,4 +230,5 @@ Total: ~30 seconds if the build is cached, longer if not.
 - Announce the skill before running stages.
 - Eval the **deepest specific attribute** first.
 - Run `nix flake check` even when you're "sure" formatting is fine.
-- Report what you evaluated and how long it took in your final answer — gives the user confidence the verification was real, not gestured.
+- Report what you evaluated and how long it took in your final answer — gives the user confidence the verification was
+  real, not gestured.
