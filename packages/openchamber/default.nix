@@ -1,54 +1,85 @@
 {
   lib,
-  fetchurl,
   runCommand,
+  fetchFromGitHub,
   buildNpmPackage,
-  nodejs_22,
+  nodejs_24,
   python3,
   pkg-config,
-  jq,
+  vips,
 }: let
   pname = "openchamber";
   version = "1.13.5";
 
-  # The published npm tarball for packages/web ships pre-built dist/, server/,
-  # and bin/cli.js — no rebuild needed. We only install runtime deps.
-  webTarball = fetchurl {
-    url = "https://github.com/openchamber/openchamber/releases/download/v${version}/openchamber-web-${version}.tgz";
-    hash = "sha256-0gKEC+j8X9io7DUXQYSi55D9YFPTp//5ua/eeE9u6ps=";
-  };
+  src = runCommand "${pname}-${version}-src" {} ''
+    mkdir "$out"
+    cp -r ${fetchFromGitHub {
+      owner = "openchamber";
+      repo = "openchamber";
+      rev = "v${version}";
+      hash = "sha256-0SmVGwxlg59eaDtSSk5uLGKgBnxe9F9AK+F2Q9AX0dM=";
+    }}/. "$out"
+    chmod -R +w "$out"
 
-  # Strip bun-pty (Bun-only; would break under Node) and drop in a
-  # pre-generated lockfile so buildNpmPackage doesn't have to resolve one.
-  src = runCommand "${pname}-${version}-src" {
-    nativeBuildInputs = [jq];
-  } ''
-    mkdir -p $out
-    tar -xzf ${webTarball} -C $out --strip-components=1
-    chmod -R +w $out
-    jq 'del(.dependencies."bun-pty")' $out/package.json > $out/package.json.tmp
-    mv $out/package.json.tmp $out/package.json
-    cp ${./package-lock.json} $out/package-lock.json
+    cp ${./package-lock.json} "$out/package-lock.json"
+
+    ${nodejs_24}/bin/node -e '
+      const fs = require("fs");
+      const packageJsonPath = process.argv[1];
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+      packageJson.workspaces = ["packages/ui", "packages/web"];
+      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n");
+    ' "$out/package.json"
   '';
 in
   buildNpmPackage {
     inherit pname version src;
-    nodejs = nodejs_22;
+    nodejs = nodejs_24;
 
-    npmDepsHash = "sha256-Quwj1k8gUSd09RiOeNU+QUBlqiTVqF8fwG/PXtMJbW8=";
+    npmDepsHash = "sha256-nyTdkxREnDVd0tCQzPFh/gX+dN42VJLfcGStUQAI3ms=";
+    npmWorkspace = "packages/web";
+    npmPruneFlags = ["--include-workspace-root=false"];
+    makeCacheWritable = true;
+    SHARP_FORCE_GLOBAL_LIBVIPS = "true";
 
-    # Tarball already ships pre-built dist/ — skip npm run build.
-    dontNpmBuild = true;
-    npmFlags = ["--omit=dev" "--no-optional"];
-
-    # node-pty and better-sqlite3 need native compilation via node-gyp.
     nativeBuildInputs = [
       python3
       pkg-config
     ];
 
+    buildInputs = [vips];
+
+    postInstall = ''
+      rm -f \
+        "$out/lib/node_modules/openchamber-monorepo/node_modules/.bin/openchamber" \
+        "$out/lib/node_modules/openchamber-monorepo/node_modules/@openchamber/ui" \
+        "$out/lib/node_modules/openchamber-monorepo/node_modules/@openchamber/web"
+
+      mkdir -p "$out/bin"
+      cat > "$out/bin/openchamber" <<WRAPPER
+      #!${lib.getExe' nodejs_24 "node"}
+      const {spawn} = require("node:child_process");
+
+      const child = spawn(
+        ${builtins.toJSON (lib.getExe' nodejs_24 "node")},
+        [${builtins.toJSON "$out/lib/node_modules/openchamber-monorepo/bin/cli.js"}, ...process.argv.slice(2)],
+        {stdio: "inherit"},
+      );
+
+      child.on("exit", (code, signal) => {
+        if (signal !== null) {
+          process.kill(process.pid, signal);
+          return;
+        }
+
+        process.exit(code ?? 0);
+      });
+      WRAPPER
+      chmod +x "$out/bin/openchamber"
+    '';
+
     meta = with lib; {
-      description = "Web GUI for OpenCode AI agent (multi-agent runs, worktrees, LAN access)";
+      description = "Desktop and web interface for OpenCode AI agent";
       homepage = "https://github.com/openchamber/openchamber";
       license = licenses.mit;
       mainProgram = "openchamber";
