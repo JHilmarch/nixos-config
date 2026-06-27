@@ -8,6 +8,7 @@
 - [Home Modules](#home-modules)
   - [fish](#fish)
   - [git](#git)
+    - [SSH commit signing](#ssh-commit-signing)
   - [gpg](#gpg)
   - [ssh](#ssh)
     - [YubiKey SSH](#yubikey-ssh)
@@ -19,6 +20,7 @@
     - [wake-on-lan](#wake-on-lan)
 - [Scripts](#scripts)
   - [Reboot to Windows](#reboot-to-windows)
+  - [SSH signing bootstrap](#ssh-signing-bootstrap)
 - [Secrets](#secrets)
 - [AI Assistant and MCP](#ai-assistant-and-mcp)
 - [NixOS](#nixos)
@@ -107,6 +109,22 @@ The module contains the _git_ configuration. Change `userName`, `userEmail` and 
 # Check if OpenPGP is set up with a signing key on your YubiKey and copy it.
 gpg --card-status
 ```
+
+#### SSH commit signing
+
+Personal commits are signed with an ed25519 SSH key using file-based signing (`gpg.format = ssh`, signer `ssh-keygen`),
+configured in `home-modules/git/ssh.nix`. This replaces the earlier 1Password agent signer (`op-ssh-sign`) whose socket
+(`~/.1password/agent.sock`) is unreachable from OpenCode and other agent jails — every signed commit from inside a
+sandbox failed.
+
+The signing key lives at `~/.ssh/signing_keys/id_ed25519_signing` and is bootstrapped from 1Password by
+[`scripts/ssh-signing-bootstrap.fish`](#ssh-signing-bootstrap). Run it once after your first rebuild on a host; after
+that, commits sign automatically with no running 1Password agent.
+
+Prerequisites on the host (both already configured in `configuration.nix`):
+
+- `programs._1password.enable = true` — provides the `op` CLI wrapper with desktop app integration
+- `programs._1password-gui.enable = true` — provides the desktop app + polkit
 
 ### gpg
 
@@ -199,6 +217,20 @@ for forwarding a YubiKey to a remote host over USB/IP — used both to unlock LU
 YubiKey access (git signing, `gpg --card-status`). They are installed as system packages by the `services.yubikeyUsbip`
 module in `modules/yubikey-usbip/`, currently enabled on the orion and p51 hosts. See
 [`scripts/yubikey-usbip/README.md`](./scripts/yubikey-usbip/README.md) for the full flow.
+
+### SSH signing bootstrap
+
+The `scripts/ssh-signing-bootstrap.fish` script fetches the ed25519 commit-signing key from 1Password and writes it to
+`~/.ssh/signing_keys/` so that `git commit` signs via `ssh-keygen` against a file — no running 1Password agent required
+(the agent socket is unreachable from agent jails).
+
+Run once on the host after `nixos-rebuild switch`:
+
+```fish
+fish scripts/ssh-signing-bootstrap.fish --item "GH (personal) SSH signing key (id_ed25519_gh)"
+```
+
+Re-run with `--force` after rotating the signing key. Use `--help` for all options.
 
 ## Secrets
 

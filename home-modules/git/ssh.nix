@@ -26,6 +26,7 @@ in {
         user = {
           email = "JHilmarch@users.noreply.github.com";
           name = "Jonatan Hilmarch";
+          signingkey = "~/.ssh/signing_keys/id_ed25519_signing";
         };
 
         push = {
@@ -46,12 +47,8 @@ in {
         };
 
         "gpg \"ssh\"" = {
-          program = "${pkgs._1password-gui}/bin/op-ssh-sign";
+          program = "${pkgs.openssh}/bin/ssh-keygen";
           allowedSignersFile = "${allowedSigners}";
-        };
-
-        user = {
-          signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINLbXmkI4z9yvrdcHtGxdAx41THZJsps8irUTcyEzMxo";
         };
 
         commit = {

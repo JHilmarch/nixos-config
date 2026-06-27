@@ -46,8 +46,6 @@
     vlc # Media player and streaming server
     dconf-editor # GSettings editor for GNOME
     dconf2nix # Convert dconf files to Nix, as expected by Home Manager
-    _1password-gui # Password manager
-    _1password-cli # 1Password command-line tool
     gnomeExtensions.tiling-shell # Tiling window manager
     wmctrl
     gnome-calendar

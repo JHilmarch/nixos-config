@@ -41,8 +41,6 @@
     discord # All-in-one cross-platform voice and text chat for gamers
     gitleaks # Scan git repos (or files) for secrets
     vlc # Media player and streaming server
-    _1password-gui # Password manager
-    _1password-cli # 1Password command-line tool
     gnomeExtensions.tiling-shell # Tiling window manager
     wmctrl
     gnome-calendar
