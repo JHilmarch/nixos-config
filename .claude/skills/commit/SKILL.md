@@ -1,6 +1,8 @@
-______________________________________________________________________
-
-## name: commit description: Write clear commit messages using Conventional Commits allowed-tools: Bash, Read, Glob, Grep
+---
+name: commit
+description: Write clear commit messages using Conventional Commits
+allowed-tools: Bash, Read, Glob, Grep
+---
 
 # Committing Changes
 

@@ -1,6 +1,9 @@
-______________________________________________________________________
-
-## name: project-manager description: Plan, refine, and delegate work on a GitHub Project board disable-model-invocation: true allowed-tools: Bash, Read, Glob, Grep, Skill
+---
+name: project-manager
+description: Plan, refine, and delegate work on a GitHub Project board
+disable-model-invocation: true
+allowed-tools: Bash, Read, Glob, Grep, Skill
+---
 
 ## How to use the gh-project-manager CLI
 

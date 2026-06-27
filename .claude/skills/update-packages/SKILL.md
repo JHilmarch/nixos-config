@@ -1,6 +1,9 @@
-______________________________________________________________________
-
-## name: update-packages description: Update custom packages to their latest versions disable-model-invocation: true allowed-tools: Bash, Read, Edit, Glob, Grep
+---
+name: update-packages
+description: Update custom packages to their latest versions
+disable-model-invocation: true
+allowed-tools: Bash, Read, Edit, Glob, Grep
+---
 
 ## How to use the CLI
 
