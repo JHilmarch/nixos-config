@@ -32,10 +32,16 @@
     "*.html"
   ];
 
-  # Global excludes — never touch encrypted/generated/skill files
+  # Global excludes — never touch encrypted/generated/skill files.
+  # Skill SKILL.md files have YAML frontmatter that mdformat mangles
+  # (collapses "---\nname: foo\n---" into "___\n## name: foo"). Both
+  # `ai/skills/` (user-scope, installed via readSkillsFrom) and
+  # `.claude/skills/` (project-scope, scanned natively by opencode +
+  # Claude Code) hold skills and must be excluded identically.
   settings.excludes = [
     "secrets/*"
     "*.age"
     "ai/skills/*"
+    ".claude/skills/*"
   ];
 }

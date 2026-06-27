@@ -32,7 +32,10 @@ ai/skills/          # Shared AI agent skills (SKILL.md per directory)
 - **Add a home-manager feature** → `home-modules/` — see AGENTS.md for jail/skill patterns
 - **Add/update a custom package** → `packages/` — exposed as `pkgs.local.<name>`, see AGENTS.md
 - **Configure a specific host** → `hosts/<name>/` — Orion has its own AGENTS.md
-- **Add a shared AI skill** → `ai/skills/<name>/SKILL.md` — auto-discovered by `readSkillsFrom`
+- **Add a shared AI skill** → `ai/skills/<name>/SKILL.md` — auto-discovered by `readSkillsFrom` (user-scope: loaded in
+  every project)
+- **Add a project-scope AI skill** → `.claude/skills/<name>/SKILL.md` — scanned natively by opencode + Claude Code
+  (loaded only inside this repo; use for skills that only make sense here, e.g. `verify-flake`)
 - **Add a Claude-specific skill** → `home-modules/claude/skills/<name>/SKILL.md` — Claude-only
 - **Update a package version** → `tools/update-packages/` — Fish CLI, per-package .fish files
 - **Add a new user** → `users/<name>.nix` — register in `users/default.nix` attrset
@@ -59,7 +62,8 @@ mcp-nixos, llm-agents, jail-nix, treefmt-nix, vscode-server. All follow nixpkgs 
 
 - **Formatting:** `nix fmt` (alejandra for Nix, mdformat for MD, fish_indent for Fish, biome for JS/TS/JSON/CSS/HTML)
 - **Indentation:** 2 spaces. Line length: 100 (Nix), 120 (everything else). LF endings.
-- **Formatting excludes:** `secrets/*`, `*.age`, `ai/skills/*`
+- **Formatting excludes:** `secrets/*`, `*.age`, `ai/skills/*`, `.claude/skills/*` (skill `SKILL.md` files have YAML
+  frontmatter mdformat mangles)
 - **Hooks auto-format on Edit/Write:** .nix→alejandra, .fish→fish_indent, .md→mdformat, .json→biome
 - **Nix naming:** kebab-case files/dirs, camelCase options (`systemdNoSleep`), camelCase variables
 - **Fish naming:** `cmd_<name>` dispatch, `SCREAMING_SNAKE_CASE` globals, `snake_case` locals
