@@ -386,7 +386,7 @@ function cmd_add_item
     set -l owner (resolve_owner "$argv[3]")
 
     # Extract repo and issue number from URL
-    set -l parts (string replace -r 'https://github.com/([^/]+)/([^/]+)/issues/(\d+)' '$1/$2 $3' "$url")
+    set -l parts (string replace -r 'https://github.com/([^/]+)/([^/]+)/issues/(\d+)' '$1/$2 $3' "$url" | string split ' ')
     test (count $parts) -lt 2; and die "Invalid issue URL: $url"
     set -l repo $parts[1]
     set -l issue_num $parts[2]
