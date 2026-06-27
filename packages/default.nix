@@ -2,6 +2,7 @@
   awesome-copilot = callPackage ./awesome-copilot {};
 in {
   context7-mcp = callPackage ./context7-mcp {};
+  openchamber = callPackage ./openchamber {};
   azure-devops-mcp = callPackage ./azure-devops-mcp {};
   inherit awesome-copilot;
   awesome-copilot-patched = callPackage ./awesome-copilot/patched.nix {inherit awesome-copilot;};
