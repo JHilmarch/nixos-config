@@ -123,11 +123,83 @@ Tests passing (<N> tests, 0 failures)
 Ready to implement <feature>
 ```
 
+## Merge-back to Main
+
+**Core rule:** Always produce linear history — never create merge commits. Use rebase + `--ff-only`, **never**
+`--no-ff`.
+
+`merge.ff = only` is set declaratively in `home-modules/git/*.nix` (see AGENTS.md "Linear History"), so the default
+`git merge` already refuses non-fast-forward merges with `fatal: Not possible to fast-forward, aborting.`. The patterns
+below use explicit `--ff-only` for clarity and to make intent visible in shell history.
+
+### Single Worktree
+
+When main hasn't moved since the worktree was created, the branch is directly fast-forwardable:
+
+```bash
+git switch main
+git pull --ff-only       # sync with remote before merging
+git merge --ff-only <branch-name>
+```
+
+If `--ff-only` refuses, main moved under you — rebase first, then ff-only:
+
+```bash
+git switch <branch-name> && git rebase main
+git switch main && git merge --ff-only <branch-name>
+```
+
+### Multiple Parallel Worktrees
+
+For N branches off the same base (e.g. two worktrees created from the same main commit), merge them sequentially with
+rebase + ff-only. First branch ff-merges cleanly; every subsequent branch must rebase onto the new main first.
+
+```bash
+# Branch 1 — ff works (main hasn't moved relative to it)
+git switch main
+git merge --ff-only <branch-1>
+
+# Branch 2 — rebase onto updated main, then ff-only
+git switch <branch-2> && git rebase main
+git switch main && git merge --ff-only <branch-2>
+```
+
+Result: linear history, no merge commits, both feature commits sit one atop the other.
+
+### Worked Example (Anti-Pattern)
+
+This is the bad pattern from the #80/#83/#77 session that motivated this rule — do the opposite:
+
+```bash
+# WRONG — creates a real merge commit, breaks linear history, invalid Conventional Commit prefix
+git switch main
+git merge --no-ff docs/77-agents-grep-rule -m "merge: docs(agents): ..."
+
+# RIGHT — rebase + ff-only, no merge commit
+git switch main && git merge --ff-only fix/83-gh-pm-cli-bugs
+git switch docs/77-agents-grep-rule && git rebase main
+git switch main && git merge --ff-only docs/77-agents-grep-rule
+```
+
+### After Merge
+
+Clean up the worktree and its branch:
+
+```bash
+git worktree remove ~/.worktrees/<project>/<worktree-name>
+git branch -d <branch-name>      # -d refuses if branch not fully merged
+```
+
+If `git worktree remove` refuses due to uncommitted changes, inspect with `git -C <path> status` and either commit,
+stash, or confirm with `--force`.
+
 ## Quick Reference
 
 | Situation | Action | | --- | --- | | `~/.worktrees/` exists | Use it | | Both exist | Use `~/.worktrees/` | | Neither
 exists | Check AGENTS.md → Ask user | | Directory not ignored | Add to .gitignore + commit | | Tests fail during
-baseline | Report failures + ask | | No package.json/Cargo.toml | Skip dependency install |
+baseline | Report failures + ask | | No package.json/Cargo.toml | Skip dependency install | | Merging one worktree back
+| `git merge --ff-only <branch>` (rebase first if refused) | | Merging N parallel worktrees | ff-only first, then
+`rebase main` + ff-only each subsequent | | `--ff-only` refused | `git rebase main` on the branch, then retry |
 
 ## Common Mistakes
 
@@ -175,6 +247,8 @@ Ready to implement auth feature
 - Proceed with failing tests without asking
 - Assume directory location when ambiguous
 - Skip AGENTS.md check
+- Use `git merge --no-ff` — always rebase + `git merge --ff-only` for linear history
+- Use `merge:` as a Conventional Commit type — it's invalid; the merge step itself shouldn't create a commit
 
 **Always:**
 
@@ -182,3 +256,4 @@ Ready to implement auth feature
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
+- Rebase feature branches onto current main, then `git merge --ff-only`

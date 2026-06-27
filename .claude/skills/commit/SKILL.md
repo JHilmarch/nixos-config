@@ -43,6 +43,11 @@ git add -p
 
 Never commit secrets (.env, credentials.json, private keys).
 
+**No merge commits:** this repo enforces linear history (see AGENTS.md "Linear History"). This skill creates regular
+commits on a feature branch — never run `git merge --no-ff` to combine branches. If you need to integrate two branches,
+rebase one onto the other and use `git merge --ff-only` (see `/using-git-worktrees` "Merge-back to main"). The `merge:`
+prefix is **not** a valid Conventional Commits type.
+
 ### 3. Generate Commit Message
 
 Make small, atomic commits - each commit should address one logical change. If your work spans multiple concerns (e.g.,

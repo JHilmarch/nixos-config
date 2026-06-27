@@ -25,6 +25,7 @@ in {
 
         merge = {
           conflictstyle = "diff3";
+          ff = "only";
         };
 
         diff = {

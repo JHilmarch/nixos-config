@@ -89,6 +89,8 @@ mcp-nixos, llm-agents, jail-nix, treefmt-nix, vscode-server. All follow nixpkgs 
 - **NEVER** amend commits unless explicitly asked
 - **NEVER** use one `-m` per sentence in commit messages
 - **NEVER** call bare `grep` from agent shells — the opencode jail lacks GNU grep; use `ck` (preferred) or `rg`
+- **NEVER** use `git merge --no-ff` — always rebase feature branches onto current main first, then merge with
+  `--ff-only` for linear history (see `/using-git-worktrees` "Merge-back to main")
 - **ALWAYS** use nixos MCP proactively for package/option searches
 - **ALWAYS** use `--json` flag with ck, update-packages, project-manager tools
 - **ALWAYS** format after editing Nix files (hooks do this automatically)
@@ -125,3 +127,10 @@ nix flake check
   config).
 - **GitHub MCP:** Personal/work split via base/variant pattern reading PATs from `/run/secrets/`.
 - **Azure DevOps:** Commits are NOT signed (work policy). wsl-cab uses work git identity.
+- **Linear History:** `merge.ff = only` is set declaratively in every `home-modules/git/*.nix` variant, so every clone
+  on every host refuses non-fast-forward merges at the git level. **Enforcement boundary:** the default `git merge`
+  refuses with `fatal: Not possible to fast-forward, aborting.` when branches diverge — but an explicit
+  `git merge --no-ff` flag still overrides this config (verified on git 2.54). The agent-facing rule in Anti-Patterns
+  (`NEVER git merge --no-ff`) is the primary enforcement; `merge.ff=only` is the technical backstop for accidental
+  non-ff merges. To merge a feature branch: rebase onto target first, then `git merge --ff-only <branch>` (see
+  `/using-git-worktrees` skill's "Merge-back to main" section).
