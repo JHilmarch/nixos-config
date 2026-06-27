@@ -2,7 +2,7 @@
 
 **Commit:** cdb3b52 **Branch:** main
 
-NixOS flake-based configuration. Four hosts, custom packages, AI agent sandboxing. Applies to: Claude Code, OpenCode,
+NixOS flake-based configuration. Five hosts, custom packages, AI agent sandboxing. Applies to: Claude Code, OpenCode,
 GitHub Copilot CLI.
 
 ## Structure
@@ -10,6 +10,7 @@ GitHub Copilot CLI.
 ```
 hosts/              # Per-host configuration.nix + home.nix
 ├── orion/          # Desktop (GNOME, NVIDIA, LUKS+FIDO2, YubiKey, dual boot) → [AGENTS.md]
+├── p51/            # Laptop (GNOME, LUKS+FIDO2, YubiKey USB/IP)
 ├── wsl-cab/        # WSL dev env (work identity, Copilot CLI, Azure DevOps)
 ├── iso/            # Minimal installation ISO (no Home Manager)
 └── hl-jump/        # Proxmox LXC jump host (nginx, static IP)
@@ -51,6 +52,7 @@ mcp-nixos, llm-agents, jail-nix, treefmt-nix, vscode-server. All follow nixpkgs 
 **specialArgs matrix:**
 
 - **orion**: inputs/self ✓, username jonatan, hostname nixos-orion, pkgs-unstable ✓, functions ✓, local overlay ✓
+- **p51**: inputs/self ✓, username jonatan, hostname nixos-p51, pkgs-unstable ✓, functions ✓, local overlay ✓
 - **wsl-cab**: inputs/self ✓, username jonatan, hostname wsl-cab, pkgs-unstable ✗, functions ✗, local overlay ✓
 - **iso**: inputs/self ✓, username jonatan, hostname iso, pkgs-unstable ✗, functions ✗, local overlay ✗
 - **hl-jump**: inputs/self ✓, username jonatan, hostname hl-jump, pkgs-unstable ✗, functions ✓, local overlay ✗
@@ -118,7 +120,8 @@ nix flake check
 - **Secrets:** SOPS-encrypted with age. Decrypted by sops-nix to /nix/store. Agent wrappers source via
   `scripts/secrets-sops.sh`.
 - **Dual Boot:** Orion has Windows dual boot; `scripts/reboot-to-windows.sh` uses bootctl to set next UEFI entry.
-- **YubiKey:** SSH (FIDO2), GPG, LUKS unlock via initrd scripts in `hosts/orion/boot-initrd-scripts/`.
+- **YubiKey:** SSH (FIDO2), GPG, LUKS unlock via initrd scripts in `hosts/orion/boot-initrd-scripts/`. USB/IP forwarding
+  (`services.yubikeyUsbip`) is enabled on both orion and p51.
 - **NFS:** `modules/nfs/fileshare.nix` for private NAS at fileshare.se.
 - **AI Agent Sandboxing:** Copilot CLI uses fence (`code` template, from `llm-agents` input). OpenCode uses jail-nix
   (bubblewrap + seccomp). Claude uses wrapper scripts.
