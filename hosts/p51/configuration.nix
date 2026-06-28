@@ -24,7 +24,7 @@ in {
     "${self}/modules/systemd/firefox.nix"
     "${self}/modules/systemd/power-profile.nix"
     "${self}/modules/yubikey-usbip/default.nix"
-    "${self}/modules/openchamber/default.nix"
+    "${self}/modules/openchamber/sops.nix"
     "${self}/templates/desktop.nix"
   ];
 
@@ -184,14 +184,6 @@ in {
       nssmdns4 = true;
       publish.enable = true;
       publish.addresses = true;
-    };
-
-    # OpenChamber web GUI for opencode visibility — see modules/openchamber/default.nix
-    # and story #84. UI password comes from the per-host SOPS secret wired in
-    # hosts/p51/modules/sops.nix (T3, #85).
-    openchamber = {
-      enable = true;
-      uiPasswordFile = config.sops.secrets.openchamber_ui_password.path;
     };
 
     pcscd = {
