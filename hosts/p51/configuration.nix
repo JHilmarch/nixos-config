@@ -23,6 +23,7 @@ in {
     "${self}/modules/systemd/flatpak.nix"
     "${self}/modules/systemd/firefox.nix"
     "${self}/modules/systemd/power-profile.nix"
+    "${self}/modules/spotify/firewall.nix"
     "${self}/modules/yubikey-usbip/default.nix"
     "${self}/modules/openchamber/sops.nix"
     "${self}/templates/desktop.nix"
@@ -235,6 +236,7 @@ in {
 
     systemdFlatpak.enable = true;
     yubikeyUsbip.enable = true;
+    spotifyFirewall.enable = true;
     systemdFirefox.enable = true;
     systemdPowerProfile.enable = true;
   };

@@ -42,6 +42,7 @@
     discord # All-in-one cross-platform voice and text chat for gamers
     gitleaks # Scan git repos (or files) for secrets
     vlc # Media player and streaming server
+    spotify # Digital music streaming service
     gnomeExtensions.tiling-shell # Tiling window manager
     wmctrl
     gnome-calendar
