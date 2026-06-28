@@ -53,7 +53,7 @@ prefix is **not** a valid Conventional Commits type.
 Make small, atomic commits - each commit should address one logical change. If your work spans multiple concerns (e.g.,
 a refactor and a bug fix), break it into separate commits.
 
-If applicable: Reference the relevant GitHub issue as a footer (`Closes #123` or `Refs #123`).
+Reference the relevant GitHub issue as a footer (rules in **Issue references** below).
 
 Always create a NEW commit. Never amend unless the user explicitly asks.
 
@@ -69,7 +69,7 @@ git commit -m "feat(wsl-cab): add copilot-cli with Azure DevOps" \
     'Enable the copilot-cli home module in wsl-cab with' \
     'azure-devops-mcp as a runtime input and MCP server entry.' \
     'Add PAT authentication docs to README.')" \
-  -m "Closes #65"
+  -m "Closes: #65"
 
 # WRONG: one -m per line (creates separate paragraphs with blank lines)
 git commit -m "title" \
@@ -96,6 +96,30 @@ Each `-m` is one paragraph — use `printf` to create real newlines within it.
 - Subject line must be at most **50 characters**
 - Body lines must be at most **72 characters**
 - Use host or module name as scope (e.g. `orion`, `wsl-cab`, `nfs`, `claude`)
+
+#### Issue references
+
+Always link a commit to its board item (task / bug / story) using a footer keyword:
+
+- **`Refs: #<N>`** — the commit works on the issue but does not finish it. Always include when working from a board item.
+- **`Closes: #<N>`** — the commit completes the issue. GitHub closes the issue when the commit lands on the default
+  branch.
+
+Use **one footer line per issue** — never comma-separated:
+
+```
+# WRONG — GitHub does not reliably parse this
+Closes: #1, #2
+
+# RIGHT — one line per issue
+Closes: #1
+Closes: #2
+```
+
+A closing keyword in a **commit message** closes the issue on merge to the default branch, but the PR containing that
+commit is **not** listed as a linked PR on the issue page. If PR linkage matters (e.g. for the board's "Linked pull
+requests" field), put the keyword in the **PR description** instead. See
+[GitHub docs](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword).
 
 #### Commit Types
 
