@@ -84,6 +84,7 @@ in {
     "${self}/home-modules/claude"
     "${self}/home-modules/copilot-cli"
     "${self}/home-modules/opencode"
+    ./modules/dconf
     inputs.nix-index-database.homeModules.nix-index
   ];
 

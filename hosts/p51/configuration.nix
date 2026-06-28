@@ -22,6 +22,7 @@ in {
     ./modules/opencode.nix
     "${self}/modules/systemd/flatpak.nix"
     "${self}/modules/systemd/firefox.nix"
+    "${self}/modules/systemd/power-profile.nix"
     "${self}/modules/yubikey-usbip/default.nix"
     "${self}/templates/desktop.nix"
   ];
@@ -174,6 +175,8 @@ in {
     };
     upower.enable = true;
 
+    power-profiles-daemon.enable = true;
+
     gvfs.enable = true;
 
     xserver = {
@@ -216,6 +219,7 @@ in {
     systemdFlatpak.enable = true;
     yubikeyUsbip.enable = true;
     systemdFirefox.enable = true;
+    systemdPowerProfile.enable = true;
   };
 
   programs = {
