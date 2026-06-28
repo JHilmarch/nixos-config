@@ -14,6 +14,8 @@ modules/
 ├── nfs/
 │   ├── default.nix       # Options: nfs.{enable, host, ip, shares, port} → generates fileSystems
 │   └── fileshare.nix     # Concrete config for home NAS (fileshare.local)
+├── openchamber/
+│   └── default.nix       # services.openchamber.* — web GUI for opencode; systemd USER services via home-manager.users; firewall
 ├── spotify/
 │   └── firewall.nix      # services.spotifyFirewall.enable — TCP/UDP 5353, 57621
 ├── yubikey-usbip/
@@ -32,6 +34,8 @@ modules/
 
 - **Add a new system module** → create `modules/<name>/default.nix` — use `mkEnableOption` pattern
 - **Add systemd oneshot service** → `systemd/` existing files as template — `services.systemd<CamelCase>.enable`
+- **Add a systemd USER service from a system module** → `openchamber/default.nix` as template —
+  `home-manager.users.${username}` + `systemd.user.services`
 - **Add NFS share** → `nfs/fileshare.nix` — add to `nfs.shares` list
 - **Add a Python-based tool** → `markitdown-mcp/` as template — custom Python env with version overrides
 - **Bridge SOPS to a CLI tool** → `context7/sops-wrapper.nix` as template — crosses system↔HM boundary
