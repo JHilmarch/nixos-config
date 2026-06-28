@@ -223,6 +223,17 @@ in {
   };
 
   services = {
+    # Avahi for mDNS-based hostname resolution — required for fileshare.local
+    # (NFS mount in modules/nfs/fileshare.nix) and cross-host reachability
+    # (nixos-orion.local). publish.enable is the master switch that gates all
+    # publish.* sub-options.
+    avahi = {
+      enable = true;
+      nssmdns4 = true;
+      publish.enable = true;
+      publish.addresses = true;
+    };
+
     # Btrfs auto-scrub: checks data integrity on the 1st and 15th of each month
     btrfs.autoScrub = {
       enable = true;
