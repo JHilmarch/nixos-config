@@ -18,6 +18,7 @@
 # Packages:
 #   azure-devops-mcp       GitHub releases (microsoft/azure-devops-mcp)
 #   azure-mcp-server       NuGet (Azure.Mcp)
+#   openchamber            GitHub releases (openchamber/openchamber)
 
 # Fish exits on command failure by default; explicit `or return 1`/`or exit 1` used where needed
 
@@ -40,7 +41,7 @@ end
 
 # ── Package registry ─────────────────────────────────────────────────────────
 
-set -g ALL_PACKAGES azure-devops-mcp azure-mcp-server
+set -g ALL_PACKAGES azure-devops-mcp azure-mcp-server openchamber
 
 # ── List command ──────────────────────────────────────────────────────────────
 
