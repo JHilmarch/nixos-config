@@ -1,6 +1,6 @@
-  # Concrete config for hosts that store the OpenChamber UI password in a
-  # SOPS secret named `openchamber_ui_password`. Per-host SOPS declarations
-  # live at hosts/<host>/modules/sops.nix.
+# Concrete config for hosts that store the OpenChamber UI password in a
+# SOPS secret named `openchamber_ui_password`. Per-host SOPS declarations
+# live at hosts/<host>/modules/sops.nix.
 {config, ...}: {
   imports = [
     ./default.nix
