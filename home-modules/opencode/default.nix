@@ -44,6 +44,9 @@
     opencode-pkg =
       inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.opencode;
 
+    hunk-pkg =
+      inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.hunk;
+
     settingsJSON = builtins.toJSON config.programs.opencode.settings;
 
     jailed-opencode = jail "opencode" opencode-pkg (
@@ -91,6 +94,7 @@
               pkgs.alejandra
               pkgs.cacert
               pkgs.nodejs
+              hunk-pkg
             ]
             ++ cfg.runtimeInputs))
         ]

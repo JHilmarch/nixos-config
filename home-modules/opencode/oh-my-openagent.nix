@@ -1,6 +1,8 @@
 {
   config,
   lib,
+  pkgs,
+  inputs,
   self,
   ...
 }: let
@@ -13,6 +15,10 @@
       value = {source = path;};
     })
     sharedSkills;
+
+  hunk-pkg =
+    inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.hunk;
+  hunkReviewSkill = "${hunk-pkg}/skills/hunk-review/SKILL.md";
 
   glm = "zai-coding-plan/glm-5.2";
   glmPrev = "zai-coding-plan/glm-5.1";
@@ -61,6 +67,7 @@ in
     home.file =
       skillFiles
       // {
+        ".config/opencode/skills/hunk-review/SKILL.md".source = hunkReviewSkill;
         ".config/opencode/tui.json".text = builtins.toJSON {
           "$schema" = "https://opencode.ai/tui.json";
           theme = "catppuccin";
