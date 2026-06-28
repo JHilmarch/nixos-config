@@ -17,6 +17,7 @@
 
   llm-agents-packages = with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [
     ck # Hybrid code search (semantic, lexical, regex)
+    hunk # Review-first terminal diff viewer for agentic changesets
   ];
 
   stable-packages = with pkgs; [
