@@ -24,6 +24,7 @@ in {
     "${self}/modules/systemd/firefox.nix"
     "${self}/modules/systemd/power-profile.nix"
     "${self}/modules/yubikey-usbip/default.nix"
+    "${self}/modules/openchamber/default.nix"
     "${self}/templates/desktop.nix"
   ];
 
@@ -133,6 +134,11 @@ in {
     networkmanager.enable = true;
     useDHCP = false;
     firewall.enable = true;
+
+    # Self-hostname aliases so p51 can resolve its own .local/.lan names to
+    # 127.0.0.1 without depending on avahi or router DNS. Other LAN hosts use
+    # avahi/mDNS (services.avahi.* below) to reach p51 by hostname.
+    hosts."127.0.0.1" = ["${hostname}.local" "${hostname}.lan"];
   };
 
   environment = {
@@ -168,6 +174,25 @@ in {
 
   services = {
     throttled.enable = true;
+
+    # Avahi for mDNS publishing — lets other LAN hosts resolve
+    # ${hostname}.local to p51's LAN IP. publish.enable is the master switch
+    # that gates all publish.* sub-options (was the bug behind nixos-p51.local
+    # not resolving from other hosts).
+    avahi = {
+      enable = true;
+      nssmdns4 = true;
+      publish.enable = true;
+      publish.addresses = true;
+    };
+
+    # OpenChamber web GUI for opencode visibility — see modules/openchamber/default.nix
+    # and story #84. UI password comes from the per-host SOPS secret wired in
+    # hosts/p51/modules/sops.nix (T3, #85).
+    openchamber = {
+      enable = true;
+      uiPasswordFile = config.sops.secrets.openchamber_ui_password.path;
+    };
 
     pcscd = {
       enable = true;
