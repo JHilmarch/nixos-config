@@ -9,6 +9,7 @@
   unstable-packages = with pkgs.unstable; [
     jetbrains.rider # IDE for .NET and C# development
     nodejs_24
+    signal-desktop # Desktop client for Signal (unstable: avoids pnpm-10.29.2 CVE in stable)
   ];
 
   llm-agents-packages = with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [
@@ -38,7 +39,6 @@
     grc # Generic text colouriser
     element-desktop # A feature-rich client for Matrix.org
     slack # Desktop client for Slack
-    signal-desktop # Desktop client for Signal
     discord # All-in-one cross-platform voice and text chat for gamers
     gitleaks # Scan git repos (or files) for secrets
     vlc # Media player and streaming server

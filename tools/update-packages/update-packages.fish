@@ -16,7 +16,6 @@
 #   --help                  Show this help message
 #
 # Packages:
-#   context7-mcp           npm (@upstash/context7-mcp)
 #   azure-devops-mcp       GitHub releases (microsoft/azure-devops-mcp)
 #   azure-mcp-server       NuGet (Azure.Mcp)
 #   nuget-mcp-server       NuGet (NuGet.Mcp.Server)
@@ -44,7 +43,7 @@ end
 
 # ── Package registry ─────────────────────────────────────────────────────────
 
-set -g ALL_PACKAGES context7-mcp azure-devops-mcp azure-mcp-server nuget-mcp-server awesome-copilot markitdown-mcp
+set -g ALL_PACKAGES azure-devops-mcp azure-mcp-server nuget-mcp-server awesome-copilot markitdown-mcp
 
 # ── List command ──────────────────────────────────────────────────────────────
 

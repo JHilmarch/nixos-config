@@ -13,6 +13,8 @@
     mcp-proxy # MCP server which proxies other MCP servers from stdio to SSE or from SSE to stdio
     nodejs_24
     codeql # Semantic code analysis engine for security research and vulnerability detection
+    context7-mcp # Context7 MCP CLI (up-to-date documentation for LLMs)
+    signal-desktop # Desktop client for Signal (unstable: avoids pnpm-10.29.2 CVE in stable)
   ];
 
   llm-agents-packages = with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [
@@ -41,7 +43,6 @@
     grc # Generic text colouriser
     element-desktop # A feature-rich client for Matrix.org
     slack # Desktop client for Slack
-    signal-desktop # Desktop client for Signal
     discord # All-in-one cross-platform voice and text chat for gamers
     gitleaks # Scan git repos (or files) for secrets
     vlc # Media player and streaming server
@@ -77,7 +78,6 @@
     coolercontrol.coolercontrol-ui-data
     coolercontrol.coolercontrol-gui
 
-    local.context7-mcp # Context7 MCP CLI
     local.mcp-nuget # NuGet MCP Server
     local.github-personal-mcp # GitHub MCP Server for personal account
     local.github-work-mcp # GitHub MCP Server for work account

@@ -6,8 +6,7 @@ Custom packages exposed as `pkgs.local.<name>` via overlay (orion + wsl-cab only
 
 ```
 packages/
-├── default.nix              # Registry: callPackages, 13 exports
-├── context7-mcp/            # pnpm build of @upstash/context7-mcp (Node.js)
+├── default.nix              # Registry: callPackages, 12 exports
 ├── azure-devops-mcp/        # buildNpmPackage of microsoft/azure-devops-mcp
 ├── azure-mcp-server/        # NuGet .NET tool, deps.json, dotnet dnx wrapper
 ├── nuget-mcp-server/        # NuGet .NET tool, deps.json, RID extraction
@@ -49,8 +48,7 @@ is empty with regeneration instructions. Used by: `azure-mcp-server/`, `nuget-mc
 
 ### Node.js
 
-`buildNpmPackage` or `stdenv.mkDerivation` with external build.sh/install.sh. Used by: `context7-mcp/` (pnpm),
-`azure-devops-mcp/` (npm)
+`buildNpmPackage` or `stdenv.mkDerivation` with external build.sh/install.sh. Used by: `azure-devops-mcp/` (npm)
 
 ### .NET (buildDotnetModule)
 

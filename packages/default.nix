@@ -1,7 +1,6 @@
 {callPackage}: let
   awesome-copilot = callPackage ./awesome-copilot {};
 in {
-  context7-mcp = callPackage ./context7-mcp {};
   openchamber = callPackage ./openchamber {};
   azure-devops-mcp = callPackage ./azure-devops-mcp {};
   inherit awesome-copilot;
