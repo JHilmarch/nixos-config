@@ -116,11 +116,6 @@ Closes: #1
 Closes: #2
 ```
 
-A closing keyword in a **commit message** closes the issue on merge to the default branch, but the PR containing that
-commit is **not** listed as a linked PR on the issue page. If PR linkage matters (e.g. for the board's "Linked pull
-requests" field), put the keyword in the **PR description** instead. See
-[GitHub docs](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword).
-
 #### Commit Types
 
 - `feat` - New feature
