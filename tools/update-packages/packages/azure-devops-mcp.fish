@@ -1,5 +1,9 @@
-# @fish-lsp-disable 4004
+# @fish-lsp-disable 4004 7001
 # azure-devops-mcp — GitHub releases (microsoft/azure-devops-mcp)
+# 4004: fns dispatched dynamically by update-packages.fish (current_$pkg etc).
+# 7001: helpers nix_read / nix_fix_hash / nix_build_quiet / log_step live in
+#   lib/nix.fish and common/log.fish, sourced at runtime; fish-lsp 1.1.3
+#   doesn't follow dynamic `source` paths.
 # Dual hash: source hash + npmDepsHash
 
 function fetch_latest_azure-devops-mcp

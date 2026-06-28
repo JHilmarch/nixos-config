@@ -1,5 +1,9 @@
-# @fish-lsp-disable 4004
+# @fish-lsp-disable 4004 7001
 # azure-mcp-server — NuGet tool (Azure.Mcp)
+# 4004: fns dispatched dynamically by update-packages.fish (current_$pkg etc).
+# 7001: helpers fetch_latest_nuget / update_nuget_deps / nix_build_quiet /
+#   log_step live in lib/nuget.fish, lib/nix.fish, common/log.fish, sourced
+#   at runtime; fish-lsp 1.1.3 doesn't follow dynamic `source` paths.
 # Uses generate-nuget-deps.sh for deps regeneration
 
 function fetch_latest_azure-mcp-server
