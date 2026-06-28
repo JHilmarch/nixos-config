@@ -18,9 +18,6 @@
 # Packages:
 #   azure-devops-mcp       GitHub releases (microsoft/azure-devops-mcp)
 #   azure-mcp-server       NuGet (Azure.Mcp)
-#   nuget-mcp-server       NuGet (NuGet.Mcp.Server)
-#   awesome-copilot        GitHub commits (microsoft/mcp-dotnet-samples)
-#   markitdown-mcp         PyPI (markitdown)
 
 # Fish exits on command failure by default; explicit `or return 1`/`or exit 1` used where needed
 
@@ -43,7 +40,7 @@ end
 
 # ── Package registry ─────────────────────────────────────────────────────────
 
-set -g ALL_PACKAGES azure-devops-mcp azure-mcp-server nuget-mcp-server awesome-copilot markitdown-mcp
+set -g ALL_PACKAGES azure-devops-mcp azure-mcp-server
 
 # ── List command ──────────────────────────────────────────────────────────────
 

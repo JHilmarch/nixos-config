@@ -64,8 +64,6 @@
     nuget # NuGet CLI for managing .NET packages
     cryptsetup # LUKS for dm-crypt
     sbctl # Secure Boot key manager
-
-    local.mcp-nuget # NuGet MCP Server
   ];
 
   firefoxDefaultMime = {

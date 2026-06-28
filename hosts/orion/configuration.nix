@@ -22,7 +22,6 @@ in {
     ./modules/copilot-cli.nix
     ./modules/opencode.nix
     "${self}/modules/context7/sops-wrapper.nix"
-    "${self}/modules/markitdown-mcp/default.nix"
     "${self}/modules/nfs/fileshare.nix"
     "${self}/modules/systemd/no-sleep.nix"
     "${self}/modules/systemd/wake-on-lan.nix"
@@ -248,9 +247,6 @@ in {
 
     # UPower D-Bus service for power management
     upower.enable = true;
-
-    # markitdown-mcp native Python package (installed via Nix, runs on-demand for stdio)
-    markitdown-mcp.enable = true;
 
     # Power Profiles Daemon for power management
     power-profiles-daemon.enable = true;

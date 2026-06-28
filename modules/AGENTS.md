@@ -9,8 +9,6 @@ modules/
 ├── defaults.nix          # Base: timezone (Europe/Stockholm), experimental Nix features
 ├── context7/
 │   └── sops-wrapper.nix  # Bridges SOPS secret to context7-mcp binary (crosses system↔HM)
-├── markitdown-mcp/
-│   └── default.nix       # Python build from source, custom mcp SDK version, wrapper
 ├── nfs/
 │   ├── default.nix       # Options: nfs.{enable, host, ip, shares, port} → generates fileSystems
 │   └── fileshare.nix     # Concrete config for home NAS (fileshare.local)
@@ -39,7 +37,6 @@ modules/
 - **Add a systemd USER service from a system module** → `openchamber/default.nix` as template —
   `home-manager.users.${username}` + `systemd.user.services`
 - **Add NFS share** → `nfs/fileshare.nix` — add to `nfs.shares` list
-- **Add a Python-based tool** → `markitdown-mcp/` as template — custom Python env with version overrides
 - **Bridge SOPS to a CLI tool** → `context7/sops-wrapper.nix` as template — crosses system↔HM boundary
 
 ## Module Patterns
@@ -55,7 +52,7 @@ in {
 };
 ```
 
-Used by: nfs, spotify, systemd/\*, markitdown-mcp
+Used by: nfs, spotify, systemd/\*
 
 ### Pure Config (no options)
 

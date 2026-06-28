@@ -224,10 +224,6 @@ in {
           type = "stdio";
           command = "github-work-mcp";
         };
-        nuget = {
-          type = "stdio";
-          command = "mcp-nuget";
-        };
         ms-learn = {
           type = "stdio";
           command = "mcp-proxy";
@@ -236,10 +232,6 @@ in {
             "streamablehttp"
             "https://learn.microsoft.com/api/mcp"
           ];
-        };
-        markitdown = {
-          type = "stdio";
-          command = "markitdown-mcp";
         };
         playwright = {
           type = "stdio";

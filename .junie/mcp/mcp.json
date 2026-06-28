@@ -11,10 +11,6 @@
 			"command": "github-personal-mcp",
 			"enabled": false
 		},
-		"markitdown": {
-			"command": "markitdown-mcp",
-			"enabled": false
-		},
 		"playwright": {
 			"command": "mcp-server-playwright",
 			"enabled": false

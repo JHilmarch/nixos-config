@@ -9,8 +9,8 @@
 # Examples:
 #   nix-shell -p dotnet-sdk jq nix --run \
 #     "bash tools/update-packages/scripts/generate-nuget-deps-from-project.sh \
-#        /path/to/mcp-dotnet-samples/awesome-copilot/src/McpSamples.AwesomeCopilot.HybridApp \
-#        packages/awesome-copilot/deps.json"
+#        /path/to/MyApp/src/MyApp.App \
+#        packages/my-app/deps.json"
 
 set -euo pipefail
 
@@ -31,7 +31,7 @@ Arguments:
   OutputPath    Path to output deps.json (default: deps.json)
 
 Examples:
-  $0 /path/to/mcp-dotnet-samples/awesome-copilot/src/McpSamples.AwesomeCopilot.HybridApp packages/awesome-copilot/deps.json
+  $0 /path/to/MyApp/src/MyApp.App packages/my-app/deps.json
 EOF
   exit 1
 fi

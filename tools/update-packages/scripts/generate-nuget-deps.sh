@@ -12,8 +12,6 @@
 # Examples:
 #   nix-shell -p dotnet-sdk unzip jq nix --run \
 #     "bash tools/update-packages/scripts/generate-nuget-deps.sh --ensure-sibling azure.mcp:azure.mcp.linux-x64 Azure.Mcp 0.8.6 packages/azure-mcp-server/deps.json"
-#   nix-shell -p dotnet-sdk unzip jq nix --run \
-#     "bash tools/update-packages/scripts/generate-nuget-deps.sh NuGet.Mcp.Server 1.0.0 packages/nuget-mcp-server/deps.json"
 
 set -euo pipefail
 

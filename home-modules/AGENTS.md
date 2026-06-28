@@ -7,7 +7,7 @@ Home Manager modules. Three categories: pure config, option-based, and sandboxed
 ```
 home-modules/
 ├── lib.nix          # Shared: readSkillsFrom (scans dirs for skill subdirs)
-├── claude/          # Claude Code: wrapper, permissions, 8 MCP servers, skills → [AGENTS.md]
+├── claude/          # Claude Code: wrapper, permissions, 6 MCP servers, skills → [AGENTS.md]
 ├── copilot-cli/     # Copilot CLI: fence sandbox (code template), Azure DevOps MCP
 ├── opencode/        # OpenCode: jail-nix sandbox, oh-my-openagent config
 ├── fish/            # Fish shell: plugins, abbreviations, dev vs base variants

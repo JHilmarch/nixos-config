@@ -244,7 +244,6 @@ This repository is set up to work with JetBrains Junie and Claude Code with the
 - The project-level MCP registry lives at: `.junie/mcp/mcp.json`
   - It defines a server named `nixos` that is started with: `mcp-nixos`
   - It defines a server named `context7` that is started with: `context7`
-  - It defines a server named `nuget-mcp-server` that is started with: `mcp-nuget`
 
 ## NixOS
 

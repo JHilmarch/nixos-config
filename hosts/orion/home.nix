@@ -78,14 +78,12 @@
     coolercontrol.coolercontrol-ui-data
     coolercontrol.coolercontrol-gui
 
-    local.mcp-nuget # NuGet MCP Server
     local.github-personal-mcp # GitHub MCP Server for personal account
     local.github-work-mcp # GitHub MCP Server for work account
     local.gh-personal # GitHub CLI authenticated with PAT for the personal GitHub area
     local.gh-personal-project-manager # GitHub CLI authenticated with classic PAT for project management
     local.gh-work # GitHub CLI authenticated with PAT for the work GitHub area
     local.azure-mcp-server # Azure MCP CLI
-    local.awesome-copilot-patched # Awesome Copilot MCP (with MCP logging patch)
   ];
 
   firefoxDefaultMime = {

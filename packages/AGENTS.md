@@ -6,14 +6,9 @@ Custom packages exposed as `pkgs.local.<name>` via overlay (orion + wsl-cab only
 
 ```
 packages/
-├── default.nix              # Registry: callPackages, 12 exports
+├── default.nix              # Registry: callPackages, 9 exports
 ├── azure-devops-mcp/        # buildNpmPackage of microsoft/azure-devops-mcp
 ├── azure-mcp-server/        # NuGet .NET tool, deps.json, dotnet dnx wrapper
-├── nuget-mcp-server/        # NuGet .NET tool, deps.json, RID extraction
-├── awesome-copilot/         # buildDotnetModule (Microsoft MCP sample, .NET 10)
-│   ├── default.nix          # Main build
-│   ├── patched.nix          # Patched variant (MCP logging)
-│   └── lib.nix              # Shared build/install phase generators
 ├── github-mcp-server/       # Base/variant: personal + work PAT injection
 │   ├── base.nix             # Takes serviceName + patSecret
 │   ├── personal.nix         # github-personal-mcp (reads gh_personal_pat)
@@ -44,15 +39,11 @@ Base module takes `serviceName` and `patSecret` as arguments. Variants call base
 ### NuGet (.NET tools)
 
 `deps.json` lists nupkg URLs + hashes. Build extracts and wraps with `dotnet dnx`. Throws helpful error if `deps.json`
-is empty with regeneration instructions. Used by: `azure-mcp-server/`, `nuget-mcp-server/`
+is empty with regeneration instructions. Used by: `azure-mcp-server/`
 
 ### Node.js
 
 `buildNpmPackage` or `stdenv.mkDerivation` with external build.sh/install.sh. Used by: `azure-devops-mcp/` (npm)
-
-### .NET (buildDotnetModule)
-
-Standard Nixpkgs .NET build. `awesome-copilot/` uses shared `lib.nix` for build phases. Used by: `awesome-copilot/`
 
 ## Conventions
 
