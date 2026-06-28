@@ -1,0 +1,33 @@
+[
+	{
+		"id": "Maximized",
+		"tiles": [
+			{
+				"x": 0,
+				"y": 0,
+				"width": 1,
+				"height": 1,
+				"groups": [1]
+			}
+		]
+	},
+	{
+		"id": "Split Half",
+		"tiles": [
+			{
+				"x": 0,
+				"y": 0,
+				"width": 0.5,
+				"height": 1,
+				"groups": [1]
+			},
+			{
+				"x": 0.5,
+				"y": 0,
+				"width": 0.5,
+				"height": 1,
+				"groups": [1]
+			}
+		]
+	}
+]

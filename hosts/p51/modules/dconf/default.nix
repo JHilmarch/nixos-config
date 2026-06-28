@@ -1,13 +1,29 @@
 {
-  dconf.settings = {
-    # Prevent automatic sleep/hibernate when idle on both AC and battery power.
-    # Unlike modules/systemd/no-sleep.nix (which hard-blocks suspend/hibernate at
-    # the systemd level via AllowSuspend/AllowHibernation = "no"), these GNOME
-    # settings only stop *idle-triggered* sleep. Manual suspend, lid-close, and
-    # `systemctl suspend` remain fully functional.
-    "org/gnome/settings-daemon/plugins/power" = {
-      sleep-inactive-ac-type = "nothing";
-      sleep-inactive-battery-type = "nothing";
-    };
-  };
+  pkgs,
+  lib,
+  username,
+  ...
+}: let
+  baseLine = import ./base-line.nix {inherit lib username;};
+  inputSources = import ./input-sources.nix {inherit lib;};
+  nightLight = import ./night-light.nix;
+  powerLock = import ./power-lock.nix {inherit lib;};
+  workspaceSettings = import ./workspace-settings.nix;
+  mediaKeys = import ./media-keys.nix;
+  customKeybindings = import ./custom-keybindings.nix;
+  workspaceShortcuts = import ./workspace-shortcuts.nix {inherit pkgs;};
+  spotifyShortcuts = import ./spotify-shortcuts.nix;
+  tilingShellSettings = import ./tiling-shell.nix;
+in {
+  dconf.settings = lib.foldl lib.recursiveUpdate baseLine [
+    inputSources
+    nightLight
+    powerLock
+    workspaceSettings
+    mediaKeys
+    customKeybindings
+    workspaceShortcuts
+    spotifyShortcuts
+    tilingShellSettings
+  ];
 }
