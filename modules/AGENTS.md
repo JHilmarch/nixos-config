@@ -27,7 +27,6 @@ modules/
     ├── power-profile.nix # services.systemdPowerProfile.enable — performance on boot
     ├── flatpak.nix       # services.systemdFlatpak.enable — flathub remote setup
     ├── firefox.nix       # services.systemdFirefox.enable — Flatpak Firefox (depends on flatpak)
-    ├── mullvad-browser.nix # services.systemdMullvadBrowser.enable — depends on flatpak
     └── nvidia-coolbits.nix # services.systemdNvidiaCoolbits.{enable, value} — X11 config
 ```
 

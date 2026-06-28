@@ -27,7 +27,6 @@ in {
     "${self}/modules/systemd/no-sleep.nix"
     "${self}/modules/systemd/wake-on-lan.nix"
     "${self}/modules/systemd/flatpak.nix"
-    "${self}/modules/systemd/mullvad-browser.nix"
     "${self}/modules/systemd/firefox.nix"
     "${self}/modules/systemd/nvidia-coolbits.nix"
     "${self}/modules/systemd/power-profile.nix"
@@ -314,7 +313,6 @@ in {
     systemdWakeOnLan.enable = true;
     spotifyFirewall.enable = true;
     systemdFlatpak.enable = true;
-    systemdMullvadBrowser.enable = true;
     systemdFirefox.enable = true;
     systemdNvidiaCoolbits.enable = true;
     systemdPowerProfile.enable = true;
