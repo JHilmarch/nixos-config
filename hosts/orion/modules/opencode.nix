@@ -45,10 +45,12 @@
           title.model = "zai-coding-plan/glm-5-turbo";
           summary.model = "zai-coding-plan/glm-5.2";
         };
+        # API-key providers (SOPS env vars). OAuth providers (anthropic, opencode-go)
+        # and first-time setup: see home-modules/opencode/README.md
         provider = {
           zai-coding-plan = {
             options = {
-              apiKey = "{env:ANTHROPIC_API_KEY}";
+              apiKey = "{env:ZAI_API_KEY}";
             };
           };
           openai = {

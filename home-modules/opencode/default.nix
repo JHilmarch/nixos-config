@@ -3,6 +3,7 @@
   pkgs,
   lib,
   inputs,
+  self,
   ...
 }: {
   imports = [./oh-my-openagent.nix];
@@ -47,6 +48,14 @@
     hunk-pkg =
       inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.hunk;
 
+    # Syncs Claude Code OAuth tokens → opencode auth.json for the @ex-machina plugin. See script header for details.
+    anthropic-auth-sync = pkgs.writeShellApplication {
+      name = "opencode-anthropic-auth-sync";
+      runtimeInputs = [pkgs.jq];
+      checkPhase = "true";
+      text = builtins.readFile "${self}/scripts/opencode-anthropic-auth-sync.sh";
+    };
+
     settingsJSON = builtins.toJSON config.programs.opencode.settings;
 
     jailed-opencode = jail "opencode" opencode-pkg (
@@ -60,10 +69,14 @@
           time-zone
           fake-passwd
           (add-runtime "mkdir -p \"$HOME/.local/share/opencode/tmp\"")
+          # Populate auth.json with Claude Code Max OAuth tokens before opencode starts,
+          # so the @ex-machina plugin can authenticate anthropic/* requests. Idempotent.
+          (add-runtime "opencode-anthropic-auth-sync 2>/dev/null || true")
           (rw-bind (noescape "~/.local/share/opencode/tmp") "/tmp")
           (try-readwrite (noescape "~/.cache/opencode"))
           (try-readwrite (noescape "~/.config/opencode"))
           (try-readwrite (noescape "~/.local/share/opencode"))
+          (try-readwrite (noescape "~/.local/share/opencode-anthropic-auth")) # @ex-machina plugin OAuth tokens
           (try-readonly (noescape "~/.config/git"))
           (try-readonly (noescape "~/.gitconfig"))
           (try-readonly (noescape "~/.ssh"))
@@ -71,7 +84,7 @@
           (try-readwrite (noescape "~/.cache/ck"))
           (try-readonly "/run/secrets")
           (try-readonly (noescape "~/.1password/agent.sock"))
-          (try-fwd-env "ANTHROPIC_API_KEY")
+          (try-fwd-env "ZAI_API_KEY")
           (try-fwd-env "OPENAI_API_KEY")
           (try-fwd-env "CONTEXT7_API_KEY")
           (fwd-env "OPENCODE_CONFIG_CONTENT")
@@ -96,7 +109,9 @@
               pkgs.gnutar
               pkgs.gzip
               pkgs.nodejs
+              pkgs.jq
               hunk-pkg
+              anthropic-auth-sync
             ]
             ++ cfg.runtimeInputs))
         ]
