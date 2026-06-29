@@ -9,7 +9,7 @@
   vips,
 }: let
   pname = "openchamber";
-  version = "1.13.5";
+  version = "1.13.8";
 
   src = runCommand "${pname}-${version}-src" {} ''
     mkdir "$out"
@@ -17,7 +17,7 @@
       owner = "openchamber";
       repo = "openchamber";
       rev = "v${version}";
-      hash = "sha256-0SmVGwxlg59eaDtSSk5uLGKgBnxe9F9AK+F2Q9AX0dM=";
+      hash = "sha256-ordjE7BLOnX2UeVGmOHT6DoOPTgn0pD67+WlxILEUKo=";
     }}/. "$out"
     chmod -R +w "$out"
 
@@ -36,7 +36,7 @@ in
     inherit pname version src;
     nodejs = nodejs_24;
 
-    npmDepsHash = "sha256-nyTdkxREnDVd0tCQzPFh/gX+dN42VJLfcGStUQAI3ms=";
+    npmDepsHash = "sha256-rMVDFzPJv/drhrdf3L7yY+/RE9AdsaMWOBHWe/85hQQ=";
     npmWorkspace = "packages/web";
     npmPruneFlags = ["--include-workspace-root=false"];
     makeCacheWritable = true;

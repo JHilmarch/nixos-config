@@ -57,17 +57,26 @@ Or via the `/update-packages` skill.
 
 The build uses a **vendored `package-lock.json`** at `packages/openchamber/package-lock.json` because upstream does not
 ship a workspace-aware lockfile matching our build shape. If an update fails during dependency resolution after bumping
-the version, regenerate the lockfile from the new upstream tag and retry:
+the version, regenerate the lockfile from the new upstream tag and retry.
+
+Upstream's root `package.json` declares `workspaces = ["packages/*"]`, but the build only pulls in `packages/ui` and
+`packages/web`. The lockfile **must** be generated with that same restricted workspace set, otherwise `npm install` in
+the sandbox fails with `ENOTCACHED` for workspace-only deps (e.g. `@pierre/diffs`). Mirror the build's `workspaces`
+injection when regenerating:
 
 ```fish
-set -l tag v1.13.7
+set -l tag v1.13.8
 curl -fsSL "https://github.com/openchamber/openchamber/archive/refs/tags/$tag.tar.gz" | tar -xz
 cd "openchamber-$tag"
-npm install --package-lock-only --workspaces=false
+
+# Match the build: restrict workspaces to the two packages we actually build.
+node -e 'const fs=require("fs");const p="package.json";const j=JSON.parse(fs.readFileSync(p,"utf8"));j.workspaces=["packages/ui","packages/web"];fs.writeFileSync(p,JSON.stringify(j,null,2)+"\n")'
+
+npm install --package-lock-only --ignore-scripts
 cp package-lock.json ../packages/openchamber/package-lock.json
 ```
 
-Then re-run the updater.
+Then re-run the updater (it will recompute `npmDepsHash` and verify the build).
 
 ## Package details
 
