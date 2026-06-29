@@ -1,0 +1,205 @@
+// nono profile for OpenCode (jail-nix → nono migration, story #117)
+// Mirrors the jail-nix combinator set from home-modules/opencode/default.nix lines 61-127.
+// T4 is responsible for wiring this profile into the NixOS module; this file is the
+// policy source of truth only.
+//
+// Package deps documented here for traceability (actual routing is T4's job):
+//   nixd, fish-lsp, git, openssh, ripgrep, bash, fish, _1password-gui, curl,
+//   gnused, gawk, util-linux, alejandra, cacert, gnutar, gzip, nodejs, jq,
+//   hunk-pkg, opencode-anthropic-auth-sync
+//
+// Design tensions (see nono-egress.md for full analysis):
+//   1. SSH egress (port 22): nono's network proxy operates at HTTP(S) layer only;
+//      raw TCP port 22 (git+ssh, openssh) is unfiltered by allow_domain. The jail-nix
+//      sandbox also did not restrict SSH egress. Accepted as-is pending a future
+//      open_port or firewall-level control.
+//   2. webfetch / curl conflicts: opencode's webfetch tool and curl make arbitrary
+//      HTTP(S) requests. The allow_domain list below is intentionally broad to cover
+//      known LLM providers, registries, and MCP tools, but ad-hoc webfetch calls to
+//      unlisted domains will be blocked at the proxy layer. Users needing additional
+//      domains should extend this profile or add them to nono-egress.md for review.
+{
+	"$schema": "https://nono.sh/schemas/nono-profile.schema.json",
+
+	"extends": "default", // inherits 18 deny groups: deny_credentials, system_read_linux_core, system_write_linux, etc.
+
+	"meta": {
+		"name": "opencode",
+		"version": "1.0.0",
+		"description": "OpenCode AI coding agent sandbox. Mirrors jail-nix combinator set from home-modules/opencode/default.nix.",
+		"author": "nixos-config/home-modules/opencode"
+	},
+
+	// Groups from the nono built-in policy set that cover Linux runtime paths
+	// the jail-nix sandbox exposed via ro-bind/rw-bind combinators.
+	"groups": {
+		"include": [
+			"nix_runtime", // /nix/store, /nix/var — mirrors (ro-bind "/nix/store" "/nix/store")
+			"linux_runtime_state", // /run, /var/run, /proc, /sys — mirrors (share-ns "pid") + network
+			"opencode_linux", // opencode-specific Linux policy (XDG paths, state dirs)
+			"user_tools", // ~/.local/bin, common tool paths
+			"user_caches_linux", // ~/.cache base (supplemented by explicit allow below)
+			"unlink_protection" // prevents accidental deletion of critical files
+		]
+	},
+
+	// Replaces jail-nix `mount-cwd` combinator.
+	"workdir": {
+		"access": "readwrite"
+	},
+
+	"filesystem": {
+		// ── Read-Write mounts ──────────────────────────────────────────────────────
+		// Mirrors jail-nix try-readwrite combinators (lines 76-84) plus persistentDirs defaults.
+		"allow": [
+			// XDG data/config/cache for opencode itself
+			"$XDG_DATA_HOME/opencode", // try-readwrite ~/.local/share/opencode
+			"$XDG_CONFIG_HOME/opencode", // try-readwrite ~/.config/opencode
+			"$XDG_CACHE_HOME/opencode", // try-readwrite ~/.cache/opencode
+
+			// @ex-machina plugin OAuth token cache (anthropic-auth-sync writes here)
+			"$XDG_DATA_HOME/opencode-anthropic-auth", // try-readwrite ~/.local/share/opencode-anthropic-auth
+
+			// Claude Code OAuth tokens — read by @ex-machina plugin via anthropic-auth-sync
+			"$HOME/.claude", // try-readwrite ~/.claude
+
+			// ck tool cache (used by opencode agents for code search)
+			"$HOME/.cache/ck", // try-readwrite ~/.cache/ck
+
+			// persistentDirs defaults: real-disk bind-mounts that survive the tmpfs-backed home
+			"$HOME/.cache", // persistentDirs default — XDG cache (nix fetcher, etc.)
+			"$HOME/.worktrees", // persistentDirs default — git worktrees from using-git-worktrees skill
+
+			// jail-nix maps ~/.local/share/opencode/tmp → /tmp inside the sandbox
+			// In nono, /tmp is handled by the sandbox itself; we expose the backing dir RW
+			// so opencode's add-runtime mkdir and tmp usage work correctly.
+			"$XDG_DATA_HOME/opencode/tmp" // rw-bind ~/.local/share/opencode/tmp → /tmp (jail-nix)
+		],
+
+		// ── Read-Only mounts ───────────────────────────────────────────────────────
+		// Mirrors jail-nix try-readonly combinators (lines 80-82, 85).
+		"read": [
+			"$HOME/.config/git", // try-readonly ~/.config/git — git config
+			"$HOME/.gitconfig", // try-readonly ~/.gitconfig — git config (legacy location)
+			"$HOME/.ssh", // try-readonly ~/.ssh — SSH keys for git operations
+			"/run/secrets" // try-readonly /run/secrets — SOPS-materialized secrets (ZAI_API_KEY, OPENAI_API_KEY)
+		],
+
+		// ── Socket access ──────────────────────────────────────────────────────────
+		// ~/.1password/agent.sock is blocked by the inherited deny_credentials group.
+		// bypass_protection removes the deny; allow_file grants the actual access.
+		// Mirrors jail-nix try-readonly ~/.1password/agent.sock (line 86).
+		"allow_file": [
+			"$HOME/.1password/agent.sock" // 1Password SSH agent socket for git commit signing
+		],
+		"bypass_protection": [
+			"$HOME/.1password/agent.sock" // deny_credentials blocks this path; bypass + allow_file above grants it
+		]
+	},
+
+	// ── Environment variables ──────────────────────────────────────────────────
+	// Mirrors jail-nix try-fwd-env / fwd-env combinators (lines 87-93).
+	// Note: jail-nix try-fwd-env forwards only if set; fwd-env always forwards.
+	// nono allow_vars is a positive list — all listed vars pass through unconditionally.
+	// This is acceptable: missing vars are simply empty/unset in the child environment.
+	"environment": {
+		"allow_vars": [
+			// Core POSIX environment (always needed)
+			"PATH",
+			"HOME",
+			"TERM",
+			"USER",
+			"SHELL",
+			"LANG",
+
+			// Locale (needed by fish, alejandra, and other tools)
+			"LOCALE_ARCHIVE", // glibc locale archive path (NixOS-specific)
+
+			// Nix runtime (set by opencode-wrapper before exec; NIX_PATH/NIX_CONFIG injected there)
+			"NIX_CONFIG", // try-fwd-env — experimental-features = nix-command flakes
+			"NIX_PATH", // set by wrapper: nixpkgs=${inputs.nixpkgs}
+			"NIX_PROFILES", // nix profile paths (needed by nix CLI inside sandbox)
+
+			// TLS (set by wrapper: ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt)
+			"SSL_CERT_FILE", // try-fwd-env — CA bundle for HTTPS
+
+			// Terminal color support
+			"COLORTERM", // try-fwd-env — 24-bit color detection
+
+			// OpenCode config (set by wrapper as JSON blob)
+			"OPENCODE_CONFIG_CONTENT", // fwd-env (always set by wrapper)
+
+			// LLM provider API keys (sourced from /run/secrets via preSetupScripts)
+			"ZAI_API_KEY", // try-fwd-env — z.ai GLM provider (primary orchestrator)
+			"OPENAI_API_KEY", // try-fwd-env — OpenAI provider (Hephaestus + fallbacks)
+			"CONTEXT7_API_KEY" // try-fwd-env — Context7 MCP documentation tool
+		]
+	},
+
+	// ── Network egress allowlist ───────────────────────────────────────────────
+	// Plain strings = CONNECT tunnel (no TLS interception, no L7 filtering).
+	// block: false = proxy is ON; domains not in allow_domain are blocked at HTTP(S) layer.
+	// Raw TCP (SSH port 22, git+ssh) is NOT filtered here — see design tension #1 above.
+	//
+	// Full rationale for each domain group is in nono-egress.md (written by T3).
+	"network": {
+		"block": false, // proxy on; unlisted domains blocked at HTTP(S) layer
+
+		"allow_domain": [
+			// ── LLM providers ────────────────────────────────────────────────────
+			"api.z.ai", // z.ai GLM-5.x (primary orchestrator via ZAI_API_KEY)
+			"api.anthropic.com", // Anthropic API (Claude models via @ex-machina OAuth)
+			"claude.ai", // Claude Code Max OAuth login + token refresh
+			"opencode.ai", // OpenCode Go provider OAuth login + token refresh
+			"api.openai.com", // OpenAI API (Hephaestus + last-resort fallbacks)
+			"*.openai.com", // OpenAI CDN / auxiliary endpoints
+			"models.dev", // Model catalog / discovery
+
+			// ── Package registries ────────────────────────────────────────────────
+			"registry.npmjs.org", // npm package installs (nodejs tooling)
+			"*.npmjs.org", // npm CDN / scoped registries
+			"github.com", // git clone, GitHub API, releases
+			"*.github.com", // GitHub subdomains (gist, etc.)
+			"objects.githubusercontent.com", // GitHub release asset downloads
+			"codeload.github.com", // GitHub archive downloads (go get, etc.)
+			"raw.githubusercontent.com", // raw file access (scripts, configs)
+			"api.github.com", // GitHub REST API (gh CLI, MCP server)
+			"pypi.org", // Python package index
+			"*.pypi.org", // PyPI CDN / mirrors
+			"files.pythonhosted.org", // PyPI file hosting
+			"crates.io", // Rust crate registry
+			"static.crates.io", // crates.io static assets
+			"*.crates.io", // crates.io CDN
+			"api.nuget.org", // NuGet package API
+			"*.nuget.org", // NuGet CDN / feeds
+			"cache.nixos.org", // Nix binary cache (primary substituter)
+			"*.nixos.org", // NixOS infrastructure (search, channels, etc.)
+			"search.nixos.org", // NixOS package/option search
+
+			// ── Nix substituters ─────────────────────────────────────────────────
+			"cache.numtide.com", // numtide binary cache (devshell, etc.)
+
+			// ── MCP / research tools ──────────────────────────────────────────────
+			"api.exa.ai", // Exa web search MCP tool
+			"grep.app", // grep.app code search MCP tool
+			"context7.com", // Context7 documentation MCP tool
+			"*.context7.com" // Context7 CDN / API subdomains
+		]
+	},
+
+	// ── OAuth browser delegation ───────────────────────────────────────────────
+	// nono supervisor opens these URLs in the host browser for OAuth login flows.
+	// Mirrors the auth flows documented in home-modules/opencode/README.md:
+	//   - claude auth login → claude.ai
+	//   - opencode auth login --provider opencode-go → opencode.ai
+	//   - Anthropic console (fallback / account management)
+	// allow_localhost: false — OAuth callbacks are handled server-side, not via localhost redirect.
+	"open_urls": {
+		"allow_origins": [
+			"https://claude.ai", // Claude Code Max OAuth (claude auth login)
+			"https://opencode.ai", // OpenCode Go OAuth (opencode auth login --provider opencode-go)
+			"https://console.anthropic.com" // Anthropic console (account / subscription management)
+		],
+		"allow_localhost": false
+	}
+}
