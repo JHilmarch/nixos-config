@@ -9,13 +9,18 @@
 # packages/openchamber/default.nix:
 #     packageJson.workspaces = ["packages/ui", "packages/web"];
 #
+# Requires on PATH: curl, gunzip, tar, node, npm.
+#   - Inside the opencode jail: all five are provisioned by
+#     home-modules/opencode/default.nix (curl, cacert, gnutar, gzip, nodejs).
+#   - On p51 directly: curl ships in environment.systemPackages; gnutar was
+#     added alongside it for this script. node/npm come via nix or the user
+#     environment.
+#
 # Usage:
-#   nix shell nixpkgs#curl nixpkgs#cacert nixpkgs#gnutar nixpkgs#gzip nixpkgs#nodejs_24 -c bash \
-#     tools/update-packages/scripts/regen-openchamber-lockfile.sh <version> <output-lockfile>
+#   bash tools/update-packages/scripts/regen-openchamber-lockfile.sh <version> <output-lockfile>
 #
 # Examples:
-#   nix shell nixpkgs#curl nixpkgs#cacert nixpkgs#gnutar nixpkgs#gzip nixpkgs#nodejs_24 -c bash \
-#     tools/update-packages/scripts/regen-openchamber-lockfile.sh 1.13.8 \
+#   bash tools/update-packages/scripts/regen-openchamber-lockfile.sh 1.13.8 \
 #     packages/openchamber/package-lock.json
 
 set -euo pipefail
@@ -31,7 +36,9 @@ owner_repo="openchamber/openchamber"
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
-    printf "ERROR: '%s' not found in PATH. Invoke via:\n  nix shell nixpkgs#curl nixpkgs#cacert nixpkgs#gnutar nixpkgs#gzip nixpkgs#nodejs_24 -c bash %s ...\n" "$1" "$0" >&2
+    printf "ERROR: '%s' not found in PATH.\n" "$1" >&2
+    printf "  Inside the opencode jail: check home-modules/opencode/default.nix add-pkg-deps.\n" >&2
+    printf "  On a host: add the missing package to environment.systemPackages.\n" >&2
     exit 1
   fi
 }

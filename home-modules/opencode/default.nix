@@ -93,6 +93,8 @@
               pkgs.util-linux
               pkgs.alejandra
               pkgs.cacert
+              pkgs.gnutar
+              pkgs.gzip
               pkgs.nodejs
               hunk-pkg
             ]

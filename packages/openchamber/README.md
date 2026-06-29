@@ -68,10 +68,13 @@ and retries.
 If you need to run the regeneration helper directly, use:
 
 ```fish
-nix shell nixpkgs#curl nixpkgs#cacert nixpkgs#gnutar nixpkgs#gzip nixpkgs#nodejs_24 -c bash \
-  tools/update-packages/scripts/regen-openchamber-lockfile.sh 1.13.8 \
+bash tools/update-packages/scripts/regen-openchamber-lockfile.sh 1.13.8 \
   packages/openchamber/package-lock.json
 ```
+
+The helper needs `curl`, `gunzip`, `tar`, `node`, and `npm` on PATH. Inside the opencode jail these come from
+`home-modules/opencode/default.nix`; on p51 they come from `environment.systemPackages` (plus whatever node/npm the user
+env provides).
 
 Then re-run the updater (it will recompute `npmDepsHash` and verify the build).
 

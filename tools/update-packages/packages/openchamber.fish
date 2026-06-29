@@ -37,9 +37,6 @@ function update_openchamber
     sed -i -E 's|npmDepsHash = "sha256-[^"]*"|npmDepsHash = ""|' "$file"
     set -l hash (_openchamber_extract_npmhash "$attr")
 
-    # Empty-hash trick didn't surface a `got:` line — the vendored lockfile is
-    # stale for the new version (upstream added/changed/removed deps).
-    # Regenerate it from the upstream tag and retry extraction.
     if test -z "$hash"
         log_step "Vendored package-lock.json is stale for v$latest — regenerating..."
         _openchamber_regenerate_lockfile "$latest" "$lockfile"; or return 1
@@ -68,18 +65,12 @@ end
 
 # Regenerate the vendored packages/openchamber/package-lock.json from an upstream
 # tag, applying the same workspaces override the Nix build does. Delegates to the
-# bash helper at scripts/regen-openchamber-lockfile.sh. Uses `nix shell` to
-# provide curl/cacert/gnutar/gzip/nodejs_24 since the user env (or agent jail)
-# may not have them on PATH. Explicitly forwards a known-good CA bundle because
-# the shell environment's default CA setup is unreliable here.
+# bash helper at scripts/regen-openchamber-lockfile.sh. Requires curl, gunzip,
+# tar, node, npm on PATH.
 function _openchamber_regenerate_lockfile
     set -l target_version $argv[1]
     set -l lockfile $argv[2]
     set -l script (dirname (status filename))/../scripts/regen-openchamber-lockfile.sh
-    set -l cacert_path (nix build nixpkgs#cacert --no-link --print-out-paths)
-    set -l ca_file "$cacert_path/etc/ssl/certs/ca-bundle.crt"
 
-    env SSL_CERT_FILE="$ca_file" NIX_SSL_CERT_FILE="$ca_file" \
-        nix shell nixpkgs#curl nixpkgs#cacert nixpkgs#gnutar nixpkgs#gzip nixpkgs#nodejs_24 \
-        -c bash "$script" "$target_version" "$lockfile"
+    bash "$script" "$target_version" "$lockfile"
 end
