@@ -104,6 +104,26 @@ Enabled (`team_mode.enabled = true`) with safe defaults: 4 in flight, 8 max memb
 12 `team_*` tools for parallel multi-agent coordination. See [OMO Team Mode docs](https://omo.dev/docs#team-mode) for
 usage.
 
+## nono session dir permissions
+
+nono refuses to start unless its session state dir (`~/.nono/sessions`) is private (mode `700`), failing with:
+
+```
+nono: Configuration parse error: /home/<user>/.nono/sessions must not be group/world accessible; chmod 700 and retry
+```
+
+With the default `umask` (`022`), nono auto-creates `~/.nono/sessions` as `755` (group/world-readable), which trips this
+check. The [`default.nix`](./default.nix) wrapper therefore pre-creates the dir and locks down the perms before
+launching nono, regardless of the active umask:
+
+```sh
+mkdir -p "$HOME/.nono/sessions"
+chmod 700 "$HOME/.nono" "$HOME/.nono/sessions"
+```
+
+This also self-heals a dir left at the wrong mode by an earlier failed run — the `chmod` corrects it on the next launch,
+so no manual cleanup is needed.
+
 ## See also
 
 - [OMO Agent-Model Matching Guide](https://omo.dev/docs#agent-model-matching) — full fallback chains per agent.

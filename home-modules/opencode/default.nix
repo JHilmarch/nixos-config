@@ -18,29 +18,24 @@
     runtimeInputs = mkOption {
       type = types.listOf types.package;
       default = [];
-      description = "Additional packages to add to PATH inside the jail";
+      description = "Additional packages to add to PATH for OpenCode";
     };
 
     persistentDirs = mkOption {
       type = types.listOf types.str;
       default = ["~/.worktrees" "~/.cache"];
       description = ''
-        Host directories bind-mounted read-write into the OpenCode jail at the
-        same path. These live on real disk (btrfs), so they survive reboots
-        and aren't capped by the jail's 16G home tmpfs. Created at runtime if
-        missing. Tilde-expanded by the shell.
-
-        Defaults cover the two paths that historically filled the tmpfs:
-          - ~/.worktrees  — git worktrees created by the using-git-worktrees skill
-          - ~/.cache      — XDG cache (nix fetcher cache, etc.); replaces the
-            XDG_CACHE_HOME=/tmp/nixcache hack from the shared-yubikey-usbip session
+        Host directories that the agent needs persistent read-write access to.
+        With nono (replaces the jail-nix sandbox), these paths live on the real
+        disk (btrfs) — no tmpfs home in the nono model. The nono profile
+        (nono-profile.jsonc) grants Landlock access; the wrapper just ensures
+        the dirs exist at runtime. Tilde-expanded by the shell.
       '';
     };
   };
 
   config = let
     cfg = config.modules.opencode;
-    jail = inputs.jail-nix.lib.init pkgs;
 
     opencode-pkg =
       inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.opencode;
@@ -48,7 +43,8 @@
     hunk-pkg =
       inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.hunk;
 
-    # Syncs Claude Code OAuth tokens → opencode auth.json for the @ex-machina plugin. See script header for details.
+    # Syncs Claude Code OAuth tokens → opencode auth.json for the @ex-machina plugin.
+    # See script header for details.
     anthropic-auth-sync = pkgs.writeShellApplication {
       name = "opencode-anthropic-auth-sync";
       runtimeInputs = [pkgs.jq];
@@ -57,79 +53,41 @@
     };
 
     settingsJSON = builtins.toJSON config.programs.opencode.settings;
+    nonoProfile = "${self}/home-modules/opencode/nono-profile.jsonc";
 
-    jailed-opencode = jail "opencode" opencode-pkg (
-      with jail.combinators;
-        [
-          network
-          no-new-session
-          (share-ns "pid")
-          mount-cwd
-          (ro-bind "/nix/store" "/nix/store")
-          time-zone
-          fake-passwd
-          (add-runtime "mkdir -p \"$HOME/.local/share/opencode/tmp\"")
-          # Populate auth.json with Claude Code Max OAuth tokens before opencode starts,
-          # so the @ex-machina plugin can authenticate anthropic/* requests. Idempotent.
-          (add-runtime "opencode-anthropic-auth-sync 2>/dev/null || true")
-          (rw-bind (noescape "~/.local/share/opencode/tmp") "/tmp")
-          (try-readwrite (noescape "~/.cache/opencode"))
-          (try-readwrite (noescape "~/.config/opencode"))
-          (try-readwrite (noescape "~/.local/share/opencode"))
-          (try-readwrite (noescape "~/.local/share/opencode-anthropic-auth")) # @ex-machina plugin OAuth tokens
-          (try-readonly (noescape "~/.config/git"))
-          (try-readonly (noescape "~/.gitconfig"))
-          (try-readonly (noescape "~/.ssh"))
-          (try-readwrite (noescape "~/.claude"))
-          (try-readwrite (noescape "~/.cache/ck"))
-          (try-readonly "/run/secrets")
-          (try-readonly (noescape "~/.1password/agent.sock"))
-          (try-fwd-env "ZAI_API_KEY")
-          (try-fwd-env "OPENAI_API_KEY")
-          (try-fwd-env "CONTEXT7_API_KEY")
-          (fwd-env "OPENCODE_CONFIG_CONTENT")
-          (try-fwd-env "NIX_CONFIG")
-          (try-fwd-env "SSL_CERT_FILE")
-          (try-fwd-env "COLORTERM")
-          (add-pkg-deps ([
-              pkgs.nixd
-              pkgs.fish-lsp
-              pkgs.git
-              pkgs.openssh
-              pkgs.ripgrep
-              pkgs.bash
-              pkgs.fish
-              pkgs._1password-gui
-              pkgs.curl
-              pkgs.gnused
-              pkgs.gawk
-              pkgs.util-linux
-              pkgs.alejandra
-              pkgs.cacert
-              pkgs.gnutar
-              pkgs.gzip
-              pkgs.nodejs
-              pkgs.jq
-              pkgs.local.mdformat
-              hunk-pkg
-              anthropic-auth-sync
-            ]
-            ++ cfg.runtimeInputs))
-        ]
-        # Persistent real-disk bind-mounts (override the tmpfs-backed home for
-        # build-heavy paths). See modules.opencode.persistentDirs.
-        ++ (builtins.concatMap (
-            dir: [
-              (add-runtime "mkdir -p \"${builtins.replaceStrings ["~"] ["$HOME"] dir}\"")
-              (rw-bind (noescape dir) (noescape dir))
-            ]
-          )
-          cfg.persistentDirs)
-    );
+    # Packages the agent needs inside the sandbox. nono forwards PATH via the
+    # profile's environment.allow_vars, so anything on the wrapper's PATH is
+    # available to the sandboxed opencode process. The nix_runtime group in
+    # the profile grants /nix/store ro access, so binaries are reachable.
+    agentPackages =
+      [
+        pkgs.nixd
+        pkgs.fish-lsp
+        pkgs.git
+        pkgs.openssh
+        pkgs.ripgrep
+        pkgs.bash
+        pkgs.fish
+        pkgs._1password-gui
+        pkgs.curl
+        pkgs.gnused
+        pkgs.gawk
+        pkgs.util-linux
+        pkgs.alejandra
+        pkgs.cacert
+        pkgs.gnutar
+        pkgs.gzip
+        pkgs.nodejs
+        pkgs.jq
+        pkgs.local.mdformat
+        hunk-pkg
+        anthropic-auth-sync
+      ]
+      ++ cfg.runtimeInputs;
 
     opencode-wrapper = pkgs.writeShellApplication {
       name = "opencode";
-      runtimeInputs = [jailed-opencode];
+      runtimeInputs = [pkgs.nono] ++ agentPackages;
       checkPhase = "true";
       text = ''
         ${lib.concatMapStrings (script: ''
@@ -141,7 +99,27 @@
         export NIX_PATH="nixpkgs=${inputs.nixpkgs}"
         export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         export OPENCODE_CONFIG_CONTENT='${settingsJSON}'
-        exec ${lib.getExe jailed-opencode} "$@"
+
+        # Ensure persistentDirs exist on disk (nono's Landlock grants access
+        # via the profile; these just need to be created first).
+        ${lib.concatMapStrings (dir: ''
+            mkdir -p "${builtins.replaceStrings ["~"] ["$HOME"] dir}" 2>/dev/null || true
+          '')
+          cfg.persistentDirs}
+
+        # Ensure opencode's tmp and state dirs exist
+        mkdir -p "$HOME/.local/share/opencode/tmp" 2>/dev/null || true
+        mkdir -p "$HOME/.local/state/opencode" 2>/dev/null || true
+
+        # nono needs ~/.nono/sessions to be mode 700 — see README.md ("nono session dir permissions").
+        mkdir -p "$HOME/.nono/sessions" 2>/dev/null || true
+        chmod 700 "$HOME/.nono" "$HOME/.nono/sessions" 2>/dev/null || true
+
+        # Sync Claude Code Max OAuth tokens → auth.json before launch.
+        # Idempotent — skips cleanly when source tokens are missing or already synced.
+        opencode-anthropic-auth-sync 2>/dev/null || true
+
+        exec nono run --profile "${nonoProfile}" -- ${lib.getExe opencode-pkg} "$@"
       '';
     };
   in
