@@ -15,12 +15,13 @@ runs on the side that needs to use the YubiKey (the remote host, during initrd o
 
 ## Scripts
 
-| Script | Side | Purpose | | ----------------- | -------- |
------------------------------------------------------------------ | | `detect-yubikey` | server | Auto-detect the
-YubiKey bus id (`usbip list -l`, vendor `1050`). | | `bind-yubikey` | server | Load `usbip-host`, start `usbipd`, bind
-the YubiKey bus id. | | `unbind-yubikey` | server | Release the YubiKey bus id from usbip. | | `attach-yubikey` | client
-| Load `vhci_hcd`, attach the remote YubiKey by host + device id. | | `detach-yubikey` | client | Detach the YubiKey by
-port (`usbip port`). |
+| Script           | Side   | Purpose                                                          |
+| ---------------- | ------ | ---------------------------------------------------------------- |
+| `detect-yubikey` | server | Auto-detect the YubiKey bus id (`usbip list -l`, vendor `1050`). |
+| `bind-yubikey`   | server | Load `usbip-host`, start `usbipd`, bind the YubiKey bus id.      |
+| `unbind-yubikey` | server | Release the YubiKey bus id from usbip.                           |
+| `attach-yubikey` | client | Load `vhci_hcd`, attach the remote YubiKey by host + device id.  |
+| `detach-yubikey` | client | Detach the YubiKey by port (`usbip port`).                       |
 
 `bind-yubikey` and `unbind-yubikey` call `detect-yubikey` via `PATH` when no bus id is given, so all three server-side
 commands must be installed together (the module does this).
