@@ -1,6 +1,4 @@
-{
-  python3,
-}:
+{python3}:
 # mdformat bundled with the GFM + frontmatter plugins required by
 # `.mdformat.toml`'s `extensions = ["gfm", "frontmatter"]` rule.
 #

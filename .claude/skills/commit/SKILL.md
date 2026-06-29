@@ -101,7 +101,8 @@ Each `-m` is one paragraph — use `printf` to create real newlines within it.
 
 Always link a commit to its board item (task / bug / story) using a footer keyword:
 
-- **`Refs: #<N>`** — the commit works on the issue but does not finish it. Always include when working from a board item.
+- **`Refs: #<N>`** — the commit works on the issue but does not finish it. Always include when working from a board
+  item.
 - **`Closes: #<N>`** — the commit completes the issue. GitHub closes the issue when the commit lands on the default
   branch.
 
