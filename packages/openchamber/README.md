@@ -53,27 +53,24 @@ fish tools/update-packages/update-packages.fish update openchamber
 
 Or via the `/update-packages` skill.
 
-### Manual fallback
+### Vendored lockfile behavior
 
-The build uses a **vendored `package-lock.json`** at `packages/openchamber/package-lock.json` because upstream does not
-ship a workspace-aware lockfile matching our build shape. If an update fails during dependency resolution after bumping
-the version, regenerate the lockfile from the new upstream tag and retry.
+The build uses a **vendored `package-lock.json`** at `packages/openchamber/package-lock.json` because upstream's root
+`package.json` declares `workspaces = ["packages/*"]`, but this package only builds `packages/ui` and `packages/web`.
+The lockfile **must** be generated with that same restricted workspace set, otherwise `npm install` in the sandbox can
+fail with `ENOTCACHED` for workspace-only deps (for example `@pierre/diffs` when the old lockfile still pins the wrong
+beta version).
 
-Upstream's root `package.json` declares `workspaces = ["packages/*"]`, but the build only pulls in `packages/ui` and
-`packages/web`. The lockfile **must** be generated with that same restricted workspace set, otherwise `npm install` in
-the sandbox fails with `ENOTCACHED` for workspace-only deps (e.g. `@pierre/diffs`). Mirror the build's `workspaces`
-injection when regenerating:
+The updater now handles this automatically: if the version bump succeeds for the source hash but the `npmDepsHash`
+extraction fails because the vendored lockfile is stale, `update_openchamber` regenerates the lockfile from the new tag
+and retries.
+
+If you need to run the regeneration helper directly, use:
 
 ```fish
-set -l tag v1.13.8
-curl -fsSL "https://github.com/openchamber/openchamber/archive/refs/tags/$tag.tar.gz" | tar -xz
-cd "openchamber-$tag"
-
-# Match the build: restrict workspaces to the two packages we actually build.
-node -e 'const fs=require("fs");const p="package.json";const j=JSON.parse(fs.readFileSync(p,"utf8"));j.workspaces=["packages/ui","packages/web"];fs.writeFileSync(p,JSON.stringify(j,null,2)+"\n")'
-
-npm install --package-lock-only --ignore-scripts
-cp package-lock.json ../packages/openchamber/package-lock.json
+nix shell nixpkgs#curl nixpkgs#cacert nixpkgs#gnutar nixpkgs#gzip nixpkgs#nodejs_24 -c bash \
+  tools/update-packages/scripts/regen-openchamber-lockfile.sh 1.13.8 \
+  packages/openchamber/package-lock.json
 ```
 
 Then re-run the updater (it will recompute `npmDepsHash` and verify the build).
