@@ -29,7 +29,7 @@
     age-plugin-yubikey # YubiKey plugin for age
     tree-sitter # A parser generator tool
     alejandra # nix linter
-    pkgs.mdformat # CommonMark compliant Markdown formatter
+    pkgs.local.mdformat # CommonMark compliant Markdown formatter (with GFM + frontmatter plugins — see .mdformat.toml)
     biome # Fast formatter/linter for JS, TS, JSON, CSS, HTML
     pinentry-tty # GnuPG's interface to passphrase input
     yubikey-manager # Command line tool for configuring any YubiKey over all USB transports

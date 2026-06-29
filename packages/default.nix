@@ -8,4 +8,5 @@
   gh-personal = callPackage ./gh-cli/personal.nix {};
   gh-personal-project-manager = callPackage ./gh-cli/personal-project-manager.nix {};
   gh-work = callPackage ./gh-cli/work.nix {};
+  mdformat = callPackage ./mdformat {};
 }

@@ -110,6 +110,7 @@
               pkgs.gzip
               pkgs.nodejs
               pkgs.jq
+              pkgs.local.mdformat
               hunk-pkg
               anthropic-auth-sync
             ]
