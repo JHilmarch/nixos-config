@@ -1,6 +1,7 @@
-______________________________________________________________________
-
-## name: hybrid_code_search_ck description: Use ck to search code by meaning, keyword, hybrid matching, or regex. Best for locating concepts, symbols, TODOs, and implementation patterns across a codebase.
+---
+name: hybrid_code_search_ck
+description: Use ck to search code by meaning, keyword, hybrid matching, or regex. Best for locating concepts, symbols, TODOs, and implementation patterns across a codebase.
+---
 
 # Hybrid Code Search with ck
 
