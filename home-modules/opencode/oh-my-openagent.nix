@@ -217,7 +217,9 @@ in
               }
             ];
           };
-          disabled_skills = ["git-master"];
+          # security-research/review bind a dynamic localhost port, which nono
+          # blocks — disabling them avoids a noisy startup warning. See README.md.
+          disabled_skills = ["git-master" "security-research" "security-review"];
 
           ralph_loop = {
             enabled = true;

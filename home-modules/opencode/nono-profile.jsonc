@@ -1,149 +1,89 @@
-// nono profile for OpenCode (jail-nix → nono migration, story #117)
-// Mirrors the jail-nix combinator set from home-modules/opencode/default.nix lines 61-127.
-// T4 is responsible for wiring this profile into the NixOS module; this file is the
-// policy source of truth only.
-//
-// Package deps documented here for traceability (actual routing is T4's job):
-//   nixd, fish-lsp, git, openssh, ripgrep, bash, fish, _1password-gui, curl,
-//   gnused, gawk, util-linux, alejandra, cacert, gnutar, gzip, nodejs, jq,
-//   hunk-pkg, opencode-anthropic-auth-sync
-//
-// Design tensions (see nono-egress.md for full analysis):
-//   1. SSH egress (port 22): nono's network proxy operates at HTTP(S) layer only;
-//      raw TCP port 22 (git+ssh, openssh) is unfiltered by allow_domain. The jail-nix
-//      sandbox also did not restrict SSH egress. Accepted as-is pending a future
-//      open_port or firewall-level control.
-//   2. webfetch / curl conflicts: opencode's webfetch tool and curl make arbitrary
-//      HTTP(S) requests. The allow_domain list below is intentionally broad to cover
-//      known LLM providers, registries, and MCP tools, but ad-hoc webfetch calls to
-//      unlisted domains will be blocked at the proxy layer. Users needing additional
-//      domains should extend this profile or add them to nono-egress.md for review.
+// nono sandbox profile for OpenCode. Policy source of truth.
+// Rationale, design tensions, and the egress allowlist analysis live in
+// nono-egress.md and home-modules/opencode/README.md.
 {
 	"$schema": "https://nono.sh/schemas/nono-profile.schema.json",
 
-	"extends": "default", // inherits 18 deny groups: deny_credentials, system_read_linux_core, system_write_linux, etc.
+	"extends": "default", // inherits 18 default deny groups
 
 	"meta": {
 		"name": "opencode",
 		"version": "1.0.0",
-		"description": "OpenCode AI coding agent sandbox. Mirrors jail-nix combinator set from home-modules/opencode/default.nix.",
+		"description": "OpenCode AI coding agent sandbox.",
 		"author": "nixos-config/home-modules/opencode"
 	},
 
-	// Groups from the nono built-in policy set that cover Linux runtime paths
-	// the jail-nix sandbox exposed via ro-bind/rw-bind combinators.
 	"groups": {
 		"include": [
-			"nix_runtime", // /nix/store, /nix/var — mirrors (ro-bind "/nix/store" "/nix/store")
-			"linux_runtime_state", // /run, /var/run, /proc, /sys — mirrors (share-ns "pid") + network
-			"opencode_linux", // opencode-specific Linux policy (XDG paths, state dirs)
-			"user_tools", // ~/.local/bin, common tool paths
-			"user_caches_linux", // ~/.cache base (supplemented by explicit allow below)
-			"unlink_protection" // prevents accidental deletion of critical files
+			"nix_runtime",
+			"linux_runtime_state",
+			"opencode_linux",
+			"user_tools",
+			"user_caches_linux",
+			"unlink_protection"
 		]
 	},
 
-	// Replaces jail-nix `mount-cwd` combinator.
 	"workdir": {
 		"access": "readwrite"
 	},
 
 	"filesystem": {
-		// ── Read-Write mounts ──────────────────────────────────────────────────────
-		// Mirrors jail-nix try-readwrite combinators (lines 76-84) plus persistentDirs defaults.
 		"allow": [
-			// XDG data/config/cache for opencode itself
-			"$XDG_DATA_HOME/opencode", // try-readwrite ~/.local/share/opencode
-			"$XDG_CONFIG_HOME/opencode", // try-readwrite ~/.config/opencode
-			"$XDG_CACHE_HOME/opencode", // try-readwrite ~/.cache/opencode
-
-			// @ex-machina plugin OAuth token cache (anthropic-auth-sync writes here)
-			"$XDG_DATA_HOME/opencode-anthropic-auth", // try-readwrite ~/.local/share/opencode-anthropic-auth
-
-			// Claude Code OAuth tokens — read by @ex-machina plugin via anthropic-auth-sync
-			"$HOME/.claude", // try-readwrite ~/.claude
-
-			// ck tool cache (used by opencode agents for code search)
-			"$HOME/.cache/ck", // try-readwrite ~/.cache/ck
-
-			// persistentDirs defaults: real-disk bind-mounts that survive the tmpfs-backed home
-			"$HOME/.cache", // persistentDirs default — XDG cache (nix fetcher, etc.)
-			"$HOME/.worktrees", // persistentDirs default — git worktrees from using-git-worktrees skill
-
-			// jail-nix maps ~/.local/share/opencode/tmp → /tmp inside the sandbox
-			// In nono, /tmp is handled by the sandbox itself; we expose the backing dir RW
-			// so opencode's add-runtime mkdir and tmp usage work correctly.
-			"$XDG_DATA_HOME/opencode/tmp" // rw-bind ~/.local/share/opencode/tmp → /tmp (jail-nix)
+			"$XDG_DATA_HOME/opencode",
+			"$XDG_CONFIG_HOME/opencode",
+			"$XDG_CACHE_HOME/opencode",
+			"$XDG_STATE_HOME/opencode",
+			"$XDG_DATA_HOME/opencode-anthropic-auth", // OAuth token cache (anthropic-auth-sync)
+			"$HOME/.claude", // Claude Code OAuth tokens, read by anthropic-auth-sync
+			"$HOME/.cache/ck", // ck code-search cache
+			"$HOME/.cache",
+			"$HOME/.worktrees",
+			"$XDG_DATA_HOME/opencode/tmp",
+			"/tmp" // Bun OpenTUI .so extraction target — required for the TUI; see README.md
 		],
 
-		// ── Read-Only mounts ───────────────────────────────────────────────────────
-		// Mirrors jail-nix try-readonly combinators (lines 80-82, 85).
 		"read": [
-			"$HOME/.config/git", // try-readonly ~/.config/git — git config
-			"$HOME/.gitconfig", // try-readonly ~/.gitconfig — git config (legacy location)
-			"$HOME/.ssh", // try-readonly ~/.ssh — SSH keys for git operations
-			"/run/secrets" // try-readonly /run/secrets — SOPS-materialized secrets (ZAI_API_KEY, OPENAI_API_KEY)
+			"$HOME/.config/git",
+			"$HOME/.gitconfig",
+			"$HOME/.ssh",
+			"/run/secrets" // SOPS-materialized API keys
 		],
 
-		// ── Socket access ──────────────────────────────────────────────────────────
-		// ~/.1password/agent.sock is blocked by the inherited deny_credentials group.
-		// bypass_protection removes the deny; allow_file grants the actual access.
-		// Mirrors jail-nix try-readonly ~/.1password/agent.sock (line 86).
-		"allow_file": [
-			"$HOME/.1password/agent.sock" // 1Password SSH agent socket for git commit signing
-		],
-		"bypass_protection": [
-			"$HOME/.1password/agent.sock" // deny_credentials blocks this path; bypass + allow_file above grants it
-		]
+		// 1Password SSH agent socket: deny_credentials blocks it, so bypass + allow.
+		"allow_file": ["$HOME/.1password/agent.sock"],
+		"bypass_protection": ["$HOME/.1password/agent.sock"]
 	},
 
-	// ── Environment variables ──────────────────────────────────────────────────
-	// Mirrors jail-nix try-fwd-env / fwd-env combinators (lines 87-93).
-	// Note: jail-nix try-fwd-env forwards only if set; fwd-env always forwards.
-	// nono allow_vars is a positive list — all listed vars pass through unconditionally.
-	// This is acceptable: missing vars are simply empty/unset in the child environment.
+	// Positive list; vars not set by the wrapper are simply empty in the child.
 	"environment": {
 		"allow_vars": [
-			// Core POSIX environment (always needed)
 			"PATH",
 			"HOME",
 			"TERM",
 			"USER",
 			"SHELL",
 			"LANG",
-
-			// Locale (needed by fish, alejandra, and other tools)
-			"LOCALE_ARCHIVE", // glibc locale archive path (NixOS-specific)
-
-			// Nix runtime (set by opencode-wrapper before exec; NIX_PATH/NIX_CONFIG injected there)
-			"NIX_CONFIG", // try-fwd-env — experimental-features = nix-command flakes
-			"NIX_PATH", // set by wrapper: nixpkgs=${inputs.nixpkgs}
-			"NIX_PROFILES", // nix profile paths (needed by nix CLI inside sandbox)
-
-			// TLS (set by wrapper: ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt)
-			"SSL_CERT_FILE", // try-fwd-env — CA bundle for HTTPS
-
-			// Terminal color support
-			"COLORTERM", // try-fwd-env — 24-bit color detection
-
-			// OpenCode config (set by wrapper as JSON blob)
-			"OPENCODE_CONFIG_CONTENT", // fwd-env (always set by wrapper)
-
-			// LLM provider API keys (sourced from /run/secrets via preSetupScripts)
-			"ZAI_API_KEY", // try-fwd-env — z.ai GLM provider (primary orchestrator)
-			"OPENAI_API_KEY", // try-fwd-env — OpenAI provider (Hephaestus + fallbacks)
-			"CONTEXT7_API_KEY" // try-fwd-env — Context7 MCP documentation tool
+			"LOCALE_ARCHIVE",
+			"NIX_CONFIG",
+			"NIX_PATH",
+			"NIX_PROFILES",
+			"SSL_CERT_FILE",
+			"COLORTERM",
+			"OPENCODE_CONFIG_CONTENT",
+			"ZAI_API_KEY",
+			"OPENAI_API_KEY",
+			"CONTEXT7_API_KEY"
 		]
 	},
 
-	// ── Network egress allowlist ───────────────────────────────────────────────
-	// Plain strings = CONNECT tunnel (no TLS interception, no L7 filtering).
-	// block: false = proxy is ON; domains not in allow_domain are blocked at HTTP(S) layer.
-	// Raw TCP (SSH port 22, git+ssh) is NOT filtered here — see design tension #1 above.
-	//
-	// Full rationale for each domain group is in nono-egress.md (written by T3).
+	// Egress allowlist. block:false = proxy on, unlisted domains blocked at the
+	// HTTP(S) layer. Per-domain and SSH/webfetch rationale is in nono-egress.md.
 	"network": {
-		"block": false, // proxy on; unlisted domains blocked at HTTP(S) layer
+		"block": false,
+
+		// Pins the TUI's loopback port; must match --port in the wrapper. See nono-egress.md.
+		"open_port": [4099],
 
 		"allow_domain": [
 			// ── LLM providers ────────────────────────────────────────────────────
@@ -153,6 +93,7 @@
 			"opencode.ai", // OpenCode Go provider OAuth login + token refresh
 			"api.openai.com", // OpenAI API (Hephaestus + last-resort fallbacks)
 			"*.openai.com", // OpenAI CDN / auxiliary endpoints
+			"api.opencode.ai", // OpenCode Go inference API (opencode.ai is OAuth/console; api.* serves models)
 			"models.dev", // Model catalog / discovery
 
 			// ── Package registries ────────────────────────────────────────────────
@@ -160,7 +101,8 @@
 			"*.npmjs.org", // npm CDN / scoped registries
 			"github.com", // git clone, GitHub API, releases
 			"*.github.com", // GitHub subdomains (gist, etc.)
-			"objects.githubusercontent.com", // GitHub release asset downloads
+			"objects.githubusercontent.com", // GitHub release asset downloads (legacy host)
+			"release-assets.githubusercontent.com", // GitHub release asset downloads (current CDN host)
 			"codeload.github.com", // GitHub archive downloads (go get, etc.)
 			"raw.githubusercontent.com", // raw file access (scripts, configs)
 			"api.github.com", // GitHub REST API (gh CLI, MCP server)
@@ -187,18 +129,12 @@
 		]
 	},
 
-	// ── OAuth browser delegation ───────────────────────────────────────────────
-	// nono supervisor opens these URLs in the host browser for OAuth login flows.
-	// Mirrors the auth flows documented in home-modules/opencode/README.md:
-	//   - claude auth login → claude.ai
-	//   - opencode auth login --provider opencode-go → opencode.ai
-	//   - Anthropic console (fallback / account management)
-	// allow_localhost: false — OAuth callbacks are handled server-side, not via localhost redirect.
+	// Origins nono may open in the host browser for OAuth login. See README.md.
 	"open_urls": {
 		"allow_origins": [
-			"https://claude.ai", // Claude Code Max OAuth (claude auth login)
-			"https://opencode.ai", // OpenCode Go OAuth (opencode auth login --provider opencode-go)
-			"https://console.anthropic.com" // Anthropic console (account / subscription management)
+			"https://claude.ai",
+			"https://opencode.ai",
+			"https://console.anthropic.com"
 		],
 		"allow_localhost": false
 	}

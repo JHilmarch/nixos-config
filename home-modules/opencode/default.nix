@@ -85,6 +85,13 @@
       ]
       ++ cfg.runtimeInputs;
 
+    # persistentDirs may use ~ for $HOME; expand it for the launch script's loop.
+    persistentDirsExpanded =
+      map (dir: builtins.replaceStrings ["~"] ["$HOME"] dir) cfg.persistentDirs;
+
+    # Static launch logic lives in scripts/opencode-launch.sh (see its header).
+    launchScript = "${self}/scripts/opencode-launch.sh";
+
     opencode-wrapper = pkgs.writeShellApplication {
       name = "opencode";
       runtimeInputs = [pkgs.nono] ++ agentPackages;
@@ -100,26 +107,13 @@
         export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         export OPENCODE_CONFIG_CONTENT='${settingsJSON}'
 
-        # Ensure persistentDirs exist on disk (nono's Landlock grants access
-        # via the profile; these just need to be created first).
-        ${lib.concatMapStrings (dir: ''
-            mkdir -p "${builtins.replaceStrings ["~"] ["$HOME"] dir}" 2>/dev/null || true
-          '')
-          cfg.persistentDirs}
+        # Inputs consumed by opencode-launch.sh (see its header for the contract).
+        export OC_NONO_PROFILE="${nonoProfile}"
+        export OC_BIN="${lib.getExe opencode-pkg}"
+        export OC_TUI_PORT="4099"
+        export OC_PERSISTENT_DIRS="${lib.concatStringsSep "\n" persistentDirsExpanded}"
 
-        # Ensure opencode's tmp and state dirs exist
-        mkdir -p "$HOME/.local/share/opencode/tmp" 2>/dev/null || true
-        mkdir -p "$HOME/.local/state/opencode" 2>/dev/null || true
-
-        # nono needs ~/.nono/sessions to be mode 700 — see README.md ("nono session dir permissions").
-        mkdir -p "$HOME/.nono/sessions" 2>/dev/null || true
-        chmod 700 "$HOME/.nono" "$HOME/.nono/sessions" 2>/dev/null || true
-
-        # Sync Claude Code Max OAuth tokens → auth.json before launch.
-        # Idempotent — skips cleanly when source tokens are missing or already synced.
-        opencode-anthropic-auth-sync 2>/dev/null || true
-
-        exec nono run --profile "${nonoProfile}" -- ${lib.getExe opencode-pkg} "$@"
+        exec ${pkgs.bash}/bin/bash ${launchScript} "$@"
       '';
     };
   in

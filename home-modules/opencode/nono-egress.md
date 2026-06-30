@@ -14,39 +14,41 @@ ______________________________________________________________________
 
 All domains in one flat table. The encoded entries in `nono-profile.jsonc` must match this list exactly.
 
-| Domain                          | Category         | Why blocked if missing                                                       |
-| ------------------------------- | ---------------- | ---------------------------------------------------------------------------- |
-| `api.z.ai`                      | LLM provider     | GLM-5.2 inference fails; orchestrators (sisyphus/prometheus/atlas) go dark   |
-| `api.anthropic.com`             | LLM provider     | Direct Anthropic API calls fail (fallback path for non-OAuth usage)          |
-| `claude.ai`                     | LLM provider     | OAuth token refresh fails; `@ex-machina` plugin dies; all Claude models fail |
-| `opencode.ai`                   | LLM provider     | OpenCode Go OAuth refresh fails; kimi/qwen/minimax models unavailable        |
-| `api.openai.com`                | LLM provider     | Hephaestus completely non-functional; last-resort fallbacks fail             |
-| `*.openai.com`                  | LLM provider     | CDN/streaming endpoints for OpenAI; same failure mode as above               |
-| `models.dev`                    | LLM provider     | Model catalog lookups fail; provider routing may degrade                     |
-| `registry.npmjs.org`            | Package registry | npm install fails inside agent tasks                                         |
-| `*.npmjs.org`                   | Package registry | npm CDN/metadata endpoints; same failure mode                                |
-| `github.com`                    | Package registry | git clone over HTTPS fails; GitHub Actions, releases unreachable             |
-| `*.github.com`                  | Package registry | GitHub subdomains (assets, pages, etc.)                                      |
-| `objects.githubusercontent.com` | Package registry | GitHub release asset downloads fail                                          |
-| `codeload.github.com`           | Package registry | GitHub archive downloads (zip/tarball) fail                                  |
-| `raw.githubusercontent.com`     | Package registry | Raw file fetches from GitHub repos fail                                      |
-| `api.github.com`                | Package registry | GitHub API calls fail; MCP github-personal/github-work tools fail            |
-| `pypi.org`                      | Package registry | pip install fails                                                            |
-| `*.pypi.org`                    | Package registry | PyPI CDN/metadata endpoints                                                  |
-| `files.pythonhosted.org`        | Package registry | Python package wheel/sdist downloads fail                                    |
-| `crates.io`                     | Package registry | cargo fetch/build fails                                                      |
-| `static.crates.io`              | Package registry | Crate file downloads fail                                                    |
-| `*.crates.io`                   | Package registry | crates.io CDN endpoints                                                      |
-| `api.nuget.org`                 | Package registry | dotnet restore fails                                                         |
-| `*.nuget.org`                   | Package registry | NuGet CDN/metadata endpoints                                                 |
-| `cache.nixos.org`               | Nix substituter  | Nix binary cache misses; every nix build falls back to source compilation    |
-| `*.nixos.org`                   | Nix substituter  | NixOS channel metadata, search.nixos.org MCP queries                         |
-| `search.nixos.org`              | Nix substituter  | mcp-nixos tool queries fail                                                  |
-| `cache.numtide.com`             | Nix substituter  | numtide binary cache misses (host-specific; see note below)                  |
-| `api.exa.ai`                    | Research tool    | websearch tool (Exa backend) returns no results                              |
-| `grep.app`                      | Research tool    | grep_app tool fails entirely                                                 |
-| `context7.com`                  | Research tool    | context7 MCP tool fails                                                      |
-| `*.context7.com`                | Research tool    | context7 CDN/API subdomains                                                  |
+| Domain                                 | Category         | Why blocked if missing                                                       |
+| -------------------------------------- | ---------------- | ---------------------------------------------------------------------------- |
+| `api.z.ai`                             | LLM provider     | GLM-5.2 inference fails; orchestrators (sisyphus/prometheus/atlas) go dark   |
+| `api.anthropic.com`                    | LLM provider     | Direct Anthropic API calls fail (fallback path for non-OAuth usage)          |
+| `claude.ai`                            | LLM provider     | OAuth token refresh fails; `@ex-machina` plugin dies; all Claude models fail |
+| `opencode.ai`                          | LLM provider     | OpenCode Go OAuth refresh fails; kimi/qwen/minimax models unavailable        |
+| `api.openai.com`                       | LLM provider     | Hephaestus completely non-functional; last-resort fallbacks fail             |
+| `*.openai.com`                         | LLM provider     | CDN/streaming endpoints for OpenAI; same failure mode as above               |
+| `api.opencode.ai`                      | LLM provider     | OpenCode Go inference fails; kimi/qwen/minimax requests cannot reach the API |
+| `models.dev`                           | LLM provider     | Model catalog lookups fail; provider routing may degrade                     |
+| `registry.npmjs.org`                   | Package registry | npm install fails inside agent tasks                                         |
+| `*.npmjs.org`                          | Package registry | npm CDN/metadata endpoints; same failure mode                                |
+| `github.com`                           | Package registry | git clone over HTTPS fails; GitHub Actions, releases unreachable             |
+| `*.github.com`                         | Package registry | GitHub subdomains (assets, pages, etc.)                                      |
+| `objects.githubusercontent.com`        | Package registry | GitHub release asset downloads fail (legacy host)                            |
+| `release-assets.githubusercontent.com` | Package registry | GitHub release asset downloads fail (current CDN host)                       |
+| `codeload.github.com`                  | Package registry | GitHub archive downloads (zip/tarball) fail                                  |
+| `raw.githubusercontent.com`            | Package registry | Raw file fetches from GitHub repos fail                                      |
+| `api.github.com`                       | Package registry | GitHub API calls fail; MCP github-personal/github-work tools fail            |
+| `pypi.org`                             | Package registry | pip install fails                                                            |
+| `*.pypi.org`                           | Package registry | PyPI CDN/metadata endpoints                                                  |
+| `files.pythonhosted.org`               | Package registry | Python package wheel/sdist downloads fail                                    |
+| `crates.io`                            | Package registry | cargo fetch/build fails                                                      |
+| `static.crates.io`                     | Package registry | Crate file downloads fail                                                    |
+| `*.crates.io`                          | Package registry | crates.io CDN endpoints                                                      |
+| `api.nuget.org`                        | Package registry | dotnet restore fails                                                         |
+| `*.nuget.org`                          | Package registry | NuGet CDN/metadata endpoints                                                 |
+| `cache.nixos.org`                      | Nix substituter  | Nix binary cache misses; every nix build falls back to source compilation    |
+| `*.nixos.org`                          | Nix substituter  | NixOS channel metadata, search.nixos.org MCP queries                         |
+| `search.nixos.org`                     | Nix substituter  | mcp-nixos tool queries fail                                                  |
+| `cache.numtide.com`                    | Nix substituter  | numtide binary cache misses (host-specific; see note below)                  |
+| `api.exa.ai`                           | Research tool    | websearch tool (Exa backend) returns no results                              |
+| `grep.app`                             | Research tool    | grep_app tool fails entirely                                                 |
+| `context7.com`                         | Research tool    | context7 MCP tool fails                                                      |
+| `*.context7.com`                       | Research tool    | context7 CDN/API subdomains                                                  |
 
 ______________________________________________________________________
 
@@ -86,12 +88,14 @@ triple-failure scenarios. `*.openai.com` covers CDN and streaming endpoints used
 
 ### OpenCode Go
 
-**Domain:** `opencode.ai` **Auth:** `opencode auth login --provider opencode-go` (OAuth). Tokens in
+**Domains:** `opencode.ai`, `api.opencode.ai` **Auth:** `opencode auth login --provider opencode-go` (OAuth). Tokens in
 `~/.local/share/opencode/`. **Models:** Kimi K2.7-code, Qwen 3.7-plus, MiniMax M3, MiniMax M2.7. **Role:** Second
 fallback for orchestrators; primary for visual/artistry and utility tiers.
 
-Blocking `opencode.ai` prevents OAuth token refresh. The utility tier (kimi/qwen/minimax) goes dark, and the
-orchestrator second-fallback path fails. The $10/mo flat subscription covers all four models.
+`opencode.ai` serves the OAuth login/console; `api.opencode.ai` serves the inference API the models actually call.
+Blocking `opencode.ai` prevents OAuth token refresh; blocking `api.opencode.ai` cuts inference even when the token is
+valid. Either way the utility tier (kimi/qwen/minimax) goes dark, and the orchestrator second-fallback path fails. The
+$10/mo flat subscription covers all four models.
 
 ______________________________________________________________________
 
@@ -107,11 +111,13 @@ npm install and package metadata. `*.npmjs.org` covers CDN and scoped-package en
 
 ### GitHub
 
-`github.com`, `*.github.com`, `objects.githubusercontent.com`, `codeload.github.com`, `raw.githubusercontent.com`,
-`api.github.com`
+`github.com`, `*.github.com`, `objects.githubusercontent.com`, `release-assets.githubusercontent.com`,
+`codeload.github.com`, `raw.githubusercontent.com`, `api.github.com`
 
 HTTPS git clone, release downloads, raw file fetches, and the GitHub REST API. `api.github.com` is also required by the
-MCP github-personal and github-work servers (see [MCP Servers](#mcp-servers)).
+MCP github-personal and github-work servers (see [MCP Servers](#mcp-servers)). Release binaries are served from two
+hosts: `objects.githubusercontent.com` (legacy) and `release-assets.githubusercontent.com` (current CDN). The `gh` CLI
+and tool/binary installers inside agent tasks hit both depending on the asset's age.
 
 ### PyPI
 
@@ -232,6 +238,32 @@ unlisted domains. Common research domains (`api.exa.ai`, `grep.app`, `context7.c
 most frequent cases.
 
 Flagged as a product-decision follow-up for story #117.
+
+### Loopback IPC: the TUI's localhost server
+
+The TUI's Go frontend talks to its TS backend over a `127.0.0.1` HTTP server. nono sets `NO_PROXY=localhost,127.0.0.1`,
+so that loopback bypasses the egress proxy into the kernel-level direct-connect block, crashing startup with
+`permission denied 127.0.0.1:0` (surfaced as a generic `Effect.tryPromise` error with a misleading "no path denials"
+footer). Headless `opencode run` has no loopback split and is unaffected.
+
+`network.open_port` grants bidirectional localhost TCP on a fixed port (Linux nono has no `:0`/range grant), so the port
+is pinned on both sides: `open_port: [4099]` in the profile and `--port 4099` in the wrapper (TUI path only; subcommands
+and a user `--port` pass through). Verified: the loopback listen succeeds with the grant and fails `EACCES` without it.
+
+### Filesystem grants for the TUI: `/tmp` and `~/.local/state/opencode`
+
+Two non-network grants the TUI needs, both failing as the same misleading `Effect.tryPromise` / "no path denials" error:
+
+- **`/tmp`** — the Bun binary extracts its embedded OpenTUI render lib (`.so`) into `/tmp` and `dlopen()`s it at TUI
+  startup. nono does not auto-grant `/tmp`, so the load fails and the TUI crashes (headless runs never load the
+  renderer).
+- **`$XDG_STATE_HOME/opencode`** — `models.dev` cache locks/logs live here; without the grant the lock `mkdir` fails
+  `EACCES` and capability refresh dies (non-fatal but noisy).
+
+Confirmed via `nono why` (`ALLOWED` with the grants, `DENIED` without).
+
+> **Best-effort Landlock caveat:** on kernels without full Landlock ABI these denials may leak through, so the TUI can
+> work on one host and crash on another. Trust `nono why`, not a single host's live run.
 
 ______________________________________________________________________
 

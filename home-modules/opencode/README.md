@@ -6,11 +6,14 @@ sandbox, plus the [Oh-My-OpenAgent](https://omo.dev) multi-agent orchestration p
 
 ## Files
 
-| File                                           | Purpose                                                                        |
-| ---------------------------------------------- | ------------------------------------------------------------------------------ |
-| [`default.nix`](./default.nix)                 | Jail wrapper: filesystem binds, env vars, secret injection, runtime inputs.    |
-| [`oh-my-openagent.nix`](./oh-my-openagent.nix) | OMO config: agent/category → model mappings, plugins, TUI keybinds, team mode. |
-| [`README.md`](./README.md)                     | This file.                                                                     |
+| File                                                             | Purpose                                                                        |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [`default.nix`](./default.nix)                                   | Wrapper: env vars, runtime inputs, exports the launch-script inputs.           |
+| [`oh-my-openagent.nix`](./oh-my-openagent.nix)                   | OMO config: agent/category → model mappings, plugins, TUI keybinds, team mode. |
+| [`nono-profile.jsonc`](./nono-profile.jsonc)                     | nono sandbox policy: filesystem/env/network grants. Source of truth.           |
+| [`nono-egress.md`](./nono-egress.md)                             | Egress allowlist analysis, SSH/webfetch tensions, TUI loopback + grants.       |
+| [`scripts/opencode-launch.sh`](../../scripts/opencode-launch.sh) | Static launch logic: runtime dirs, session-dir perms, token sync, `nono run`.  |
+| [`README.md`](./README.md)                                       | This file.                                                                     |
 
 ## Provider stack
 
@@ -113,8 +116,8 @@ nono: Configuration parse error: /home/<user>/.nono/sessions must not be group/w
 ```
 
 With the default `umask` (`022`), nono auto-creates `~/.nono/sessions` as `755` (group/world-readable), which trips this
-check. The [`default.nix`](./default.nix) wrapper therefore pre-creates the dir and locks down the perms before
-launching nono, regardless of the active umask:
+check. The [`opencode-launch.sh`](../../scripts/opencode-launch.sh) script therefore pre-creates the dir and locks down
+the perms before launching nono, regardless of the active umask:
 
 ```sh
 mkdir -p "$HOME/.nono/sessions"
@@ -123,6 +126,24 @@ chmod 700 "$HOME/.nono" "$HOME/.nono/sessions"
 
 This also self-heals a dir left at the wrong mode by an earlier failed run — the `chmod` corrects it on the next launch,
 so no manual cleanup is needed.
+
+## Launch script
+
+The static launch logic lives in [`scripts/opencode-launch.sh`](../../scripts/opencode-launch.sh), kept out of the Nix
+wrapper so it stays readable and shellcheckable. [`default.nix`](./default.nix) only assembles the dynamic inputs
+(config JSON, profile path, opencode binary, persistent dirs) and exports them as `OC_*` env vars before `exec`-ing the
+script. The script then ensures opencode's runtime dirs exist, locks down the nono session dir (above), syncs Claude Max
+OAuth tokens, pins the TUI loopback `--port`, and execs `nono run` with the profile. See the script header for the full
+input contract.
+
+## Disabled runtime-skills
+
+OMO's bundled `security-research` / `security-review` skills are served from a runtime localhost HTTP server that binds
+a **dynamic** port (`bun.serve port:0`). nono on Linux only allows explicit `open_port` entries (`port:0` is
+macOS-only), so the bind is blocked and OMO logs a benign-but-noisy `[runtime-skills] … permission denied 127.0.0.1:0`
+overlay at startup. Listing both in `disabled_skills` (in [`oh-my-openagent.nix`](./oh-my-openagent.nix)) makes
+`selectRuntimeSecuritySkills()` return `[]`, so the server is never created and the warning never fires. The skills
+require team mode and spawn 5 subagents, so they have limited use inside the sandbox anyway.
 
 ## See also
 
