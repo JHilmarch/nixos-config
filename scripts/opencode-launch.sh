@@ -11,6 +11,8 @@
 #   OC_BIN              path to the opencode binary
 #   OC_TUI_PORT         loopback port to pin the TUI to (matches profile open_port)
 #   OC_PERSISTENT_DIRS  newline-separated dirs to pre-create ($HOME already expanded)
+#   OC_WAYLAND_CLIPBOARD  "1" to grant the Wayland compositor socket (clipboard);
+#                         empty/unset to skip. See README.md "Clipboard".
 #
 # Behavioural notes (full rationale in home-modules/opencode/README.md):
 #   - The TUI is pinned to a fixed loopback --port; subcommands pass through and a
@@ -36,6 +38,22 @@ chmod 700 "$HOME/.nono" "$HOME/.nono/sessions" 2>/dev/null || true
 # Sync Claude Max OAuth tokens → auth.json (idempotent, best-effort).
 opencode-anthropic-auth-sync 2>/dev/null || true
 
+# Wayland clipboard: grant connect() to the compositor socket so wl-clipboard
+# can reach the host clipboard. Opt-in per host (OC_WAYLAND_CLIPBOARD=1) and
+# guarded by a runtime existence check, so launching from a non-Wayland session
+# (TTY/SSH/X11) silently skips the grant. See README.md "Clipboard".
+oc_wayland_args=()
+if [ "${OC_WAYLAND_CLIPBOARD:-}" = "1" ] &&
+  [ -n "${WAYLAND_DISPLAY:-}" ] && [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+  case "$WAYLAND_DISPLAY" in
+    /*) wl_socket="$WAYLAND_DISPLAY" ;;
+    *) wl_socket="$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ;;
+  esac
+  if [ -S "$wl_socket" ]; then
+    oc_wayland_args=(--allow-unix-socket "$wl_socket")
+  fi
+fi
+
 # Pin the TUI's loopback port; leave subcommands and user --port untouched.
 oc_port_args=()
 case "${1:-}" in
@@ -51,4 +69,4 @@ case "${1:-}" in
     ;;
 esac
 
-exec nono run --allow-cwd --profile "$OC_NONO_PROFILE" -- "$OC_BIN" "${oc_port_args[@]}" "$@"
+exec nono run --allow-cwd "${oc_wayland_args[@]}" --profile "$OC_NONO_PROFILE" -- "$OC_BIN" "${oc_port_args[@]}" "$@"

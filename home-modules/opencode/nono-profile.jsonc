@@ -71,6 +71,9 @@
 			"SSL_CERT_FILE",
 			"COLORTERM",
 			"OPENCODE_CONFIG_CONTENT",
+			"OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT", // disable auto-copy-on-select; see README "Clipboard"
+			"WAYLAND_DISPLAY", // wl-clipboard: locate compositor socket (opt-in hosts)
+			"XDG_RUNTIME_DIR", // wl-clipboard: socket dir base (opt-in hosts)
 			"ZAI_API_KEY",
 			"OPENAI_API_KEY",
 			"CONTEXT7_API_KEY"

@@ -32,6 +32,32 @@
         the dirs exist at runtime. Tilde-expanded by the shell.
       '';
     };
+
+    enableWaylandClipboard = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Grant the OpenCode sandbox connect access to the user's Wayland
+        compositor socket and add `wl-clipboard` to PATH, so OpenCode's
+        "copy to clipboard" actions (the copy button on messages, Ctrl+C
+        within the TUI, and auto-copy-on-select when
+        OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT is unset) actually reach
+        the host clipboard.
+
+        Enable on Wayland desktop hosts. Leave disabled on non-graphical hosts
+        — the launch script guards the grant with a runtime existence check on
+        $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY, so opencode still launches cleanly
+        when started from a non-Wayland session (TTY/SSH/X11), just without
+        clipboard access.
+
+        Upstream issue: anomalyco/opencode#13984
+
+        Security note: this grants connect()-only access to a single
+        AF_UNIX socket (nono `--allow-unix-socket`), not a directory or
+        compositor filesystem tree. This is the same clipboard permission
+        surface flatpaks use.
+      '';
+    };
   };
 
   config = let
@@ -83,6 +109,7 @@
         hunk-pkg
         anthropic-auth-sync
       ]
+      ++ lib.optional cfg.enableWaylandClipboard pkgs.wl-clipboard
       ++ cfg.runtimeInputs;
 
     # persistentDirs may use ~ for $HOME; expand it for the launch script's loop.
@@ -107,11 +134,20 @@
         export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         export OPENCODE_CONFIG_CONTENT='${settingsJSON}'
 
+        # Clipboard: disable auto-copy-on-select so a mouse drag falls through
+        # to the terminal's native selection. See README "Clipboard".
+        export OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT="true"
+
         # Inputs consumed by opencode-launch.sh (see its header for the contract).
         export OC_NONO_PROFILE="${nonoProfile}"
         export OC_BIN="${lib.getExe opencode-pkg}"
         export OC_TUI_PORT="4099"
         export OC_PERSISTENT_DIRS="${lib.concatStringsSep "\n" persistentDirsExpanded}"
+        export OC_WAYLAND_CLIPBOARD="${
+          if cfg.enableWaylandClipboard
+          then "1"
+          else ""
+        }"
 
         exec ${pkgs.bash}/bin/bash ${launchScript} "$@"
       '';

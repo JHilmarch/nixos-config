@@ -145,6 +145,43 @@ overlay at startup. Listing both in `disabled_skills` (in [`oh-my-openagent.nix`
 `selectRuntimeSecuritySkills()` return `[]`, so the server is never created and the warning never fires. The skills
 require team mode and spawn 5 subagents, so they have limited use inside the sandbox anyway.
 
+## Clipboard
+
+OpenCode runs inside the nono sandbox, which by default has no access to the host's Wayland compositor. That broke
+copy/paste: OpenCode showed a "copied to clipboard" toast, but the bytes never reached the system clipboard
+([upstream issue anomalyco/opencode#13984](https://github.com/anomalyco/opencode/issues/13984)). Two independent knobs
+address this.
+
+### `OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT=true` (always set)
+
+Exported by the wrapper in [`default.nix`](./default.nix) and allowlisted in
+[`nono-profile.jsonc`](./nono-profile.jsonc) (`environment.allow_vars`) so it survives into the sandboxed process. It
+disables OpenCode's auto-copy-on-select so a mouse drag falls through to GNOME Terminal's native selection handler. This
+keeps terminal-native copy/paste working — **Shift+drag** to select, **Ctrl+Shift+C** to copy, **Ctrl+Shift+V** to paste
+— for users who want to position the terminal cursor without triggering a copy.
+
+### `modules.opencode.enableWaylandClipboard` (per-host, default `false`)
+
+Enabled on the Wayland desktop hosts (orion, p51); left `false` on non-graphical hosts (wsl-cab, iso, hl-jump). When
+enabled it does two things:
+
+1. Adds `wl-clipboard` to the sandbox PATH so OpenCode's explicit copy actions (the copy button on messages, Ctrl+C in
+   the TUI, and auto-copy-on-select when the env var above is unset) can shell out to `wl-copy`.
+1. Exports `OC_WAYLAND_CLIPBOARD=1` to [`opencode-launch.sh`](../../scripts/opencode-launch.sh), which passes
+   `nono run --allow-unix-socket "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"` to grant `connect()` to the compositor socket.
+   `WAYLAND_DISPLAY` / `XDG_RUNTIME_DIR` are allowlisted in the profile so `wl-copy` can locate the socket inside the
+   sandbox.
+
+The launch script guards the grant with a runtime existence check on the socket, so OpenCode still launches cleanly from
+a TTY, SSH, or X11 session — it just runs without clipboard access there.
+
+**Why `--allow-unix-socket` and not a profile filesystem grant:** the Wayland socket path is session-dependent
+(`$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY`), so it cannot be baked into the static profile. The launch script resolves it at
+runtime and passes the single-socket grant only when the host opts in and the socket exists.
+
+**Security:** this grants `connect()`-only access to a single AF_UNIX socket — not a directory, not a compositor
+filesystem tree. No X11, GPU, or network surface is added. This is the same clipboard permission surface flatpaks use.
+
 ## See also
 
 - [OMO Agent-Model Matching Guide](https://omo.dev/docs#agent-model-matching) — full fallback chains per agent.

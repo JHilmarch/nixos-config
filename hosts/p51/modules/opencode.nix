@@ -9,6 +9,7 @@
 }: {
   home-manager.users.${username} = {
     modules.opencode = {
+      enableWaylandClipboard = true;
       preSetupScripts = [
         "${self}/scripts/secrets-sops.sh ${config.sops.templates."agents.env".path}"
       ];
