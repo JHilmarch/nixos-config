@@ -58,6 +58,23 @@
         surface flatpaks use.
       '';
     };
+
+    codegraphBin = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "\${pkgs.local.codegraph}/bin/codegraph";
+      description = ''
+        Absolute path to a `codegraph` executable. When set, the wrapper exports
+        it as `OMO_CODEGRAPH_BIN` so oh-my-openagent's resolver enables the
+        codegraph MCP via its "env" source — which skips the Node-runtime gate
+        that the plain-PATH resolution path requires.
+
+        Leave `null` on hosts that don't provide a codegraph binary; OMO then
+        auto-disables the codegraph MCP (no binary found). The var is
+        allowlisted in `nono-profile.jsonc` (`environment.allow_vars`) so it
+        survives into the sandboxed process.
+      '';
+    };
   };
 
   config = let
@@ -130,7 +147,9 @@
         # Clipboard: disable auto-copy-on-select so a mouse drag falls through
         # to the terminal's native selection. See README "Clipboard".
         export OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT="true"
-
+        ${lib.optionalString (cfg.codegraphBin != null) ''
+          export OMO_CODEGRAPH_BIN="${cfg.codegraphBin}"
+        ''}
         # Inputs consumed by opencode-launch.sh (see its header for the contract).
         export OC_NONO_PROFILE="${nonoProfile}"
         export OC_BIN="${lib.getExe opencode-pkg}"

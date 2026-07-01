@@ -89,6 +89,7 @@
 			"WAYLAND_DISPLAY", // wl-clipboard: locate compositor socket (opt-in hosts)
 			"XDG_RUNTIME_DIR", // wl-clipboard: socket dir base (opt-in hosts)
 			"ZAI_API_KEY",
+			"OMO_CODEGRAPH_BIN", // codegraph MCP: absolute path to the Nix-provided codegraph binary (env source)
 			"OPENAI_API_KEY",
 			"CONTEXT7_API_KEY"
 		]

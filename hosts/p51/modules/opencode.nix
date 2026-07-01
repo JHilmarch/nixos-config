@@ -10,11 +10,13 @@
   home-manager.users.${username} = {
     modules.opencode = {
       enableWaylandClipboard = true;
+      codegraphBin = "${pkgs.local.codegraph}/bin/codegraph";
       preSetupScripts = [
         "${self}/scripts/secrets-sops.sh ${config.sops.templates."agents.env".path}"
       ];
       runtimeInputs = [
         inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
+        pkgs.local.codegraph # code-intelligence MCP server (codegraph serve --mcp)
         pkgs.local.github-personal-mcp
         pkgs.local.github-work-mcp
         pkgs.local.gh-personal # GitHub CLI authenticated with PAT for personal account
