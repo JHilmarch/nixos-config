@@ -63,7 +63,8 @@
 			"/verify-flake",
 			"/using-git-worktrees",
 			"/hunk-review",
-			"/ck"
+			"/ck",
+			"/main" // git-ref leader (e.g. `diff main...`) misread as a top-level path by nono's save-profile heuristic
 		]
 	},
 
