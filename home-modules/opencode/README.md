@@ -183,6 +183,18 @@ runtime and passes the single-socket grant only when the host opts in and the so
 **Security:** this grants `connect()`-only access to a single AF_UNIX socket — not a directory, not a compositor
 filesystem tree. No X11, GPU, or network surface is added. This is the same clipboard permission surface flatpaks use.
 
+## Phantom save-profile prompts
+
+On exit, nono's save-profile heuristic scans recently-referenced strings and offers to persist any that look like paths.
+OpenCode slash-command names (surfaced from `.claude/skills/*/SKILL.md` and the opencode skills dirs) start with `/`, so
+they get misread as top-level dirs and shown as phantom `grant /<command> (read+write)` prompts — even though the same
+dialog reports `No path denials were observed`.
+
+The `filesystem.suppress_save_prompt` list in [`nono-profile.jsonc`](./nono-profile.jsonc) silences these for every
+slash-command exposed to the sandbox. Per the nono schema it "does not grant access, remove deny rules, or hide
+diagnostic output" — enforcement is unchanged; only the bogus prompt is suppressed. If a newly added skill triggers the
+same phantom prompt, add its `/<command>` name to that list.
+
 ## See also
 
 - [OMO Agent-Model Matching Guide](https://omo.dev/docs#agent-model-matching) — full fallback chains per agent.

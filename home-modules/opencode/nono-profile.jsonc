@@ -52,7 +52,19 @@
 
 		// 1Password SSH agent socket: deny_credentials blocks it, so bypass + allow.
 		"allow_file": ["$HOME/.1password/agent.sock"],
-		"bypass_protection": ["$HOME/.1password/agent.sock"]
+		"bypass_protection": ["$HOME/.1password/agent.sock"],
+
+		// Silence phantom save-profile prompts for slash-command names. See README.md
+		// "Phantom save-profile prompts"; add new skill names here if they reappear.
+		"suppress_save_prompt": [
+			"/commit",
+			"/project-manager",
+			"/update-packages",
+			"/verify-flake",
+			"/using-git-worktrees",
+			"/hunk-review",
+			"/ck"
+		]
 	},
 
 	// Positive list; vars not set by the wrapper are simply empty in the child.
