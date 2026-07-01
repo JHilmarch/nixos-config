@@ -39,6 +39,7 @@
 			"$HOME/.cache/ck", // ck code-search cache
 			"$HOME/.cache",
 			"$HOME/.worktrees",
+			"$HOME/.omo", // OMO/codegraph bootstrap state (mkdir'd at startup; else EACCES + grant prompt)
 			"$XDG_DATA_HOME/opencode/tmp",
 			"/tmp" // Bun OpenTUI .so extraction target — required for the TUI; see README.md
 		],
