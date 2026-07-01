@@ -39,6 +39,10 @@
         owner = username;
         mode = "0400";
       };
+      exa_key = {
+        owner = username;
+        mode = "0400";
+      };
       openai_api_key = {
         owner = username;
         mode = "0400";
@@ -64,6 +68,7 @@
           ZAI_API_KEY=${config.sops.placeholder.zai_anthropic_pat}
           OPENAI_API_KEY=${config.sops.placeholder.openai_api_key}
           CONTEXT7_API_KEY=${config.sops.placeholder.context7_pat}
+          EXA_API_KEY=${config.sops.placeholder.exa_key}
         '';
       };
     };
