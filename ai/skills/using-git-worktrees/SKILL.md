@@ -132,13 +132,16 @@ Ready to implement <feature>
 `git merge` already refuses non-fast-forward merges with `fatal: Not possible to fast-forward, aborting.`. The patterns
 below use explicit `--ff-only` for clarity and to make intent visible in shell history.
 
+> **Local-only inside the sandbox.** Assume the agent runs in a sandbox, where all network git is blocked by design.
+> **The agent works entirely locally** — commit, branch `worktree add`, `rebase`, and `merge --ff-only` against the
+> *local* `main`. Skip every `git pull`/`push` step.
+
 ### Single Worktree
 
-When main hasn't moved since the worktree was created, the branch is directly fast-forwardable:
+When local `main` hasn't moved since the worktree was created, the branch is directly fast-forwardable:
 
 ```bash
 git switch main
-git pull --ff-only       # sync with remote before merging
 git merge --ff-only <branch-name>
 ```
 

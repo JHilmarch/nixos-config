@@ -57,17 +57,11 @@ ______________________________________________________________________
 ### z.ai (GLM)
 
 **Domain:** `api.z.ai` **Auth:** SOPS env var `ZAI_API_KEY`, injected by the jail wrapper before process start.
-**Models:** GLM-5.2, GLM-5.1, GLM-5-turbo, GLM-5v-turbo. **Role:** Default orchestrator for sisyphus, prometheus, atlas,
-and most category workers.
-
-Blocking `api.z.ai` silences the primary inference path for every orchestrator-tier agent. The first fallback
-(Anthropic) takes over, but at higher cost and lower throughput.
 
 ### Anthropic (Claude)
 
 **Domains:** `api.anthropic.com`, `claude.ai` **Auth:** `@ex-machina/opencode-anthropic-auth` plugin (OAuth). Tokens
-stored in `~/.local/share/opencode/auth.json`, synced from `~/.claude/.credentials.json` on startup. **Models:** Claude
-Opus 4.8, Sonnet 4.6, Haiku 4.5. **Role:** First fallback for orchestrators; primary for deep/review tier.
+stored in `~/.local/share/opencode/auth.json`, synced from `~/.claude/.credentials.json` on startup.
 
 `claude.ai` is the single most fragile domain in this allowlist. The `@ex-machina` plugin refreshes OAuth tokens against
 `claude.ai` at runtime. If `claude.ai` is blocked, token refresh fails silently: requests to `api.anthropic.com` start
@@ -79,23 +73,16 @@ See [README.md](./README.md) for the full OAuth flow and the `@ex-machina` plugi
 
 ### OpenAI
 
-**Domains:** `api.openai.com`, `*.openai.com` **Auth:** SOPS env var `OPENAI_API_KEY`. **Models:** GPT-5.5. **Role:**
-Hephaestus primary (no fallback). Last-resort fallback for deep/review tier.
-
-Hephaestus is the only agent with OpenAI as its primary model and no fallback chain. Blocking OpenAI makes Hephaestus
-completely non-functional. For all other agents, OpenAI is the second or third fallback; blocking it degrades only on
-triple-failure scenarios. `*.openai.com` covers CDN and streaming endpoints used during inference.
+**Domains:** `api.openai.com`, `*.openai.com` **Auth:** SOPS env var `OPENAI_API_KEY`.
 
 ### OpenCode Go
 
 **Domains:** `opencode.ai`, `api.opencode.ai` **Auth:** `opencode auth login --provider opencode-go` (OAuth). Tokens in
-`~/.local/share/opencode/`. **Models:** Kimi K2.7-code, Qwen 3.7-plus, MiniMax M3, MiniMax M2.7. **Role:** Second
-fallback for orchestrators; primary for visual/artistry and utility tiers.
+`~/.local/share/opencode/`.
 
 `opencode.ai` serves the OAuth login/console; `api.opencode.ai` serves the inference API the models actually call.
 Blocking `opencode.ai` prevents OAuth token refresh; blocking `api.opencode.ai` cuts inference even when the token is
-valid. Either way the utility tier (kimi/qwen/minimax) goes dark, and the orchestrator second-fallback path fails. The
-$10/mo flat subscription covers all four models.
+valid.
 
 ______________________________________________________________________
 
@@ -215,20 +202,21 @@ ______________________________________________________________________
 
 ## Design Tensions
 
-### Port 22: SSH Egress
+### Raw TCP egress is blocked (incl. port 22 / SSH)
 
-`network.allow_domain` is an HTTP(S) proxy allowlist. It operates via CONNECT tunnel and TLS interception on port 443
-(and port 80). It does NOT intercept or filter raw TCP connections on other ports.
+`network.allow_domain` is an HTTP(S) proxy allowlist on ports 80/443. nono's Landlock network layer blocks all direct
+`connect()` — every port, including 22 and direct 443. Egress is possible only through the injected HTTP(S) proxy to an
+allowlisted host; there is no raw-TCP passthrough.
 
-Git over SSH (`git clone git@github.com:...`) opens a raw TCP connection to port 22. This connection bypasses the nono
-proxy entirely. The nono layer cannot enforce an allowlist for raw TCP outbound traffic in v1.
+Consequence: all network git fails inside the sandbox. `git fetch`/`pull`/`push`/`clone` against a remote open raw TCP
+(SSH to port 22, or a direct HTTPS socket), which Landlock denies. This is the intended default-deny behavior, not a
+gap.
 
-**v1 resolution (option 3 from issue #124):** Documented exception. SSH egress remains unfiltered at the nono layer.
-`git clone` over SSH works, but is not allowlist-enforced. The story #117 acceptance criteria explicitly states "SSH
-egress for git over SSH is allowed," which this resolution satisfies literally. A future nono version with raw-TCP
-outbound filtering would close this gap.
-
-Flagged as a product-decision follow-up for story #117.
+The sandboxed agent therefore works locally only — commit, branch, `worktree add`, local `rebase`/`merge --ff-only`, and
+file-based SSH commit signing all run without egress. Remote sync (`fetch`/`pull`/`push`) is done by the human from a
+normal host shell outside the sandbox, where SSH and the YubiKey agent work as usual. `gh-personal`/`gh-work` (PRs,
+issues, project board) still work inside the sandbox because they use the GitHub REST API over HTTPS to the allowlisted
+`api.github.com`.
 
 ### webfetch and Arbitrary URLs
 
