@@ -41,7 +41,7 @@ end
 
 # ── Package registry ─────────────────────────────────────────────────────────
 
-set -g ALL_PACKAGES azure-devops-mcp azure-mcp-server openchamber
+set -g ALL_PACKAGES azure-devops-mcp azure-mcp-server codegraph openchamber
 
 # ── List command ──────────────────────────────────────────────────────────────
 

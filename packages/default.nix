@@ -1,6 +1,7 @@
 {callPackage}: {
   openchamber = callPackage ./openchamber {};
   azure-devops-mcp = callPackage ./azure-devops-mcp {};
+  codegraph = callPackage ./codegraph {};
   azure-mcp-server = callPackage ./azure-mcp-server {};
   github-personal-mcp = callPackage ./github-mcp-server/personal.nix {};
   github-work-mcp = callPackage ./github-mcp-server/work.nix {};
