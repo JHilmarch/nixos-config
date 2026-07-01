@@ -6,7 +6,7 @@
   self,
   ...
 }: {
-  imports = [./oh-my-openagent.nix];
+  imports = [./oh-my-openagent.nix ./audit-rotate.nix];
 
   options.modules.opencode = with lib; {
     preSetupScripts = mkOption {
@@ -69,8 +69,6 @@
     hunk-pkg =
       inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.hunk;
 
-    # Syncs Claude Code OAuth tokens → opencode auth.json for the @ex-machina plugin.
-    # See script header for details.
     anthropic-auth-sync = pkgs.writeShellApplication {
       name = "opencode-anthropic-auth-sync";
       runtimeInputs = [pkgs.jq];
@@ -81,10 +79,6 @@
     settingsJSON = builtins.toJSON config.programs.opencode.settings;
     nonoProfile = "${self}/home-modules/opencode/nono-profile.jsonc";
 
-    # Packages the agent needs inside the sandbox. nono forwards PATH via the
-    # profile's environment.allow_vars, so anything on the wrapper's PATH is
-    # available to the sandboxed opencode process. The nix_runtime group in
-    # the profile grants /nix/store ro access, so binaries are reachable.
     agentPackages =
       [
         pkgs.nixd
@@ -116,7 +110,6 @@
     persistentDirsExpanded =
       map (dir: builtins.replaceStrings ["~"] ["$HOME"] dir) cfg.persistentDirs;
 
-    # Static launch logic lives in scripts/opencode-launch.sh (see its header).
     launchScript = "${self}/scripts/opencode-launch.sh";
 
     opencode-wrapper = pkgs.writeShellApplication {
@@ -155,5 +148,10 @@
   in
     lib.mkIf config.programs.opencode.enable {
       programs.opencode.package = lib.mkForce opencode-wrapper;
+      home.packages = [pkgs.nono pkgs.jq];
+
+      programs.fish.shellAbbrs.oc-audit = "nono audit list --command opencode";
+      programs.fish.functions.oc-audit-verify =
+        builtins.readFile "${self}/home-modules/opencode/oc-audit-verify.fish";
     };
 }

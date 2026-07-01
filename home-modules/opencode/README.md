@@ -12,6 +12,7 @@ sandbox, plus the [Oh-My-OpenAgent](https://omo.dev) multi-agent orchestration p
 | [`oh-my-openagent.nix`](./oh-my-openagent.nix)                   | OMO config: agent/category → model mappings, plugins, TUI keybinds, team mode. |
 | [`nono-profile.jsonc`](./nono-profile.jsonc)                     | nono sandbox policy: filesystem/env/network grants. Source of truth.           |
 | [`nono-egress.md`](./nono-egress.md)                             | Egress allowlist analysis, SSH/webfetch tensions, TUI loopback + grants.       |
+| [`nono-audit.md`](./nono-audit.md)                               | Audit trail: destination, append-only guarantee, rotation timer, reading.      |
 | [`scripts/opencode-launch.sh`](../../scripts/opencode-launch.sh) | Static launch logic: runtime dirs, session-dir perms, token sync, `nono run`.  |
 | [`README.md`](./README.md)                                       | This file.                                                                     |
 
