@@ -238,6 +238,18 @@ footer). Headless `opencode run` has no loopback split and is unaffected.
 is pinned on both sides: `open_port: [4099]` in the profile and `--port 4099` in the wrapper (TUI path only; subcommands
 and a user `--port` pass through). Verified: the loopback listen succeeds with the grant and fails `EACCES` without it.
 
+### Loopback IPC: the hunk daemon session broker
+
+The `hunk-review` skill drives live [hunk.dev](https://hunk.dev) reviews through `hunk session *` subcommands, which
+reach the hunk session-broker daemon over `127.0.0.1:47657` (`HUNK_MCP_PORT` default). The daemon runs on the host,
+started by the user's Hunk TUI; only the sandboxed client's loopback reach needs granting.
+
+The same `NO_PROXY=localhost,127.0.0.1` loopback split that affects the TUI (above) denies `connect()` to that port by
+default, so every `hunk session` call fails with `No active Hunk sessions.` even while Hunk is running. Adding `47657`
+to `open_port` grants the loopback reach: nono then reports `ipc localhost:47657` and the socket connects.
+`HUNK_MCP_PORT` is left at its default — pinning a custom port would require syncing the env var into the sandbox for no
+benefit.
+
 ### Filesystem grants for the TUI: `/tmp` and `~/.local/state/opencode`
 
 Two non-network grants the TUI needs, both failing as the same misleading `Effect.tryPromise` / "no path denials" error:

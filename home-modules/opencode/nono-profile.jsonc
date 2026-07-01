@@ -85,8 +85,12 @@
 	"network": {
 		"block": false,
 
-		// Pins the TUI's loopback port; must match --port in the wrapper. See nono-egress.md.
-		"open_port": [4099],
+		// Loopback IPC ports (nono blocks all localhost TCP unless explicitly granted):
+		//   4099  — TUI Go↔TS backend; must match --port in the wrapper.
+		//   47657 — hunk daemon session broker (HUNK_MCP_PORT default); lets `hunk
+		//           session *` reach the host daemon so hunk.dev reviews are readable.
+		// See nono-egress.md "Loopback IPC".
+		"open_port": [4099, 47657],
 
 		"allow_domain": [
 			// ── LLM providers ────────────────────────────────────────────────────
