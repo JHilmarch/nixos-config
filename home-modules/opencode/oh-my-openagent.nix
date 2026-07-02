@@ -20,91 +20,138 @@
     inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.hunk;
   hunkReviewSkill = "${hunk-pkg}/skills/hunk-review/SKILL.md";
 
-  # Provider model catalog. Subscription/auth/setup details: see ./README.md
-  # z.ai Coding Plan (SOPS API key)
-  glm = "zai-coding-plan/glm-5.2"; # Orchestrator default (Claude Opus alt)
-  glmPrev = "zai-coding-plan/glm-5.1"; # Acceptable per docs; currently unused
-  glmFlash = "zai-coding-plan/glm-5-turbo"; # Cheap utility
-  glmVision = "zai-coding-plan/glm-5v-turbo"; # Vision (legacy fallback only)
+  cfg = config.modules.opencode;
+  useFable = cfg.useFable;
+  modelPreference = cfg.modelPreference;
 
-  # Anthropic Claude Max via @ex-machina/opencode-anthropic-auth plugin (ankarhem pattern).
-  # Auth + first-time setup: see ./README.md
-  claudeOpus = "anthropic/claude-opus-4-8"; # Primary deep/review model
-  claudeSonnet = "anthropic/claude-sonnet-4-6"; # Metis, writing, unspecified-low
-  claudeHaiku = "anthropic/claude-haiku-4-5"; # Quick category
+  glm = "zai-coding-plan/glm-5.2";
+  glmPrev = "zai-coding-plan/glm-5.1";
+  glmFlash = "zai-coding-plan/glm-5-turbo";
+  glmVision = "zai-coding-plan/glm-5v-turbo";
 
-  # OpenCode Go (Kimi/Qwen/MiniMax — see README.md)
-  kimi = "opencode-go/kimi-k2.7-code"; # Claude-alt, vision-capable
-  qwen = "opencode-go/qwen3.7-plus"; # Gemini-alt for visual/artistry
-  qwenUtil = "opencode-go/qwen3.7-plus"; # Utility fallback
-  minimax = "opencode-go/minimax-m3"; # Flagship
-  minimaxFast = "opencode-go/minimax-m2.7"; # Fast utility
+  claudeFable = "anthropic/claude-fable-5";
+  claudeOpus = "anthropic/claude-opus-4-8";
+  claudeSonnet = "anthropic/claude-sonnet-4-6";
+  claudeHaiku = "anthropic/claude-haiku-4-5";
 
-  # OpenAI API (pay-per-usage, SOPS API key)
-  gpt55 = "openai/gpt-5.5"; # Hephaestus (no fallback) + last-resort chains
+  kimi = "opencode-go/kimi-k2.7-code"; # vision-capable
+  qwen = "opencode-go/qwen3.7-plus";
+  qwenPrev = "opencode-go/qwen3.6-plus";
+  minimax = "opencode-go/minimax-m3";
+  minimaxFast = "opencode-go/minimax-m2.7";
+  deepseekFlash = "opencode-go/deepseek-v4-flash";
+
+  gpt55 = "openai/gpt-5.5";
+
+  # Claude-vs-GLM layer ordering per `modelPreference`.
+  # "Per-host model options". balanced alternates by `slot`.
+  claudeBeforeGlm = slot:
+    if modelPreference == "anthropic"
+    then true
+    else if modelPreference == "zai"
+    then false
+    else lib.mod slot 2 == 0;
+
+  # Premium chain: reorderable Claude + GLM layers, fixed tail.
+  premium = {
+    variant ? null,
+    tail,
+    slot ? 0,
+    fable ? useFable,
+    glmLayer ? [glm],
+  }: let
+    withVariant = attrs:
+      attrs // lib.optionalAttrs (variant != null) {inherit variant;};
+    # Normalize bare "provider/model" strings so the primary can carry attrs.
+    toAttrs = entry:
+      if builtins.isString entry
+      then {model = entry;}
+      else entry;
+    claudeLayer =
+      if fable
+      then [(withVariant {model = claudeFable;}) (withVariant {model = claudeOpus;})]
+      else [(withVariant {model = claudeOpus;})];
+    ordered =
+      if claudeBeforeGlm slot
+      then claudeLayer ++ glmLayer
+      else glmLayer ++ claudeLayer;
+    primary = toAttrs (builtins.head ordered);
+    rest = builtins.tail ordered;
+  in
+    primary // {fallback_models = rest ++ tail;};
+
+  # Sonnet-primary worker chain (junior/atlas); only the Kimi/GLM fallback
+  # order follows the preference.
+  sonnetChain = {
+    slot ? 0,
+    tail ? [],
+  }: {
+    model = claudeSonnet;
+    fallback_models =
+      (
+        if claudeBeforeGlm slot
+        then [kimi glm]
+        else [glm kimi]
+      )
+      ++ tail;
+  };
 
   globalPromptAppend = lib.strings.removeSuffix "\n" (builtins.readFile "${self}/ai/global-prompt-append.md");
 
-  # Agent model assignments. Design rationale: see ./README.md
+  # Agent → model chains.
+  # sisyphus forces fable=false.
   agentsBase = {
-    # Communicators (Claude family) — orchestrator default per user
-    sisyphus = {
-      model = glm;
-      fallback_models = [claudeOpus kimi];
+    sisyphus = premium {
+      slot = 0;
+      fable = false;
+      tail = [kimi];
     };
-    sisyphus-junior = {
-      model = glm;
-      fallback_models = [claudeSonnet kimi minimax];
+    prometheus = premium {
+      slot = 1;
+      tail = [gpt55];
     };
-    prometheus = {
-      model = glm;
-      fallback_models = [claudeOpus gpt55];
+    sisyphus-junior = sonnetChain {
+      slot = 2;
+      tail = [minimax];
     };
-    atlas = {
-      model = glm;
-      fallback_models = [claudeSonnet kimi];
-    };
+    atlas = sonnetChain {slot = 3;};
 
-    # GPT-only (Hephaestus) — single-entry chain, no fallback. Must be gpt-5.5 not gpt-5.4.
     hephaestus = {
-      model = gpt55;
+      model = gpt55; # GPT-only, no fallback
       variant = "medium";
     };
 
-    # OpenAI-defaulted → real Anthropic per user rule
-    oracle = {
-      model = claudeOpus;
+    oracle = premium {
+      slot = 4;
       variant = "max";
-      fallback_models = [kimi gpt55];
+      tail = [kimi gpt55];
     };
-    momus = {
-      model = claudeOpus;
+    momus = premium {
+      slot = 5;
       variant = "max";
-      fallback_models = [kimi gpt55];
+      tail = [kimi gpt55];
     };
     metis = {
       model = claudeSonnet;
       fallback_models = [claudeOpus kimi];
     };
 
-    # Utility tier — best OpenCode Go model (Kimi) primary. See README.md for rationale.
     librarian = {
-      model = kimi;
-      fallback_models = [qwenUtil minimaxFast];
+      model = deepseekFlash;
+      fallback_models = [claudeHaiku glmFlash];
     };
     explore = {
-      model = kimi;
-      fallback_models = [qwenUtil minimaxFast];
+      model = minimaxFast;
+      fallback_models = [claudeHaiku glmFlash];
     };
 
-    # Vision — Kimi K2.7-code is vision-capable (Anthropic not in this chain per docs)
     multimodal-looker = {
-      model = kimi;
+      model = kimi; # vision-capable
       fallback_models = [glmVision];
     };
   };
 
-  # Chinese-reminder prompt_append applies to Chinese-origin providers only.
+  # prompt_append (Chinese reminder) only for Chinese-origin providers.
   needsPromptAppend = cfg:
     lib.hasPrefix "zai-coding-plan/" cfg.model
     || lib.hasPrefix "opencode-go/" cfg.model;
@@ -115,36 +162,34 @@
     else cfg)
   agentsBase;
 
-  # Category model assignments. Rationale: see ./README.md
+  # Category → model chains. Rationale: see ./README.md.
   categoriesConfig = {
-    # Gemini-defaulted → Qwen (documented Gemini substitute, NOT Claude/Kimi)
+    # Qwen substitutes for Gemini on visual work (no Google provider wired).
     visual-engineering = {
       model = qwen;
-      fallback_models = [claudeOpus kimi];
+      fallback_models = [qwenPrev gpt55];
     };
     artistry = {
       model = qwen;
-      fallback_models = [claudeOpus gpt55];
+      fallback_models = [qwenPrev gpt55];
     };
 
-    # OpenAI-defaulted → real Anthropic per user rule
-    ultrabrain = {
-      model = claudeOpus;
+    ultrabrain = premium {
+      slot = 6;
       variant = "max";
-      fallback_models = [kimi gpt55];
+      tail = [kimi gpt55];
     };
-    deep = {
-      model = claudeOpus;
+    deep = premium {
+      slot = 7;
       variant = "max";
-      fallback_models = [kimi gpt55];
+      tail = [kimi gpt55];
     };
-    unspecified-high = {
-      model = claudeOpus;
+    unspecified-high = premium {
+      slot = 8;
       variant = "max";
-      fallback_models = [glm kimi];
+      tail = [kimi];
     };
 
-    # Anthropic-defaulted categories (already Anthropic in docs chain)
     unspecified-low.model = claudeSonnet;
     quick.model = claudeHaiku;
     writing.model = claudeSonnet;
@@ -217,8 +262,7 @@ in
               }
             ];
           };
-          # security-research/review bind a dynamic localhost port, which nono
-          # blocks — disabling them avoids a noisy startup warning. See README.md.
+
           disabled_skills = ["git-master" "security-research" "security-review"];
 
           ralph_loop = {
@@ -226,7 +270,7 @@ in
             default_max_iterations = 25;
           };
 
-          # Team Mode — 12 team_* tools, shared mailbox/task list. OFF by default in OMO.
+          # Team Mode — 12 team_* tools, shared mailbox/task list.
           team_mode = {
             enabled = true;
             max_parallel_members = 4;
@@ -240,7 +284,18 @@ in
             auto_refresh_on_start = true;
           };
 
-          # Per-provider parallelism. Rationale: see ./README.md
+          # Error-driven model switching.
+          runtime_fallback = {
+            enabled = true;
+            retry_on_errors = [402 429 500 502 503 504 529];
+            max_fallback_attempts = 5;
+            cooldown_seconds = 14400;
+            timeout_seconds = 30;
+            notify_on_fallback = true;
+            restore_primary_after_cooldown = false;
+          };
+
+          # Per-provider parallelism.
           background_task = {
             providerConcurrency = {
               openai = 3;

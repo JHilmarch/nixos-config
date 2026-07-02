@@ -82,17 +82,16 @@ ______________________________________________________________________
 
 Two fish abbreviations (declared in [`default.nix`](./default.nix)) read the trail from the **host** shell, where
 
-## Acceptance-criteria mapping (T5 / #123)
+## Audit guarantees
 
-| Criterion                                                                                                                | How it is met                                                                    |
-| ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| Sample `opencode` run produces audit entries at the destination                                                          | nono auto-writes `~/.nono/audit/<session>/` for every `nono run` — always on     |
-| Entries are append-only (in-sandbox `>>` fails)                                                                          | Profile grants the sandbox no access to `~/.nono`; only nono's supervisor writes |
-| Rotation policy active                                                                                                   | `opencode-audit-rotate` weekly timer runs `nono audit cleanup --older-than 180`  |
-| Reading alias / script exists                                                                                            | `oc-audit` / `oc-audit-verify` fish abbreviations                                |
-| `~/.nono/audit` is readable. Inside opencode the same commands are denied by the profile — that is the boundary working  |                                                                                  |
-| as designed. `nono` itself is on the host PATH via `home.packages` in [`default.nix`](./default.nix) (it otherwise lives |                                                                                  |
-| only inside the opencode wrapper's `runtimeInputs`, i.e. inside the sandbox), so these host-side readers resolve.        |                                                                                  |
+| Guarantee        | Mechanism                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| Entries recorded | nono auto-writes `~/.nono/audit/<session>/` for every `nono run` — always on                                  |
+| Append-only      | The profile grants the sandbox no access to `~/.nono`; only nono's supervisor writes                          |
+| Rotation active  | `opencode-audit-rotate` weekly timer runs `nono audit cleanup --older-than 180`                               |
+| Host-readable    | `nono` is on the host PATH via `home.packages`, so `oc-audit` / `oc-audit-verify` resolve outside the sandbox |
+
+Inside opencode those same reads are denied by the profile — that is the boundary working as designed.
 
 | Helper                 | Runs                                             | Purpose                                |
 | ---------------------- | ------------------------------------------------ | -------------------------------------- |

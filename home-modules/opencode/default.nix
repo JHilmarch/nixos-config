@@ -59,6 +59,26 @@
       '';
     };
 
+    useFable = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Use Claude Fable 5 as the premium primary (all premium chains except
+        sisyphus, which is too expensive for Fable). See the "Per-host model
+        options" section of home-modules/opencode/README.md.
+      '';
+    };
+
+    modelPreference = mkOption {
+      type = types.enum ["anthropic" "zai" "balanced"];
+      default = "anthropic";
+      description = ''
+        Claude-vs-GLM ordering in each premium chain: "anthropic" (Claude
+        first), "zai" (GLM first), or "balanced" (alternate per agent). See
+        the "Per-host model options" section of home-modules/opencode/README.md.
+      '';
+    };
+
     codegraphBin = mkOption {
       type = types.nullOr types.str;
       default = null;

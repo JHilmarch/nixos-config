@@ -21,12 +21,12 @@ both [orion](../../hosts/orion/) and [p51](../../hosts/p51/).
 Four providers, three auth strategies. The model catalog and per-agent rationale live in
 [`oh-my-openagent.nix`](./oh-my-openagent.nix); the billing/auth setup is documented here.
 
-| Provider          | How it's wired                                      | Auth mechanism                                       | Used for                                                          |
-| ----------------- | --------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------- |
-| `zai-coding-plan` | apiKey in `provider.*.options.apiKey` (host config) | SOPS env var `ZAI_API_KEY`                           | GLM-5.2 / 5.1 / 5-turbo / 5v-turbo (default orchestrator)         |
-| `openai`          | apiKey in `provider.*.options.apiKey` (host config) | SOPS env var `OPENAI_API_KEY`                        | GPT-5.5 (Hephaestus only, plus last-resort fallbacks)             |
-| `anthropic`       | Model IDs in OMO config (`anthropic/claude-*`)      | `@ex-machina/opencode-anthropic-auth` plugin (OAuth) | Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5 (Claude Code Max $90/mo) |
-| `opencode-go`     | Model IDs in OMO config (`opencode-go/*`)           | `opencode auth login --provider opencode-go` (OAuth) | Kimi K2.7-code, Qwen 3.7-plus, MiniMax M3/M2.7 ($10/mo flat)      |
+| Provider          | How it's wired                                      | Auth mechanism                                       | Used for                                                                   |
+| ----------------- | --------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------- |
+| `zai-coding-plan` | apiKey in `provider.*.options.apiKey` (host config) | SOPS env var `ZAI_API_KEY`                           | GLM-5.2 / 5.1 / 5-turbo / 5v-turbo (first non-Anthropic fallback layer)    |
+| `openai`          | apiKey in `provider.*.options.apiKey` (host config) | SOPS env var `OPENAI_API_KEY`                        | GPT-5.5 (Hephaestus only, plus last-resort fallbacks)                      |
+| `anthropic`       | Model IDs in OMO config (`anthropic/claude-*`)      | `@ex-machina/opencode-anthropic-auth` plugin (OAuth) | Fable 5 / Opus 4.8 / Sonnet 4.6 / Haiku 4.5 (Claude Code Max $90/mo)       |
+| `opencode-go`     | Model IDs in OMO config (`opencode-go/*`)           | `opencode auth login --provider opencode-go` (OAuth) | Kimi K2.7-code, Qwen 3.7-plus, MiniMax M3/M2.7, DeepSeek V4 Flash ($10/mo) |
 
 SOPS is only suitable for the two **API-key** providers (top two rows). OAuth-based providers store dynamically
 refreshed tokens on disk; they cannot be SOPS-managed.
@@ -72,23 +72,108 @@ Notes:
 
 ## Agent model design
 
-Per OMO docs (`agent-model-matching.md`) with two user-chosen deviations:
+Two providers carry the premium tiers — Anthropic (Claude) and z.ai (GLM) — and their relative order is a **per-host
+choice** (see [Per-host model options](#per-host-model-options)). The remaining rules are user-chosen deviations from
+the OMO docs (`agent-model-matching.md`):
 
-1. **GLM-5.2 is the orchestrator default** (sisyphus / prometheus / atlas). Docs recommend Claude Opus 4.8; user prefers
-   GLM-5.2 as a Claude Opus alternative. Anthropic remains the first fallback layer.
+1. **Fable 5 is an opt-in premium primary through 2026-07-07** (included for up to 50% of Claude Max weekly limits),
+   with Opus 4.8 as the next Claude-layer entry. Gated by the per-host `modules.opencode.useFable` option (default
+   `false`; `true` on p51). Usage credits are disabled, so an exhausted Fable surfaces as HTTP 402 and the runtime
+   fallback (below) degrades to Opus within seconds. **Sisyphus never leads with Fable** — as the highest-volume premium
+   agent it is too expensive to run on Fable, so it always starts at Opus 4.8 (or GLM, per preference) regardless of
+   `useFable`.
+1. **Provider preference is a per-host switch** (`modules.opencode.modelPreference`: `anthropic` / `zai` / `balanced`,
+   default `anthropic`). It reorders the Claude-layer vs the GLM-layer inside every premium chain. This supersedes the
+   old hardcoded "GLM before Kimi" deviation — the Claude↔GLM order is now explicit and host-tunable. See
+   [Per-host model options](#per-host-model-options) for the exact per-mode behavior.
 1. **OpenAI is pay-per-usage and used sparingly** — only Hephaestus (which has no fallback chain) and a few last-resort
-   fallback entries. Everything the docs default to OpenAI uses real Anthropic (Claude Opus 4.8 / Sonnet 4.6) instead.
+   fallback entries. OpenCode Go and OpenAI models are always last resort in premium chains, after both Claude and GLM.
+1. **Utility tier stays on OpenCode Go regardless of preference** — librarian/explore are the highest-volume agents and
+   Haiku would burn the same Claude Max weekly quota Fable/Opus draw from (and anthropic's concurrency cap is 3 vs Go's
+   5). Haiku 4.5 (the newest Haiku) is the first *fallback* instead. The tier is split by workload: librarian gets
+   DeepSeek V4 Flash (1M context for doc/repo digestion), explore gets MiniMax M2.7 (fastest latency for grep-style
+   bursts). This follows the docs' "DeepSeek ≻≻ MiniMax" rule — MiniMax only on grep-style utility, never on
+   deep/multi-step agents.
+1. **Visual fallbacks stay inside the Qwen family** — per the docs' "Safe vs Dangerous Overrides": visual-engineering →
+   Kimi/GLM is a wrong-reasoning-style override; Qwen substitutes for Gemini (no Google provider is connected, so Qwen
+   3.7-plus is the *primary*, Qwen 3.6-plus the fallback, GPT-5.5 the only non-Qwen tail).
 
-| Tier              | Primary                           | First fallback                | Second fallback              |
-| ----------------- | --------------------------------- | ----------------------------- | ---------------------------- |
-| Orchestrators     | `glm-5.2`                         | `anthropic/claude-opus-4-8`   | `opencode-go/kimi-k2.7-code` |
-| Deep / review     | `anthropic/claude-opus-4-8` (max) | `opencode-go/kimi-k2.7-code`  | `openai/gpt-5.5`             |
-| Visual / artistry | `opencode-go/qwen3.7-plus`        | `anthropic/claude-opus-4-8`   | `kimi-k2.7-code`             |
-| Utility           | `opencode-go/kimi-k2.7-code`      | `opencode-go/qwen3.7-plus`    | `opencode-go/minimax-m2.7`   |
-| Hephaestus        | `openai/gpt-5.5`                  | — (single-entry, no fallback) |                              |
+Executive summary (shown for `modelPreference = "anthropic"`, `useFable = true`; the Claude/GLM columns swap under
+`zai`, and alternate per agent under `balanced`):
+
+| Tier              | Primary                          | Next (Claude layer)               | Then (GLM layer) | Tail               |
+| ----------------- | -------------------------------- | --------------------------------- | ---------------- | ------------------ |
+| Sisyphus          | `anthropic/claude-opus-4-8`      | — (no Fable)                      | `glm-5.2`        | `kimi`             |
+| Orchestrators     | `anthropic/claude-fable-5`       | `anthropic/claude-opus-4-8`       | `glm-5.2`        | `kimi` / `gpt-5.5` |
+| Deep / review     | `anthropic/claude-fable-5` (max) | `anthropic/claude-opus-4-8` (max) | `glm-5.2`        | `kimi` → `gpt-5.5` |
+| Workers (junior)  | `anthropic/claude-sonnet-4-6`    | `kimi` (Claude-like)              | `glm-5.2`        | `minimax-m3`       |
+| Visual / artistry | `opencode-go/qwen3.7-plus`       | `opencode-go/qwen3.6-plus`        | —                | `gpt-5.5`          |
+| Librarian         | `opencode-go/deepseek-v4-flash`  | `anthropic/claude-haiku-4-5`      | `glm-5-turbo`    |                    |
+| Explore           | `opencode-go/minimax-m2.7`       | `anthropic/claude-haiku-4-5`      | `glm-5-turbo`    |                    |
+| Hephaestus        | `openai/gpt-5.5`                 | — (single-entry, no fallback)     |                  |                    |
 
 The full agent-by-agent and category-by-category matrix is the source of truth in
 [`oh-my-openagent.nix`](./oh-my-openagent.nix); this table is the executive summary.
+
+## Per-host model options
+
+Two options on `modules.opencode` (declared in [`default.nix`](./default.nix), consumed in
+[`oh-my-openagent.nix`](./oh-my-openagent.nix)) let each host tune the premium chains without editing the shared module.
+Set them in `hosts/<host>/modules/opencode.nix`.
+
+### `useFable` (bool, default `false`)
+
+Enables Claude Fable 5 as the premium primary for the deep/review and orchestrator/planner chains — **except sisyphus**,
+which never leads with Fable. Currently `true` on p51 only. Flip a host to `false` (or let the default stand) and Opus
+4.8 becomes that host's Claude-layer primary everywhere. After 2026-07-07 (promo ends → Fable bills via disabled credits
+→ 402), set every host to `false`.
+
+### `modelPreference` (enum, default `"anthropic"`)
+
+Reorders the Claude-layer vs GLM-layer inside each premium chain. OpenCode Go / OpenAI tails are unaffected — always
+last.
+
+| Mode        | Behavior                                                                                                                                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `anthropic` | Claude models before GLM in every premium chain. Junior/Atlas fall back Kimi (Claude-like) before GLM.                                                                                                                    |
+| `zai`       | GLM before Claude — spend the z.ai Coding Plan token budget first; Anthropic is the next layer.                                                                                                                           |
+| `balanced`  | Alternate the preferred provider agent-by-agent (via a per-agent `slot` index) so compute is spread across both subscriptions instead of hammering one. Even-slot agents lead with Claude, odd-slot agents lead with GLM. |
+
+Implementation: the `premium` / `sonnetChain` helpers in [`oh-my-openagent.nix`](./oh-my-openagent.nix) build each chain
+from a reorderable Claude layer + GLM layer + a fixed tail; `claudeBeforeGlm slot` decides the order. Verify a host's
+effective chains with:
+
+```fish
+nix eval --raw '.#nixosConfigurations.nixos-p51.config.home-manager.users.jonatan.home.file.".config/opencode/oh-my-openagent.json".text' | jq '.agents'
+```
+
+## Runtime fallback
+
+OMO's `runtime_fallback` hook is **enabled** (it is OFF by default upstream — without it the `fallback_models` chains
+only apply at session start, and a mid-session 429/402 just loops upstream OpenCode's hardcoded exponential backoff,
+observed as ~8 retries of 2s→30s). Two failover paths, verified against OMO source
+(`packages/omo-opencode/src/hooks/runtime-fallback/`):
+
+- **Non-retryable errors (402):** upstream doesn't retry → `session.error` → OMO checks `retry_on_errors` → immediate
+  fallback. 402 is added to the list because usage credits are disabled.
+- **Retryable errors (429/503/529):** upstream starts its backoff loop and emits a retry status → OMO's session-status
+  handler intercepts the **first** matching signal (message-pattern match, independent of `retry_on_errors`), aborts,
+  and switches. Per-code retry counts ("give 503 a few retries first") are **not expressible** in current OMO — fast
+  failover for everything is the accepted trade-off.
+
+Config choices (in [`oh-my-openagent.nix`](./oh-my-openagent.nix)):
+
+| Key                              | Value                                 | Why                                                                  |
+| -------------------------------- | ------------------------------------- | -------------------------------------------------------------------- |
+| `retry_on_errors`                | `[402, 429, 500, 502, 503, 504, 529]` | 402 = credits off; 529 = Anthropic overloaded                        |
+| `max_fallback_attempts`          | `5`                                   | chains are 3–5 deep                                                  |
+| `cooldown_seconds`               | `14400` (4 h)                         | throttled model stays benched for the session (state is per-session) |
+| `timeout_seconds`                | `30`                                  | hang safety net                                                      |
+| `restore_primary_after_cooldown` | `false`                               | pointless with a 4 h cooldown; new sessions re-probe primary anyway  |
+
+Fallback state is **per-session and in-memory** — a new session always re-probes the primary model once (~2s) before
+switching. That is the self-healing path: when weekly limits reset, sessions land on Fable/Opus again with zero
+intervention.
 
 ## Background-task parallelism
 
