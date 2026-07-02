@@ -30,6 +30,7 @@
     tree-sitter # A parser generator tool
     alejandra # nix linter
     pkgs.local.mdformat # CommonMark compliant Markdown formatter (with GFM + frontmatter plugins — see .mdformat.toml)
+    pkgs.local.gh-project-manager # GitHub Projects CLI wrapper (bakes gh + jq; also in opencode runtimeInputs)
     biome # Fast formatter/linter for JS, TS, JSON, CSS, HTML
     pinentry-tty # GnuPG's interface to passphrase input
     yubikey-manager # Command line tool for configuring any YubiKey over all USB transports

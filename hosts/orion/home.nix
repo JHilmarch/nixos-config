@@ -82,6 +82,7 @@
     local.github-work-mcp # GitHub MCP Server for work account
     local.gh-personal # GitHub CLI authenticated with PAT for the personal GitHub area
     local.gh-personal-project-manager # GitHub CLI authenticated with classic PAT for project management
+    local.gh-project-manager # GitHub Projects CLI wrapper (bakes gh + jq; also in opencode runtimeInputs)
     local.gh-work # GitHub CLI authenticated with PAT for the work GitHub area
     local.azure-mcp-server # Azure MCP CLI
   ];

@@ -7,16 +7,19 @@ allowed-tools: Bash, Read, Glob, Grep, Skill
 
 ## How to use the gh-project-manager CLI
 
+Call the packaged `gh-project-manager` command directly — it is on PATH via `pkgs.local.gh-project-manager` (installed
+on the p51 and orion hosts). The packaged wrapper bakes in its own `gh` + `jq` dependencies, so it works from any shell.
+
 **Documentation**
 
 ```bash
-fish tools/gh-project-manager/gh-project-manager.fish --help --json
+gh-project-manager --help --json
 ```
 
 **Example:** _count all items in the project 2, matching the free-text-search "Ready"_
 
 ```bash
-fish tools/gh-project-manager/gh-project-manager.fish --json --owner JHilmarch count-items 2 "Ready"
+gh-project-manager --json --owner JHilmarch count-items 2 "Ready"
 ```
 
 ## Configuration

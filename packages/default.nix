@@ -1,4 +1,4 @@
-{callPackage}: {
+{callPackage}: rec {
   openchamber = callPackage ./openchamber {};
   azure-devops-mcp = callPackage ./azure-devops-mcp {};
   codegraph = callPackage ./codegraph {};
@@ -9,5 +9,6 @@
   gh-personal = callPackage ./gh-cli/personal.nix {};
   gh-personal-project-manager = callPackage ./gh-cli/personal-project-manager.nix {};
   gh-work = callPackage ./gh-cli/work.nix {};
+  gh-project-manager = callPackage ./gh-project-manager {inherit gh-personal-project-manager;};
   mdformat = callPackage ./mdformat {};
 }

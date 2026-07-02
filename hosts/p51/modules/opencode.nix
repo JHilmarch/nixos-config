@@ -21,6 +21,7 @@
         pkgs.local.github-work-mcp
         pkgs.local.gh-personal # GitHub CLI authenticated with PAT for personal account
         pkgs.local.gh-personal-project-manager # GitHub CLI with classic PAT for project management
+        pkgs.local.gh-project-manager # gh-project-manager.fish wrapper (fish --no-config, bakes gh + jq)
         pkgs.local.gh-work # GitHub CLI authenticated with PAT for work account
         self.formatter.${pkgs.stdenv.hostPlatform.system} # treefmt wrapper (all formatters)
         pkgs.findutils # find, xargs, locate

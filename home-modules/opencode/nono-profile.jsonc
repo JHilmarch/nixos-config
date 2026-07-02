@@ -47,6 +47,7 @@
     "read": [
       "$HOME/.config/git",
       "$HOME/.gitconfig",
+      "$HOME/.config/fish",
       "$HOME/.ssh",
       "/run/secrets" // SOPS-materialized API keys
     ],
