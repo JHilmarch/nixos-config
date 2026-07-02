@@ -44,9 +44,12 @@ All domains in one flat table. The encoded entries in `nono-profile.jsonc` must 
 | `cache.nixos.org`                      | Nix substituter  | Nix binary cache misses; every nix build falls back to source compilation    |
 | `*.nixos.org`                          | Nix substituter  | NixOS channel metadata, search.nixos.org MCP queries                         |
 | `search.nixos.org`                     | Nix substituter  | mcp-nixos tool queries fail                                                  |
+| `nixhub.io`                            | Nix substituter  | mcp-nixos `nix_versions` / NixHub version-history queries fail closed        |
+| `noogle.dev`                           | Nix substituter  | mcp-nixos Noogle function search / browse fails closed                       |
 | `cache.numtide.com`                    | Nix substituter  | numtide binary cache misses (host-specific; see note below)                  |
-| `api.exa.ai`                           | Research tool    | websearch tool (Exa backend) returns no results                              |
-| `grep.app`                             | Research tool    | grep_app tool fails entirely                                                 |
+| `mcp.exa.ai`                           | Research tool    | websearch tool (Exa MCP backend) fails; needs `EXA_API_KEY` for paid access  |
+| `mcp.grep.app`                         | Research tool    | grep_app MCP server unreachable; code search fails                           |
+| `grep.app`                             | Research tool    | grep.app site (referenced by grep_app; Vercel-challenge-guarded)             |
 | `context7.com`                         | Research tool    | context7 MCP tool fails                                                      |
 | `*.context7.com`                       | Research tool    | context7 CDN/API subdomains                                                  |
 
@@ -141,7 +144,13 @@ agent. The domains below are what those servers reach, not the servers themselve
 
 ### mcp-nixos
 
-Queries `search.nixos.org` (already listed under NixOS registries). No additional domains.
+Queries `search.nixos.org` (covered by `*.nixos.org`) for package/option search. Also reaches two domains outside the
+NixOS infrastructure block:
+
+- `nixhub.io` — package version history (`nix_versions`, NixHub lookups). Blocked → version-history queries fail closed.
+- `noogle.dev` — Noogle function search / browse. Blocked → Noogle queries fail closed.
+
+Both are now listed under NixOS registries in the profile.
 
 ### github-personal / github-work
 
@@ -154,14 +163,17 @@ ______________________________________________________________________
 
 ### websearch (Exa)
 
-**Domain:** `api.exa.ai`
+**Domain:** `mcp.exa.ai`
 
-The websearch tool sends queries to the Exa search API. Blocking `api.exa.ai` returns empty results with no error
-surfaced to the agent.
+OMO's websearch tool is a remote MCP server at `https://mcp.exa.ai/mcp` (see
+`packages/omo-opencode/src/mcp/websearch.ts`). It works keyless on Exa's free tier but returns HTTP 402 (Payment
+Required) once quota is exhausted. Set `EXA_API_KEY` (sourced from the sops `agents.env` template and allowlisted in
+`environment.allow_vars`) — OMO sends it as `Authorization: Bearer $EXA_API_KEY`. Blocking `mcp.exa.ai` makes the
+websearch tool fail entirely.
 
 ### grep_app
 
-**Domain:** `grep.app`
+**Domains:** `mcp.grep.app` (MCP server actually used), `grep.app` (site)
 
 The grep_app tool queries grep.app for code search across public GitHub repos. Blocking it makes the tool return errors.
 
@@ -222,8 +234,8 @@ issues, project board) still work inside the sandbox because they use the GitHub
 
 Documented in [Built-in OMO/OpenCode Tools](#built-in-omoopencode-tools) above. webfetch is not domain-scoped by design;
 the allowlist cannot enumerate every URL an agent might fetch. The v1 resolution accepts that webfetch fails closed for
-unlisted domains. Common research domains (`api.exa.ai`, `grep.app`, `context7.com`) are explicitly listed to cover the
-most frequent cases.
+unlisted domains. Common research domains (`mcp.exa.ai`, `mcp.grep.app`, `context7.com`) are explicitly listed to cover
+the most frequent cases.
 
 Flagged as a product-decision follow-up for story #117.
 

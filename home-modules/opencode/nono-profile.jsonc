@@ -91,7 +91,8 @@
 			"ZAI_API_KEY",
 			"OMO_CODEGRAPH_BIN", // codegraph MCP: absolute path to the Nix-provided codegraph binary (env source)
 			"OPENAI_API_KEY",
-			"CONTEXT7_API_KEY"
+			"CONTEXT7_API_KEY",
+			"EXA_API_KEY" // websearch MCP: Authorization: Bearer for mcp.exa.ai (from sops agents.env)
 		]
 	},
 
@@ -121,12 +122,11 @@
 			// ── Package registries ────────────────────────────────────────────────
 			"registry.npmjs.org", // npm package installs (nodejs tooling)
 			"*.npmjs.org", // npm CDN / scoped registries
+			"*.npmjs.com", // npm website/auth/docs assets (npmjs.com, distinct from .org)
 			"github.com", // git clone, GitHub API, releases
 			"*.github.com", // GitHub subdomains (gist, etc.)
-			"objects.githubusercontent.com", // GitHub release asset downloads (legacy host)
-			"release-assets.githubusercontent.com", // GitHub release asset downloads (current CDN host)
+			"*.githubusercontent.com", // GitHub user content CDN (raw, objects, avatars, camo, release-assets, ...)
 			"codeload.github.com", // GitHub archive downloads (go get, etc.)
-			"raw.githubusercontent.com", // raw file access (scripts, configs)
 			"api.github.com", // GitHub REST API (gh CLI, MCP server)
 			"pypi.org", // Python package index
 			"*.pypi.org", // PyPI CDN / mirrors
@@ -139,13 +139,16 @@
 			"cache.nixos.org", // Nix binary cache (primary substituter)
 			"*.nixos.org", // NixOS infrastructure (search, channels, etc.)
 			"search.nixos.org", // NixOS package/option search
+			"nixhub.io", // mcp-nixos: package version history (nix_versions / NixHub)
+			"noogle.dev", // mcp-nixos: Noogle function search / browse
 
 			// ── Nix substituters ─────────────────────────────────────────────────
 			"cache.numtide.com", // numtide binary cache (devshell, etc.)
 
 			// ── MCP / research tools ──────────────────────────────────────────────
-			"api.exa.ai", // Exa web search MCP tool
-			"grep.app", // grep.app code search MCP tool
+			"mcp.exa.ai", // websearch MCP endpoint (OMO calls mcp.exa.ai/mcp; Bearer EXA_API_KEY)
+			"mcp.grep.app", // grep_app MCP server (OMO built-in; remote MCP endpoint)
+			"grep.app", // grep.app site (referenced by grep_app; Vercel-challenge-guarded)
 			"context7.com", // Context7 documentation MCP tool
 			"*.context7.com" // Context7 CDN / API subdomains
 		]
