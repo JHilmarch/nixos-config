@@ -2,165 +2,161 @@
 // Rationale, design tensions, and the egress allowlist analysis live in
 // nono-egress.md and home-modules/opencode/README.md.
 {
-	"$schema": "https://nono.sh/schemas/nono-profile.schema.json",
+  "$schema": "https://nono.sh/schemas/nono-profile.schema.json",
 
-	"extends": "default", // inherits 18 default deny groups
+  "extends": "default", // inherits 18 default deny groups
 
-	"meta": {
-		"name": "opencode",
-		"version": "1.0.0",
-		"description": "OpenCode AI coding agent sandbox.",
-		"author": "nixos-config/home-modules/opencode"
-	},
+  "meta": {
+    "name": "opencode",
+    "version": "1.0.0",
+    "description": "OpenCode AI coding agent sandbox.",
+    "author": "nixos-config/home-modules/opencode"
+  },
 
-	"groups": {
-		"include": [
-			"nix_runtime",
-			"linux_runtime_state",
-			"opencode_linux",
-			"user_tools",
-			"user_caches_linux",
-			"unlink_protection"
-		]
-	},
+  "groups": {
+    "include": [
+      "nix_runtime",
+      "linux_runtime_state",
+      "opencode_linux",
+      "user_tools",
+      "user_caches_linux",
+      "unlink_protection"
+    ]
+  },
 
-	"workdir": {
-		"access": "readwrite"
-	},
+  "workdir": {
+    "access": "readwrite"
+  },
 
-	"filesystem": {
-		"allow": [
-			"$XDG_DATA_HOME/opencode",
-			"$XDG_CONFIG_HOME/opencode",
-			"$XDG_CACHE_HOME/opencode",
-			"$XDG_STATE_HOME/opencode",
-			"$XDG_DATA_HOME/opencode-anthropic-auth", // OAuth token cache (anthropic-auth-sync)
-			"$HOME/.claude", // Claude Code OAuth tokens, read by anthropic-auth-sync
-			"$HOME/.cache/ck", // ck code-search cache
-			"$HOME/.cache",
-			"$HOME/.worktrees",
-			"$HOME/.omo", // OMO/codegraph bootstrap state (mkdir'd at startup; else EACCES + grant prompt)
-			"$XDG_DATA_HOME/opencode/tmp",
-			"/tmp" // Bun OpenTUI .so extraction target — required for the TUI; see README.md
-		],
+  "filesystem": {
+    "allow": [
+      "$XDG_DATA_HOME/opencode",
+      "$XDG_CONFIG_HOME/opencode",
+      "$XDG_CACHE_HOME/opencode",
+      "$XDG_STATE_HOME/opencode",
+      "$XDG_DATA_HOME/opencode-anthropic-auth", // OAuth token cache (anthropic-auth-sync)
+      "$HOME/.claude", // Claude Code OAuth tokens, read by anthropic-auth-sync
+      "$HOME/.cache/ck", // ck code-search cache
+      "$HOME/.cache",
+      "$HOME/.worktrees",
+      "$HOME/.omo", // OMO/codegraph bootstrap state (mkdir'd at startup; else EACCES + grant prompt)
+      "$XDG_DATA_HOME/opencode/tmp",
+      "/tmp" // Bun OpenTUI .so extraction target — required for the TUI; see README.md
+    ],
 
-		"read": [
-			"$HOME/.config/git",
-			"$HOME/.gitconfig",
-			"$HOME/.ssh",
-			"/run/secrets" // SOPS-materialized API keys
-		],
+    "read": [
+      "$HOME/.config/git",
+      "$HOME/.gitconfig",
+      "$HOME/.ssh",
+      "/run/secrets" // SOPS-materialized API keys
+    ],
 
-		// 1Password SSH agent socket: deny_credentials blocks it, so bypass + allow.
-		"allow_file": ["$HOME/.1password/agent.sock"],
-		"bypass_protection": ["$HOME/.1password/agent.sock"],
+    // 1Password SSH agent socket: deny_credentials blocks it, so bypass + allow.
+    "allow_file": ["$HOME/.1password/agent.sock"],
+    "bypass_protection": ["$HOME/.1password/agent.sock"],
 
-		// Silence phantom save-profile prompts for slash-command names. See README.md
-		// "Phantom save-profile prompts"; add new skill names here if they reappear.
-		"suppress_save_prompt": [
-			"/commit",
-			"/project-manager",
-			"/update-packages",
-			"/verify-flake",
-			"/using-git-worktrees",
-			"/hunk-review",
-			"/ck",
-			"/main" // git-ref leader (e.g. `diff main...`) misread as a top-level path by nono's save-profile heuristic
-		]
-	},
+    // Silence phantom save-profile prompts for slash-command names. See README.md
+    // "Phantom save-profile prompts"; add new skill names here if they reappear.
+    "suppress_save_prompt": [
+      "/commit",
+      "/project-manager",
+      "/update-packages",
+      "/verify-flake",
+      "/using-git-worktrees",
+      "/hunk-review",
+      "/ck",
+      "/main" // git-ref leader (e.g. `diff main...`) misread as a top-level path by nono's save-profile heuristic
+    ]
+  },
 
-	// Positive list; vars not set by the wrapper are simply empty in the child.
-	"environment": {
-		"allow_vars": [
-			"PATH",
-			"HOME",
-			"TERM",
-			"USER",
-			"SHELL",
-			"LANG",
-			"LOCALE_ARCHIVE",
-			"NIX_CONFIG",
-			"NIX_PATH",
-			"NIX_PROFILES",
-			"SSL_CERT_FILE",
-			"COLORTERM",
-			"OPENCODE_CONFIG_CONTENT",
-			"OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT", // disable auto-copy-on-select; see README "Clipboard"
-			"WAYLAND_DISPLAY", // wl-clipboard: locate compositor socket (opt-in hosts)
-			"XDG_RUNTIME_DIR", // wl-clipboard: socket dir base (opt-in hosts)
-			"ZAI_API_KEY",
-			"OMO_CODEGRAPH_BIN", // codegraph MCP: absolute path to the Nix-provided codegraph binary (env source)
-			"OPENAI_API_KEY",
-			"CONTEXT7_API_KEY",
-			"EXA_API_KEY" // websearch MCP: Authorization: Bearer for mcp.exa.ai (from sops agents.env)
-		]
-	},
+  // Positive list; vars not set by the wrapper are simply empty in the child.
+  "environment": {
+    "allow_vars": [
+      "PATH",
+      "HOME",
+      "TERM",
+      "USER",
+      "SHELL",
+      "LANG",
+      "LOCALE_ARCHIVE",
+      "NIX_CONFIG",
+      "NIX_PATH",
+      "NIX_PROFILES",
+      "SSL_CERT_FILE",
+      "COLORTERM",
+      "OPENCODE_CONFIG_CONTENT",
+      "OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT", // disable auto-copy-on-select; see README "Clipboard"
+      "WAYLAND_DISPLAY", // wl-clipboard: locate compositor socket (opt-in hosts)
+      "XDG_RUNTIME_DIR", // wl-clipboard: socket dir base (opt-in hosts)
+      "ZAI_API_KEY",
+      "OMO_CODEGRAPH_BIN", // codegraph MCP: absolute path to the Nix-provided codegraph binary (env source)
+      "OPENAI_API_KEY",
+      "CONTEXT7_API_KEY",
+      "EXA_API_KEY" // websearch MCP: Authorization: Bearer for mcp.exa.ai (from sops agents.env)
+    ]
+  },
 
-	// Egress allowlist. block:false = proxy on, unlisted domains blocked at the
-	// HTTP(S) layer. Per-domain and SSH/webfetch rationale is in nono-egress.md.
-	"network": {
-		"block": false,
+  // Egress allowlist. block:false = proxy on, unlisted domains blocked at the
+  // HTTP(S) layer. Per-domain and SSH/webfetch rationale is in nono-egress.md.
+  "network": {
+    "block": false,
 
-		// Loopback IPC ports (nono blocks all localhost TCP unless explicitly granted):
-		//   4099  — TUI Go↔TS backend; must match --port in the wrapper.
-		//   47657 — hunk daemon session broker (HUNK_MCP_PORT default); lets `hunk
-		//           session *` reach the host daemon so hunk.dev reviews are readable.
-		// See nono-egress.md "Loopback IPC".
-		"open_port": [4099, 47657],
+    // Loopback IPC ports (nono blocks all localhost TCP unless explicitly granted):
+    //   4099  — TUI Go↔TS backend; must match --port in the wrapper.
+    //   47657 — hunk daemon session broker (HUNK_MCP_PORT default); lets `hunk
+    //           session *` reach the host daemon so hunk.dev reviews are readable.
+    // See nono-egress.md "Loopback IPC".
+    "open_port": [4099, 47657],
 
-		"allow_domain": [
-			// ── LLM providers ────────────────────────────────────────────────────
-			"api.z.ai", // z.ai GLM-5.x (primary orchestrator via ZAI_API_KEY)
-			"api.anthropic.com", // Anthropic API (Claude models via @ex-machina OAuth)
-			"claude.ai", // Claude Code Max OAuth login + token refresh
-			"opencode.ai", // OpenCode Go provider OAuth login + token refresh
-			"api.openai.com", // OpenAI API (Hephaestus + last-resort fallbacks)
-			"*.openai.com", // OpenAI CDN / auxiliary endpoints
-			"api.opencode.ai", // OpenCode Go inference API (opencode.ai is OAuth/console; api.* serves models)
-			"models.dev", // Model catalog / discovery
+    "allow_domain": [
+      // ── LLM providers ────────────────────────────────────────────────────
+      "api.z.ai", // z.ai GLM-5.x (primary orchestrator via ZAI_API_KEY)
+      "api.anthropic.com", // Anthropic API (Claude models via @ex-machina OAuth)
+      "claude.ai", // Claude Code Max OAuth login + token refresh
+      "opencode.ai", // OpenCode Go provider OAuth login + token refresh
+      "api.openai.com", // OpenAI API (Hephaestus + last-resort fallbacks)
+      "*.openai.com", // OpenAI CDN / auxiliary endpoints
+      "api.opencode.ai", // OpenCode Go inference API (opencode.ai is OAuth/console; api.* serves models)
+      "models.dev", // Model catalog / discovery
 
-			// ── Package registries ────────────────────────────────────────────────
-			"registry.npmjs.org", // npm package installs (nodejs tooling)
-			"*.npmjs.org", // npm CDN / scoped registries
-			"*.npmjs.com", // npm website/auth/docs assets (npmjs.com, distinct from .org)
-			"github.com", // git clone, GitHub API, releases
-			"*.github.com", // GitHub subdomains (gist, etc.)
-			"*.githubusercontent.com", // GitHub user content CDN (raw, objects, avatars, camo, release-assets, ...)
-			"codeload.github.com", // GitHub archive downloads (go get, etc.)
-			"api.github.com", // GitHub REST API (gh CLI, MCP server)
-			"pypi.org", // Python package index
-			"*.pypi.org", // PyPI CDN / mirrors
-			"files.pythonhosted.org", // PyPI file hosting
-			"crates.io", // Rust crate registry
-			"static.crates.io", // crates.io static assets
-			"*.crates.io", // crates.io CDN
-			"api.nuget.org", // NuGet package API
-			"*.nuget.org", // NuGet CDN / feeds
-			"cache.nixos.org", // Nix binary cache (primary substituter)
-			"*.nixos.org", // NixOS infrastructure (search, channels, etc.)
-			"search.nixos.org", // NixOS package/option search
-			"nixhub.io", // mcp-nixos: package version history (nix_versions / NixHub)
-			"noogle.dev", // mcp-nixos: Noogle function search / browse
+      // ── Package registries ────────────────────────────────────────────────
+      "registry.npmjs.org", // npm package installs (nodejs tooling)
+      "*.npmjs.org", // npm CDN / scoped registries
+      "*.npmjs.com", // npm website/auth/docs assets (npmjs.com, distinct from .org)
+      "github.com", // git clone, GitHub API, releases
+      "*.github.com", // GitHub subdomains (gist, etc.)
+      "*.githubusercontent.com", // GitHub user content CDN (raw, objects, avatars, camo, release-assets, ...)
+      "codeload.github.com", // GitHub archive downloads (go get, etc.)
+      "api.github.com", // GitHub REST API (gh CLI, MCP server)
+      "pypi.org", // Python package index
+      "*.pypi.org", // PyPI CDN / mirrors
+      "files.pythonhosted.org", // PyPI file hosting
+      "crates.io", // Rust crate registry
+      "static.crates.io", // crates.io static assets
+      "*.crates.io", // crates.io CDN
+      "api.nuget.org", // NuGet package API
+      "*.nuget.org", // NuGet CDN / feeds
+      "cache.nixos.org", // Nix binary cache (primary substituter)
+      "*.nixos.org", // NixOS infrastructure (search, channels, etc.)
+      "search.nixos.org", // NixOS package/option search
+      "nixhub.io", // mcp-nixos: package version history (nix_versions / NixHub)
+      "noogle.dev", // mcp-nixos: Noogle function search / browse
 
-			// ── Nix substituters ─────────────────────────────────────────────────
-			"cache.numtide.com", // numtide binary cache (devshell, etc.)
+      // ── Nix substituters ─────────────────────────────────────────────────
+      "cache.numtide.com", // numtide binary cache (devshell, etc.)
 
-			// ── MCP / research tools ──────────────────────────────────────────────
-			"mcp.exa.ai", // websearch MCP endpoint (OMO calls mcp.exa.ai/mcp; Bearer EXA_API_KEY)
-			"mcp.grep.app", // grep_app MCP server (OMO built-in; remote MCP endpoint)
-			"grep.app", // grep.app site (referenced by grep_app; Vercel-challenge-guarded)
-			"context7.com", // Context7 documentation MCP tool
-			"*.context7.com" // Context7 CDN / API subdomains
-		]
-	},
+      // ── MCP / research tools ──────────────────────────────────────────────
+      "mcp.exa.ai", // websearch MCP endpoint (OMO calls mcp.exa.ai/mcp; Bearer EXA_API_KEY)
+      "mcp.grep.app", // grep_app MCP server (OMO built-in; remote MCP endpoint)
+      "grep.app", // grep.app site (referenced by grep_app; Vercel-challenge-guarded)
+      "context7.com", // Context7 documentation MCP tool
+      "*.context7.com" // Context7 CDN / API subdomains
+    ]
+  },
 
-	// Origins nono may open in the host browser for OAuth login. See README.md.
-	"open_urls": {
-		"allow_origins": [
-			"https://claude.ai",
-			"https://opencode.ai",
-			"https://console.anthropic.com"
-		],
-		"allow_localhost": false
-	}
+  // Origins nono may open in the host browser for OAuth login. See README.md.
+  "open_urls": {
+    "allow_origins": ["https://claude.ai", "https://opencode.ai", "https://console.anthropic.com"],
+    "allow_localhost": false
+  }
 }

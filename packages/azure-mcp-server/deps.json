@@ -1,12 +1,12 @@
 [
-	{
-		"name": "azure.mcp.linux-x64",
-		"version": "3.0.0-beta.21",
-		"sha256": "1a67dizmsx0awhkqcbv63fks60d3mrd47w9qcaw4g5afk8rlf2i2"
-	},
-	{
-		"name": "azure.mcp",
-		"version": "3.0.0-beta.21",
-		"sha256": "0lqdifs965xqq0k3dvsk800pmvq1yl4f61l6nbwyjfzx1phva9gg"
-	}
+  {
+    "name": "azure.mcp.linux-x64",
+    "version": "3.0.0-beta.21",
+    "sha256": "1a67dizmsx0awhkqcbv63fks60d3mrd47w9qcaw4g5afk8rlf2i2"
+  },
+  {
+    "name": "azure.mcp",
+    "version": "3.0.0-beta.21",
+    "sha256": "0lqdifs965xqq0k3dvsk800pmvq1yl4f61l6nbwyjfzx1phva9gg"
+  }
 ]

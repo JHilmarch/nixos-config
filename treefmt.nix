@@ -21,6 +21,7 @@
   programs.biome.enable = true;
   programs.biome.formatCommand = "check";
   programs.biome.validate.enable = false; # Schema hash mismatch with Biome v2.4.10
+  programs.biome.settings = builtins.fromJSON (builtins.readFile ./biome.json);
   programs.biome.includes = [
     "*.js"
     "*.ts"

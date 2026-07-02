@@ -1,19 +1,19 @@
 {
-	"mcpServers": {
-		"nixos": {
-			"command": "mcp-nixos"
-		},
-		"context7": {
-			"command": "context7-with-sops",
-			"enabled": false
-		},
-		"github-personal": {
-			"command": "github-personal-mcp",
-			"enabled": false
-		},
-		"playwright": {
-			"command": "mcp-server-playwright",
-			"enabled": false
-		}
-	}
+  "mcpServers": {
+    "nixos": {
+      "command": "mcp-nixos"
+    },
+    "context7": {
+      "command": "context7-with-sops",
+      "enabled": false
+    },
+    "github-personal": {
+      "command": "github-personal-mcp",
+      "enabled": false
+    },
+    "playwright": {
+      "command": "mcp-server-playwright",
+      "enabled": false
+    }
+  }
 }
