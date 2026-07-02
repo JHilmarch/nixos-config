@@ -20,6 +20,10 @@
     inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.hunk;
   hunkReviewSkill = "${hunk-pkg}/skills/hunk-review/SKILL.md";
 
+  omo-pkg =
+    inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.oh-my-opencode;
+  omoPlugin = "file://${omo-pkg}/lib/oh-my-opencode/dist/index.js";
+
   cfg = config.modules.opencode;
   useFable = cfg.useFable;
   modelPreference = cfg.modelPreference;
@@ -196,7 +200,7 @@
   };
 in
   lib.mkIf config.programs.opencode.enable {
-    programs.opencode.settings.plugin = ["oh-my-openagent" "@ex-machina/opencode-anthropic-auth"];
+    programs.opencode.settings.plugin = [omoPlugin "@ex-machina/opencode-anthropic-auth"];
 
     home.file =
       skillFiles
