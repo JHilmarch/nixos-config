@@ -288,6 +288,8 @@ in
             auto_refresh_on_start = true;
           };
 
+          telemetry = false;
+
           # Error-driven model switching.
           runtime_fallback = {
             enabled = true;
