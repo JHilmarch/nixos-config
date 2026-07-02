@@ -11,7 +11,7 @@
 #
 # Use this anywhere `mdformat` is exposed to user/agent shells:
 #   - hosts/{orion,p51}/home.nix       — user daily shell
-#   - home-modules/opencode/default.nix — agent sandbox (jail-nix add-pkg-deps)
+#   - home-modules/opencode/default.nix — agent sandbox (nono runtime inputs)
 #
 # When the plugin set needs to change (e.g. add mdformat-toc), update both
 # this file AND treefmt.nix to keep them in sync.

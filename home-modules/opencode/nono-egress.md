@@ -1,9 +1,8 @@
 # OpenCode Nono Profile: Egress Allowlist
 
 The nono profile (`nono-profile.jsonc`) enforces default-deny egress for the OpenCode agent process. Every outbound
-HTTPS connection must match an entry in `network.allow_domain`; unmatched requests are blocked at the proxy layer. This
-replaces the jail-nix `network` combinator, which granted full host network access with no filtering. The allowlist
-below is the authoritative record of what the agent is permitted to reach and why.
+HTTPS connection must match an entry in `network.allow_domain`; unmatched requests are blocked at the proxy layer. The
+allowlist below is the authoritative record of what the agent is permitted to reach and why.
 
 `network.allow_domain` is an HTTP(S) proxy allowlist only. It operates via CONNECT tunnel and optional TLS interception.
 It does NOT filter raw TCP. See [Design Tensions](#design-tensions) for the implications.

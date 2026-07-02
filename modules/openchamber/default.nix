@@ -49,8 +49,8 @@ in {
       description = ''
         Port on which the local opencode server listens. Used for firewall
         scoping; the actual opencode service is launched via
-        programs.opencode.package (the jail-nix wrapper) and told to listen on
-        this port.
+        programs.opencode.package (the nono-wrapped opencode binary) and told
+        to listen on this port.
       '';
     };
 
@@ -103,10 +103,10 @@ in {
       allowedTCPPorts = [cfg.port cfg.openCodePort];
     };
 
-    # Systemd USER services (not system services) so the jail-nix opencode
-    # wrapper has access to the user's $HOME, ssh-agent, GPG agent, and
-    # SOPS-decrypted env templates. Matches the home-manager.users.${username}
-    # pattern used in hosts/orion/modules/opencode.nix.
+    # Systemd USER services (not system services) so the nono-wrapped opencode
+    # has access to the user's $HOME, ssh-agent, GPG agent, and SOPS-decrypted
+    # env templates. Matches the home-manager.users.${username} pattern used
+    # in hosts/orion/modules/opencode.nix.
     #
     # Design decision (per #90 "Decide and document which layer owns the
     # services"): a single system module owns both the firewall and the
@@ -117,7 +117,7 @@ in {
     home-manager.users.${username} = {
       systemd.user.services.opencode = {
         Unit = {
-          Description = "opencode agent server (jail-nix wrapper)";
+          Description = "opencode agent server (nono-wrapped)";
           Documentation = "see: home-modules/opencode/default.nix";
         };
         Service = {

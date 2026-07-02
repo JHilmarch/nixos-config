@@ -9,7 +9,7 @@ home-modules/
 ├── lib.nix          # Shared: readSkillsFrom (scans dirs for skill subdirs)
 ├── claude/          # Claude Code: wrapper, permissions, 6 MCP servers, skills → [AGENTS.md]
 ├── copilot-cli/     # Copilot CLI: fence sandbox (code template), Azure DevOps MCP
-├── opencode/        # OpenCode: jail-nix sandbox, oh-my-openagent config
+├── opencode/        # OpenCode: nono (Landlock) sandbox, oh-my-openagent config
 ├── fish/            # Fish shell: plugins, abbreviations, dev vs base variants
 ├── git/             # Git: 4 variants (personal/work × GPG/SSH signing)
 ├── gpg/             # GPG: hardened settings, key import by trust level
@@ -52,11 +52,14 @@ Multiple files per concern, host picks one via import.
 restrictions, dangerous command blocking, secret protection. On WSL, fence auto-detects the environment and handles
 `/init` interop.
 
-**opencode** uses `jail-nix` (bubblewrap + seccomp). Pattern:
+**opencode** uses `nono` (Landlock + seccomp) with a default-deny egress allowlist
+(`home-modules/opencode/nono-profile.jsonc` — see `nono-egress.md` for rationale). Pattern:
 
-1. Define wrapper with `writeShellApplication`
-1. Configure sandbox: filesystem binds, env vars
-1. Inject secrets read-only: `/run/secrets/`, `~/.ssh/`
+1. Define wrapper with `writeShellApplication`; `exec` the static launch script (`scripts/opencode-launch.sh`) which
+   validates session dirs and invokes `nono run`
+1. Sandbox policy lives in `nono-profile.jsonc`: filesystem grants, env var allowlist, `network.allow_domain` egress
+   list, `open_port` for loopback IPC
+1. Secrets injected read-only via SOPS env templates sourced through `preSetupScripts`
 1. Skills loaded via `readSkillsFrom`
 
 ### Skill Loading

@@ -1,8 +1,8 @@
 # OpenCode + Oh-My-OpenAgent (OMO)
 
-[OpenCode](https://opencode.ai) wrapped in a [jail-nix](https://github.com/anomalyco/jail-nix) bubblewrap + seccomp
-sandbox, plus the [Oh-My-OpenAgent](https://omo.dev) multi-agent orchestration plugin. Used by both
-[orion](../../hosts/orion/) and [p51](../../hosts/p51/).
+[OpenCode](https://opencode.ai) wrapped in a [nono](https://github.com/anomalyco/nono) Landlock + seccomp sandbox
+(default-deny egress allowlist), plus the [Oh-My-OpenAgent](https://omo.dev) multi-agent orchestration plugin. Used by
+both [orion](../../hosts/orion/) and [p51](../../hosts/p51/).
 
 ## Files
 

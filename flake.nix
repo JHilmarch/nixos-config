@@ -9,7 +9,6 @@
     mcp-nixos.url = "github:utensils/mcp-nixos";
     llm-agents.url = "github:numtide/llm-agents.nix";
     llm-agents.inputs.treefmt-nix.follows = "treefmt-nix";
-    jail-nix.url = "sourcehut:~alexdavid/jail.nix";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";

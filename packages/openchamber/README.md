@@ -26,7 +26,7 @@ services.openchamber = {
 
 The module wires up two systemd **user** services under `home-manager.users.<username>`:
 
-- `opencode.service` — runs the jail-nix opencode wrapper in server mode on `openCodePort`
+- `opencode.service` — runs the nono-wrapped opencode in server mode on `openCodePort`
 - `openchamber.service` — runs `openchamber serve` against that opencode server, reading the UI password from
   `uiPasswordFile` via the `OPENCHAMBER_UI_PASSWORD` env var
 
@@ -72,7 +72,7 @@ bash tools/update-packages/scripts/regen-openchamber-lockfile.sh 1.13.8 \
   packages/openchamber/package-lock.json
 ```
 
-The helper needs `curl`, `gunzip`, `tar`, `node`, and `npm` on PATH. Inside the opencode jail these come from
+The helper needs `curl`, `gunzip`, `tar`, `node`, and `npm` on PATH. Inside the opencode sandbox these come from
 `home-modules/opencode/default.nix`; on p51 they come from `environment.systemPackages` (plus whatever node/npm the user
 env provides).
 

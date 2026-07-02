@@ -26,10 +26,10 @@
       default = ["~/.worktrees" "~/.cache"];
       description = ''
         Host directories that the agent needs persistent read-write access to.
-        With nono (replaces the jail-nix sandbox), these paths live on the real
-        disk (btrfs) — no tmpfs home in the nono model. The nono profile
-        (nono-profile.jsonc) grants Landlock access; the wrapper just ensures
-        the dirs exist at runtime. Tilde-expanded by the shell.
+        With nono, these paths live on the real disk (btrfs) — no tmpfs home in
+        the nono model. The nono profile (nono-profile.jsonc) grants Landlock
+        access; the wrapper just ensures the dirs exist at runtime.
+        Tilde-expanded by the shell.
       '';
     };
 

@@ -46,8 +46,8 @@ ai/skills/          # Shared AI agent skills (SKILL.md per directory)
 
 ## Flake Architecture
 
-**Inputs (12):** nixpkgs (25.11), nixpkgs-unstable, home-manager (25.11), sops-nix, nixos-wsl, nix-index-database, NUR,
-mcp-nixos, llm-agents, jail-nix, treefmt-nix, vscode-server. All follow nixpkgs except llm-agents→treefmt-nix.
+**Inputs (11):** nixpkgs (25.11), nixpkgs-unstable, home-manager (25.11), sops-nix, nixos-wsl, nix-index-database, NUR,
+mcp-nixos, llm-agents, treefmt-nix, vscode-server. All follow nixpkgs except llm-agents→treefmt-nix.
 
 **specialArgs matrix:**
 
@@ -97,6 +97,8 @@ mcp-nixos, llm-agents, jail-nix, treefmt-nix, vscode-server. All follow nixpkgs 
 - **ALWAYS** use `--json` flag with ck, update-packages, project-manager tools
 - **ALWAYS** format after editing Nix files (hooks do this automatically)
 - **ALWAYS** wait for user approval before creating GitHub issues
+- **NEVER** re-add jail-nix for OpenCode — use nono (Landlock). jail-nix was removed in #119; see
+  `home-modules/opencode/` for the nono profile.
 - **Conventional Commits enforced** by hooks/commit-msg (50-char subject, 72-char body)
 
 ## Commands
@@ -123,8 +125,8 @@ nix flake check
 - **YubiKey:** SSH (FIDO2), GPG, LUKS unlock via initrd scripts in `hosts/orion/boot-initrd-scripts/`. USB/IP forwarding
   (`services.yubikeyUsbip`) is enabled on both orion and p51.
 - **NFS:** `modules/nfs/fileshare.nix` for private NAS at fileshare.se.
-- **AI Agent Sandboxing:** Copilot CLI uses fence (`code` template, from `llm-agents` input). OpenCode uses jail-nix
-  (bubblewrap + seccomp). Claude uses wrapper scripts.
+- **AI Agent Sandboxing:** Copilot CLI uses fence (`code` template, from `llm-agents` input). OpenCode uses nono
+  (Landlock + seccomp, default-deny egress allowlist — see `home-modules/opencode/`). Claude uses wrapper scripts.
 - **Skill Loading:** `home-modules/lib.nix` provides `readSkillsFrom` — scans directories for skill subdirs.
 - **SSH Config Workaround:** `home-modules/ssh/` copies Nix store symlink to regular file (SSH rejects nobody-owned
   config).
