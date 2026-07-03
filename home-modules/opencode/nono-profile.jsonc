@@ -151,7 +151,18 @@
       "mcp.grep.app", // grep_app MCP server (OMO built-in; remote MCP endpoint)
       "grep.app", // grep.app site (referenced by grep_app; Vercel-challenge-guarded)
       "context7.com", // Context7 documentation MCP tool
-      "*.context7.com" // Context7 CDN / API subdomains
+      "*.context7.com", // Context7 CDN / API subdomains
+
+      // ── Docs / reference sites (webfetch, research) ──────────────────────
+      "ankarhem.dev", // Ankarhem blog (NixOS/deploy-rs reference)
+      "*.ankarhem.dev", // Ankarhem subdomains
+      "omo.dev", // Oh-My-OpenAgent docs (agent-model matching, team mode)
+      "*.omo.dev", // OMO docs subdomains
+      "platform.claude.com", // Anthropic API-credits console (referenced in README)
+      "*.platform.claude.com", // platform.claude.com subdomains
+      "docs.aws.amazon.com", // AWS documentation
+      "anthropic.com", // Anthropic site (docs, model cards)
+      "*.anthropic.com" // Anthropic subdomains (docs.anthropic.com, etc.)
     ]
   },
 
