@@ -61,9 +61,26 @@ The lockfile **must** be generated with that same restricted workspace set, othe
 fail with `ENOTCACHED` for workspace-only deps (for example `@pierre/diffs` when the old lockfile still pins the wrong
 beta version).
 
-The updater now handles this automatically: if the version bump succeeds for the source hash but the `npmDepsHash`
-extraction fails because the vendored lockfile is stale, `update_openchamber` regenerates the lockfile from the new tag
-and retries.
+On every version bump `update_openchamber` runs these steps in order:
+
+1. Bump `version` and fix the source `hash` in `default.nix`.
+1. **Regenerate the vendored lockfile** from the new tag via `regen-openchamber-lockfile.sh` (see below).
+1. **Recompute `npmDepsHash`** with `prefetch-npm-deps` — the exact tool `buildNpmPackage`'s `fetchNpmDeps` uses, so the
+   hash always matches the current lockfile. It's resolved through the flake's own locked `nixpkgs` input, so it needs
+   no flake registry.
+1. Verify the package builds.
+
+`regen-openchamber-lockfile.sh` downloads the tag tarball into a temp dir, applies the same
+`workspaces = ["packages/ui", "packages/web"]` override the Nix build applies, and runs
+`npm install --package-lock-only`. To make that resolution deterministic it:
+
+- deletes any resolution prior the tarball ships (`package-lock.json`/`.npmrc`/`yarn.lock`/`bun.lock*`), so npm can't
+  report "up to date" against a stale lockfile;
+- resolves against a **fresh empty cache** with `--prefer-online` and an explicit registry, so a stale `~/.npm`
+  packument can't pin an old version;
+- **asserts** the regenerated lockfile pins the `@opencode-ai/sdk` version the new tag requires — both in the temp dir
+  and again at the final repo path — and aborts loudly if not, rather than letting a stale lockfile reach the Nix build
+  and fail there with `ENOTCACHED`.
 
 If you need to run the regeneration helper directly, use:
 
