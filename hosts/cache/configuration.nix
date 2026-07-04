@@ -29,7 +29,6 @@
 
   services.openssh.openFirewall = true;
 
-  # TODO(#139): secret + signing keypair land in secrets/cache/secrets.yml
   sops.secrets."nix-cache-priv-key" = {};
 
   services.nix-serve = {
