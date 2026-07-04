@@ -23,3 +23,9 @@ creation_rules:
       - age:
           - *p51
           - *jonatan-yubikey-23839166
+  - path_regex: tofu/.*\.tfstate(\.enc)?$
+    key_groups:
+      - age:
+        - *p51
+        - *orion
+        - *jonatan-yubikey-23839166
