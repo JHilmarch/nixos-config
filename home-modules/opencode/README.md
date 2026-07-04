@@ -219,8 +219,22 @@ The static launch logic lives in [`scripts/opencode-launch.sh`](../../scripts/op
 wrapper so it stays readable and shellcheckable. [`default.nix`](./default.nix) only assembles the dynamic inputs
 (config JSON, profile path, opencode binary, persistent dirs) and exports them as `OC_*` env vars before `exec`-ing the
 script. The script then ensures opencode's runtime dirs exist, locks down the nono session dir (above), syncs Claude Max
-OAuth tokens, pins the TUI loopback `--port`, and execs `nono run` with the profile. See the script header for the full
-input contract.
+OAuth tokens, picks a free TUI loopback `--port` from the granted pool (see below), and execs `nono run` with the
+profile. See the script header for the full input contract.
+
+## Concurrent TUI sessions (loopback port pool)
+
+The TUI's Go frontend talks to its TS backend over a `127.0.0.1` HTTP server, and nono blocks all localhost TCP unless a
+port is explicitly granted (`open_port`). Linux nono has no `:0`/port-range grant, so a **pool** of ports is granted
+(`open_port: [4099, 4100, 4101, 4102, 4103]` in [`nono-profile.jsonc`](./nono-profile.jsonc)) and
+[`opencode-launch.sh`](../../scripts/opencode-launch.sh) probes them at startup (bash `/dev/tcp`), binding the first
+free one. Each concurrent TUI gets a distinct granted port, so up to **5 OpenCode TUI sessions** run at once. A
+user-supplied `--port` and all subcommands pass through untouched. Headless `opencode run` has no loopback split and is
+unaffected either way.
+
+The pool size is set in two places that must stay in sync: the `open_port` list in the profile and `OC_TUI_PORT_BASE` /
+`OC_TUI_PORT_COUNT` in [`default.nix`](./default.nix). To allow more concurrent sessions, add ports to the profile list
+and bump `OC_TUI_PORT_COUNT` to match.
 
 ## Disabled runtime-skills
 

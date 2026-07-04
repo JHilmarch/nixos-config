@@ -245,9 +245,13 @@ so that loopback bypasses the egress proxy into the kernel-level direct-connect 
 `permission denied 127.0.0.1:0` (surfaced as a generic `Effect.tryPromise` error with a misleading "no path denials"
 footer). Headless `opencode run` has no loopback split and is unaffected.
 
-`network.open_port` grants bidirectional localhost TCP on a fixed port (Linux nono has no `:0`/range grant), so the port
-is pinned on both sides: `open_port: [4099]` in the profile and `--port 4099` in the wrapper (TUI path only; subcommands
-and a user `--port` pass through). Verified: the loopback listen succeeds with the grant and fails `EACCES` without it.
+`network.open_port` grants bidirectional localhost TCP on explicitly listed ports (Linux nono has no `:0`/range grant),
+so a **pool** is granted: `open_port: [4099, 4100, 4101, 4102, 4103]` in the profile, with the wrapper picking the first
+free one at runtime (`OC_TUI_PORT_BASE=4099`, `OC_TUI_PORT_COUNT=5` → probed via bash `/dev/tcp` in
+[`opencode-launch.sh`](../../scripts/opencode-launch.sh)). Each concurrent TUI binds a distinct granted port, so up to 5
+TUI sessions coexist; a user `--port` and all subcommands still pass through untouched. Verified: the loopback listen
+succeeds with the grant and fails `EACCES` without it. To raise the concurrent-session ceiling, extend the profile's
+`open_port` list and bump `OC_TUI_PORT_COUNT` in [`default.nix`](./default.nix) to match.
 
 ### Loopback IPC: the hunk daemon session broker
 

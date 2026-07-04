@@ -9,14 +9,17 @@
 # Inputs (exported by the Nix wrapper):
 #   OC_NONO_PROFILE     path to nono-profile.jsonc
 #   OC_BIN              path to the opencode binary
-#   OC_TUI_PORT         loopback port to pin the TUI to (matches profile open_port)
+#   OC_TUI_PORT_BASE    first loopback port in the TUI pool (matches profile open_port)
+#   OC_TUI_PORT_COUNT   number of ports in the pool (base .. base+count-1)
 #   OC_PERSISTENT_DIRS  newline-separated dirs to pre-create ($HOME already expanded)
 #   OC_WAYLAND_CLIPBOARD  "1" to grant the Wayland compositor socket (clipboard);
 #                         empty/unset to skip. See README.md "Clipboard".
 #
 # Behavioural notes (full rationale in home-modules/opencode/README.md):
-#   - The TUI is pinned to a fixed loopback --port; subcommands pass through and a
-#     user-supplied --port is respected.
+#   - The TUI binds a loopback --port picked at runtime from the granted pool, so
+#     several TUI sessions can run at once (Linux nono has no port-range grant, so
+#     each pool port is listed in the profile's open_port). Subcommands pass through
+#     and a user-supplied --port is respected.
 #   - --allow-cwd skips nono's redundant share-cwd prompt (the dir is already
 #     granted by the profile).
 
@@ -54,7 +57,27 @@ if [ "${OC_WAYLAND_CLIPBOARD:-}" = "1" ] &&
   fi
 fi
 
-# Pin the TUI's loopback port; leave subcommands and user --port untouched.
+# Pick the TUI's loopback port from the granted pool; leave subcommands and a
+# user-supplied --port untouched. Linux nono grants each pool port individually
+# (no port-range/:0 grant), so we probe base..base+count-1 for the first one not
+# already bound by another running TUI — this is what lets several TUI sessions
+# coexist. If every pool port is taken we fall back to the base (nono still
+# rejects the double-bind with EACCES, matching the old single-port behaviour).
+pick_free_tui_port() {
+  local base="${OC_TUI_PORT_BASE:-4099}"
+  local count="${OC_TUI_PORT_COUNT:-1}"
+  local port
+  for ((port = base; port < base + count; port++)); do
+    # bash /dev/tcp probe (no extra dep): connect succeeds ⇒ a TUI already
+    # listens ⇒ port taken. fd 3 is scoped to the subshell, so it never leaks.
+    if ! (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; then
+      printf '%s' "$port"
+      return 0
+    fi
+  done
+  printf '%s' "$base"
+}
+
 oc_port_args=()
 case "${1:-}" in
   completion | acp | mcp | attach | run | debug | providers | auth | agent | \
@@ -64,7 +87,7 @@ case "${1:-}" in
   *)
     case " $* " in
       *" --port "* | *" --port="*) : ;;
-      *) oc_port_args=(--port "$OC_TUI_PORT") ;;
+      *) oc_port_args=(--port "$(pick_free_tui_port)") ;;
     esac
     ;;
 esac

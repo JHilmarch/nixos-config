@@ -173,7 +173,8 @@
         # Inputs consumed by opencode-launch.sh (see its header for the contract).
         export OC_NONO_PROFILE="${nonoProfile}"
         export OC_BIN="${lib.getExe opencode-pkg}"
-        export OC_TUI_PORT="4099"
+        export OC_TUI_PORT_BASE="4099"
+        export OC_TUI_PORT_COUNT="5"
         export OC_PERSISTENT_DIRS="${lib.concatStringsSep "\n" persistentDirsExpanded}"
         export OC_WAYLAND_CLIPBOARD="${
           if cfg.enableWaylandClipboard
