@@ -1,5 +1,4 @@
 {callPackage}: rec {
-  openchamber = callPackage ./openchamber {};
   azure-devops-mcp = callPackage ./azure-devops-mcp {};
   codegraph = callPackage ./codegraph {};
   azure-mcp-server = callPackage ./azure-mcp-server {};

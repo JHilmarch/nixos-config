@@ -47,11 +47,6 @@
         owner = username;
         mode = "0400";
       };
-      openchamber_ui_password = {
-        owner = username;
-        mode = "0400";
-        restartUnits = ["openchamber.service"];
-      };
     };
 
     templates = {

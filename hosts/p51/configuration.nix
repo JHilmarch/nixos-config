@@ -29,7 +29,6 @@ in {
     "${self}/modules/systemd/power-profile.nix"
     "${self}/modules/spotify/firewall.nix"
     "${self}/modules/yubikey-usbip/default.nix"
-    "${self}/modules/openchamber/sops.nix"
     "${self}/templates/desktop.nix"
   ];
 
