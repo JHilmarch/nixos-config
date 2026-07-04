@@ -148,3 +148,60 @@ ssh <container>
 sudo nixos-rebuild switch --flake .#<host>
 # host comes up with hostname + static IP 192.168.2.107
 ```
+
+## Destroy / recreate a container from code
+
+A container is disposable: it can be destroyed and rebuilt from this repo alone, because the resource definition is in
+`tofu/` and its OS/services live in `hosts/<name>/`. Destroy one container without touching the others by targeting it:
+
+```fish
+# destroy just the edge container (leave others untouched)
+scripts/tofu-sops.fish destroy -target proxmox_virtual_environment_container.edge
+
+# recreate it, then follow the bootstrap above (start → inject key → nixos-rebuild switch)
+scripts/tofu-sops.fish apply
+```
+
+`apply` re-creates the container from the same template and sizing, leaving it **stopped** (`started = false`); run the
+[bootstrap](#bootstrap-template-container--flake-host) again to converge it back onto its flake host config. The result
+is byte-for-byte the same working host — same hostname, static IP, and services — because every input is code.
+
+The encrypted state round-trips automatically through the wrapper (decrypt → `tofu` → re-encrypt → shred plaintext), so
+after a destroy/recreate cycle commit the updated encrypted state:
+
+```fish
+git add tofu/terraform.tfstate.enc
+git status   # confirm: no plaintext terraform.tfstate / *.backup / secrets staged
+```
+
+## Recovery from a clean checkout
+
+The whole provisioning layer rebuilds from a fresh clone on top of a fresh Proxmox — the encrypted state committed to
+GitHub is the single recovery source. Nothing beyond this repo and your YubiKey/age key is required.
+
+1. **Clone the repo** on a machine with `tofu`, `sops`, and `age` (p51 has them system-wide; elsewhere `nix develop`
+   first) and your age/YubiKey key configured for SOPS.
+
+   ```fish
+   git clone https://github.com/JHilmarch/nixos-config.git && cd nixos-config
+   ```
+
+1. **Register the LXC template** on the fresh Proxmox host under the stable name (see
+   [`../templates/README.md`](../templates/README.md)) so the container resources resolve.
+
+1. **Ensure the Proxmox API token secret** exists for the host you're running from (`secrets/<host>/secrets.yml` with
+   `proxmox_ve_endpoint` + `proxmox_ve_api_token` — see [The Proxmox API token secret](#the-proxmox-api-token-secret)).
+
+1. **Init + apply through the wrapper.** It decrypts the committed state (`terraform.tfstate.enc`) and the credentials,
+   runs `tofu`, and re-encrypts state on exit — so the recovered state is exactly the mirrored one:
+
+   ```fish
+   scripts/tofu-sops.fish init
+   scripts/tofu-sops.fish apply
+   ```
+
+1. **Bootstrap each recreated container** onto its flake host config per the
+   [bootstrap section](#bootstrap-template-container--flake-host).
+
+Because state is version-controlled (encrypted) and mirrored to GitHub, recovery never depends on any machine-local
+file: clone → decrypt (state + creds) via SOPS → `tofu init/apply` → bootstrap.

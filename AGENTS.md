@@ -13,7 +13,9 @@ hosts/              # Per-host configuration.nix + home.nix
 ├── p51/            # Laptop (GNOME, LUKS+FIDO2, YubiKey USB/IP)
 ├── wsl-cab/        # WSL dev env (work identity, Copilot CLI, Azure DevOps)
 ├── iso/            # Minimal installation ISO (no Home Manager)
-└── hl-jump/        # Proxmox LXC jump host (nginx, static IP)
+├── hl-jump/        # Proxmox LXC jump host (nginx, static IP)
+└── cache/          # Proxmox LXC binary cache (nix-serve-ng behind nginx TLS)
+tofu/               # OpenTofu homelab provisioning (Proxmox LXCs) → [README.md]
 modules/            # System-level NixOS modules → [AGENTS.md]
 home-modules/       # Home Manager modules → [AGENTS.md]
 packages/           # Custom packages (pkgs.local.*) → [AGENTS.md]
@@ -41,6 +43,8 @@ ai/skills/          # Shared AI agent skills (SKILL.md per directory)
 - **Update a package version** → `tools/update-packages/` — Fish CLI, per-package .fish files
 - **Add a new user** → `users/<name>.nix` — register in `users/default.nix` attrset
 - **Add a new host** → `hosts/<name>/` — add nixosConfiguration in flake.nix
+- **Provision a homelab LXC** → `tofu/` — OpenTofu creates/sizes Proxmox containers; see `tofu/README.md` for bootstrap,
+  destroy/recreate, and clean-checkout recovery
 - **Change formatting rules** → `treefmt.nix` — alejandra, mdformat, fish_indent, biome
 - **Manage GitHub Projects** → `tools/gh-project-manager/` — Fish CLI with --json output
 
