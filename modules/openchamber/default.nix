@@ -63,6 +63,15 @@ in {
       '';
     };
 
+    workingDirectory = lib.mkOption {
+      type = lib.types.str;
+      default = "%h/code";
+      description = ''
+        Working directory for the opencode server unit, and the default project
+        root for OpenChamber sessions started without an explicit directory.
+      '';
+    };
+
     uiPasswordFile = lib.mkOption {
       type = lib.types.path;
       description = ''
@@ -125,6 +134,8 @@ in {
           # already sources preSetupScripts (SOPS env templates) and configures
           # the jail on every invocation. The opencode package is exported by
           # the home-modules/opencode HM module via programs.opencode.package.
+
+          WorkingDirectory = cfg.workingDirectory;
           ExecStart = "${lib.getExe config.home-manager.users.${username}.programs.opencode.package} serve --port ${toString cfg.openCodePort}";
           Restart = "on-failure";
           RestartSec = 5;
