@@ -103,11 +103,16 @@
     "block": false,
 
     // Loopback IPC ports (nono blocks all localhost TCP unless explicitly granted):
+    //   4095  — headless `opencode serve` HTTP server (services.openchamber
+    //           openCodePort); openchamber.service connects here. Without this
+    //           grant `opencode serve --port 4095` fails its listen() bind and
+    //           opencode aborts with a generic ServeError, crash-looping the
+    //           service (and openchamber with it, via Requires=/PartOf=).
     //   4099  — TUI Go↔TS backend; must match --port in the wrapper.
     //   47657 — hunk daemon session broker (HUNK_MCP_PORT default); lets `hunk
     //           session *` reach the host daemon so hunk.dev reviews are readable.
     // See nono-egress.md "Loopback IPC".
-    "open_port": [4099, 47657],
+    "open_port": [4095, 4099, 47657],
 
     "allow_domain": [
       // ── LLM providers ────────────────────────────────────────────────────
