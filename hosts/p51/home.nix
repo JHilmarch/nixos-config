@@ -27,6 +27,7 @@
     sops # Simple and flexible tool for managing secrets
     age # Modern encryption tool with small explicit keys
     age-plugin-yubikey # YubiKey plugin for age
+    opentofu # Homelab provisioning; run via scripts/tofu-sops.fish
     tree-sitter # A parser generator tool
     alejandra # nix linter
     pkgs.local.mdformat # CommonMark compliant Markdown formatter (with GFM + frontmatter plugins — see .mdformat.toml)
