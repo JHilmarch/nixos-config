@@ -307,6 +307,38 @@
             }
           ];
         };
+
+      nixos-cache = let
+        system = "x86_64-linux";
+        specialArgs = {
+          inherit inputs self;
+          username = "jonatan";
+          # Short hostname drives defaultSopsFile → secrets/cache/secrets.yml
+          # (see templates/server.nix); the flake attribute stays nixos-cache.
+          hostname = "cache";
+          functions = import ./functions {
+            pkgs = import inputs.nixpkgs {inherit system;};
+          };
+        };
+      in
+        inputs.nixpkgs.lib.nixosSystem {
+          specialArgs = specialArgs;
+          modules = [
+            {
+              nixpkgs.hostPlatform.system = system;
+            }
+            ./hosts/cache/configuration.nix
+            inputs.sops-nix.nixosModules.sops
+            inputs.home-manager.nixosModules.home-manager
+            {
+              home-manager.extraSpecialArgs = specialArgs;
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.backupFileExtension = "hm-backup";
+              home-manager.users.${specialArgs.username} = import ./hosts/cache/home.nix;
+            }
+          ];
+        };
     };
   };
 }

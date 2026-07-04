@@ -11,6 +11,7 @@ host; each container's NixOS config (under `hosts/<name>/`) owns its OS, service
 | `provider.tf`  | Configures the `proxmox` provider; reads credentials from the environment. |
 | `variables.tf` | Provisioning inputs — node, datastores, bridge, template, per-host sizing. |
 | `edge.tf`      | The `edge` ingress LXC container resource.                                 |
+| `cache.tf`     | The `cache` LAN Nix binary cache LXC container resource.                   |
 | `.gitignore`   | Keeps plaintext state and the provider cache out of git.                   |
 
 Wrapper: [`scripts/tofu-sops.fish`](../scripts/tofu-sops.fish) — sources credentials and manages encrypted state.

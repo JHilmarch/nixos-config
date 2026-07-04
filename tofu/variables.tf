@@ -55,3 +55,29 @@ variable "edge_disk_size" {
   type        = number
   default     = 8
 }
+
+# --- cache host --------------------------------------------------------------
+
+variable "cache_vm_id" {
+  description = "Proxmox CT id for the cache container."
+  type        = number
+  default     = 108
+}
+
+variable "cache_cores" {
+  description = "CPU cores for the cache container."
+  type        = number
+  default     = 2
+}
+
+variable "cache_memory" {
+  description = "Dedicated RAM (MB) for the cache container."
+  type        = number
+  default     = 2048
+}
+
+variable "cache_disk_size" {
+  description = "Root disk size (GB) for the cache container. Larger than edge — it stores served Nix store artifacts."
+  type        = number
+  default     = 32
+}
