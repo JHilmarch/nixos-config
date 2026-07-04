@@ -88,3 +88,63 @@ ls -la result/   # proxmox-lxc tarball
 
 Register the built tarball as a Proxmox CT template, then reference it by a stable name from the container resource. See
 [`../templates/README.md`](../templates/README.md) for the registration steps and the template name.
+
+## Bootstrap: template container → flake host
+
+`apply` leaves a new container **created but stopped** (`started = false` in the resource). It still runs the generic
+base template and must be converged onto its real flake host config once, by hand. The mechanism documented here is the
+simplest one: SSH into the container and run `nixos-rebuild` from a local checkout of this repo. Remote pushes
+(`nixos-rebuild --target-host`) and deploy-rs/colmena are possible future alternatives, out of scope for now.
+
+The base template ([`../templates/lxc-base.nix`](../templates/lxc-base.nix)) boots with DHCP and runs `sshd` key-only
+(root is `prohibit-password`, password auth off) — but it does **not** bake in an authorized key yet, so step 2 injects
+yours via the Proxmox host. Baking the key into the template is the clean long-term home for this.
+
+1. **Create and start the container.** `apply` creates it stopped; start it from the Proxmox host (CT id `107` =
+   `edge`):
+
+   ```fish
+   scripts/tofu-sops.fish apply
+   ssh root@<proxmox-host> pct start 107
+   ```
+
+1. **Inject your SSH key** (until the template bakes one in):
+
+   ```fish
+   scp ~/.ssh/id_ed25519.pub root@<proxmox-host>:/tmp/operator.pub
+   ssh root@<proxmox-host> pct exec 107 -- mkdir -p -m 700 /root/.ssh
+   ssh root@<proxmox-host> pct push 107 /tmp/operator.pub /root/.ssh/authorized_keys --perms 600
+   ssh root@<proxmox-host> rm /tmp/operator.pub
+   ```
+
+1. **Find the DHCP lease** the template booted with:
+
+   ```fish
+   ssh root@<proxmox-host> pct exec 107 -- ip -4 -br addr show eth0
+   ```
+
+1. **Switch onto the flake host config.** SSH in, clone this repo, rebuild. The template carries `nix` (flakes enabled)
+   and `git` for exactly this:
+
+   ```fish
+   ssh root@<dhcp-addr>
+   git clone https://github.com/JHilmarch/nixos-config.git && cd nixos-config
+   sudo nixos-rebuild switch --flake .#<host>
+   ```
+
+   From here the flake config owns the OS, including static addressing — the DHCP lease is replaced, so reconnect on the
+   static IP. For `edge` the target flake host is the evolved jump host (tracked in #126, not yet in tree); it takes
+   over static IP `192.168.2.107` / gateway `192.168.2.1`, exactly as
+   [`../hosts/hl-jump/configuration.nix`](../hosts/hl-jump/configuration.nix) does today.
+
+1. **Flip `started = true`.** Once converged, resolve the TODO in the container resource (`edge.tf`) so Tofu keeps the
+   container running, re-apply, and commit the encrypted state as usual.
+
+Verify:
+
+```fish
+# after tofu apply of edge:
+ssh <container>
+sudo nixos-rebuild switch --flake .#<host>
+# host comes up with hostname + static IP 192.168.2.107
+```
