@@ -73,7 +73,20 @@
     mkPackages = system: let
       pkgs = mkPkgs system;
     in
-      pkgs.callPackages ./packages {};
+      (pkgs.callPackages ./packages {})
+      // {
+        lxc-template =
+          (inputs.nixpkgs.lib.nixosSystem {
+            modules = [
+              {nixpkgs.hostPlatform.system = system;}
+              ./templates/lxc-base.nix
+            ];
+          })
+          .config
+          .system
+          .build
+          .tarball;
+      };
 
     treefmtEval = forAllSystems (
       system:

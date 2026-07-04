@@ -1,0 +1,27 @@
+# OpenTofu working files — keep plaintext state and provider cache OUT of git.
+#
+# The ONLY state that is committed is the SOPS-encrypted `terraform.tfstate.enc`
+# (see tofu/README.md). Plaintext state is decrypted on demand by the wrapper and
+# must never be tracked.
+
+# Provider plugins / lock working dir
+.terraform/
+.terraform.tfstate.lock.info
+
+# Plaintext state (encrypted counterpart *.enc is committed instead)
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.backup
+
+# Crash logs and plan artifacts
+crash.log
+crash.*.log
+*.tfplan
+
+# Local override files
+*.auto.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
