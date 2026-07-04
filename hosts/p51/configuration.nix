@@ -9,10 +9,14 @@
   self,
   ...
 }: let
-  authorizedSSHKeys = functions.ssh.getGithubKeys {
+  githubSSHKeys = functions.ssh.getGithubKeys {
     username = "JHilmarch";
     sha256 = "1zxj95jlhabgbaxvvhlhwvxlr6xn00ldx6yaz3sdga55wbcnsw34";
   };
+  enclaveSSHKeys = [
+    "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCVtarPAfVh+o/033ryBUWuaTc/cvqJyT5dIzc20f127biiCBhyx0iCSxNMYY6unbnzMocEri9VuGhZIyXRpjMs= iphone-enclave"
+  ];
+  authorizedSSHKeys = githubSSHKeys ++ enclaveSSHKeys;
 in {
   imports = [
     ./hardware.nix
