@@ -313,8 +313,6 @@
         specialArgs = {
           inherit inputs self;
           username = "jonatan";
-          # Short hostname drives defaultSopsFile → secrets/cache/secrets.yml
-          # (see templates/server.nix); the flake attribute stays nixos-cache.
           hostname = "cache";
           functions = import ./functions {
             pkgs = import inputs.nixpkgs {inherit system;};

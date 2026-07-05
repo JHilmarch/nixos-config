@@ -360,8 +360,6 @@ in {
       trusted-users = [username];
       accept-flake-config = true;
       auto-optimise-store = false;
-      # LAN cache + public fallbacks live in modules/nix-cache-client.nix
-      # (imported via templates/common.nix) so they are set once, not per host.
     };
 
     registry = {
