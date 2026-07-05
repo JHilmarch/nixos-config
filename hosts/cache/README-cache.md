@@ -31,6 +31,11 @@ The signing keypair is dedicated to this cache. The private key lives in SOPS (`
 `nix-cache-priv-key`) and is passed to `nix-serve` as its `secretKeyFile`. The public key is trusted on every host. The
 `cloudflare-token` secret in the same file drives the ACME DNS-01 challenge.
 
+The `nix-cache-priv-key` value must be the whole key `nix-store --generate-binary-cache-key` emits — a single line of
+the form `<name>:<base64-secret>` (e.g. `cache.nixos-homelab-1:…`), with **no** trailing newline. Storing only the
+secret half makes `nix store sign` fail with `key is corrupt`; the pre-warm validates this shape and aborts loudly if it
+is wrong. The `<name>` must match the public key in `modules/nix-cache-client.nix`.
+
 The `fileshare.se` zone uses a `_acme-challenge` CNAME, and Cloudflare's authoritative nameservers refuse lego's
 propagation checks. `cache.nix` therefore passes `--dns.propagation-wait 90s` so lego waits a fixed interval and lets
 Let's Encrypt validate the record itself, rather than polling.

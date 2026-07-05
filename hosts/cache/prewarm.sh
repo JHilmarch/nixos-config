@@ -1,5 +1,19 @@
 # flake, key_file and hosts are provided by prewarm.nix.
 
+# Fail fast on a malformed signing key. A key without the "<name>:<secret>"
+# shape makes every `nix store sign` fail with "key is corrupt", so abort with
+# one clear error instead of silently failing to sign every host.
+if [ ! -s "$key_file" ]; then
+  echo "prewarm: signing key $key_file is missing or empty" >&2
+  exit 1
+fi
+key_name=$(cut -d: -f1 < "$key_file")
+key_secret=$(cut -d: -f2- < "$key_file")
+if [ -z "$key_name" ] || [ -z "$key_secret" ] || [ "$key_name" = "$(cat "$key_file")" ]; then
+  echo "prewarm: signing key $key_file is not in <name>:<base64> form" >&2
+  exit 1
+fi
+
 failures=0
 for host in "${hosts[@]}"; do
   echo "prewarm: realising toplevel for $host"
