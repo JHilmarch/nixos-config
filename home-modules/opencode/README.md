@@ -88,18 +88,19 @@ the OMO docs (`agent-model-matching.md`):
    [Per-host model options](#per-host-model-options) for the exact per-mode behavior.
 1. **OpenAI is pay-per-usage and used sparingly** — only Hephaestus (which has no fallback chain) and a few last-resort
    fallback entries. OpenCode Go and OpenAI models are always last resort in premium chains, after both Claude and GLM.
-1. **Utility tier stays on OpenCode Go regardless of preference** — librarian/explore are the highest-volume agents and
-   Haiku would burn the same Claude Max weekly quota Fable/Opus draw from (and anthropic's concurrency cap is 3 vs Go's
-   5). Haiku 4.5 (the newest Haiku) is the first *fallback* instead. The tier is split by workload: librarian gets
-   DeepSeek V4 Flash (1M context for doc/repo digestion), explore gets MiniMax M2.7 (fastest latency for grep-style
-   bursts). This follows the docs' "DeepSeek ≻≻ MiniMax" rule — MiniMax only on grep-style utility, never on
+1. **Utility tier primary follows the host preference for librarian** — when `modelPreference` is `anthropic` or
+   `balanced`, Haiku 4.5 leads and DeepSeek V4 Flash is the first fallback (Claude Max budget permitting). Under `zai`,
+   librarian stays on DeepSeek V4 Flash as primary to preserve the OpenCode Go budget, with Haiku as the first fallback.
+   Explore is unaffected — it always leads with MiniMax M2.7 (fastest latency for grep-style bursts), Haiku as fallback.
+   The workload split still follows the docs' "DeepSeek ≻≻ MiniMax" rule — MiniMax only on grep-style utility, never on
    deep/multi-step agents.
 1. **Visual fallbacks stay inside the Qwen family** — per the docs' "Safe vs Dangerous Overrides": visual-engineering →
    Kimi/GLM is a wrong-reasoning-style override; Qwen substitutes for Gemini (no Google provider is connected, so Qwen
    3.7-plus is the *primary*, Qwen 3.6-plus the fallback, GPT-5.5 the only non-Qwen tail).
 
 Executive summary (shown for `modelPreference = "anthropic"`, `useFable = true`; the Claude/GLM columns swap under
-`zai`, and alternate per agent under `balanced`):
+`zai`, and alternate per agent under `balanced`). The librarian row also swaps under `zai` — DeepSeek becomes the
+primary and Haiku the first fallback:
 
 | Tier              | Primary                          | Next (Claude layer)               | Then (GLM layer) | Tail               |
 | ----------------- | -------------------------------- | --------------------------------- | ---------------- | ------------------ |
@@ -108,7 +109,7 @@ Executive summary (shown for `modelPreference = "anthropic"`, `useFable = true`;
 | Deep / review     | `anthropic/claude-fable-5` (max) | `anthropic/claude-opus-4-8` (max) | `glm-5.2`        | `kimi` → `gpt-5.5` |
 | Workers (junior)  | `anthropic/claude-sonnet-4-6`    | `kimi` (Claude-like)              | `glm-5.2`        | `minimax-m3`       |
 | Visual / artistry | `opencode-go/qwen3.7-plus`       | `opencode-go/qwen3.6-plus`        | —                | `gpt-5.5`          |
-| Librarian         | `opencode-go/deepseek-v4-flash`  | `anthropic/claude-haiku-4-5`      | `glm-5-turbo`    |                    |
+| Librarian         | `anthropic/claude-haiku-4-5`     | `opencode-go/deepseek-v4-flash`   | `glm-5-turbo`    |                    |
 | Explore           | `opencode-go/minimax-m2.7`       | `anthropic/claude-haiku-4-5`      | `glm-5-turbo`    |                    |
 | Hephaestus        | `openai/gpt-5.5`                 | — (single-entry, no fallback)     |                  |                    |
 

@@ -140,10 +140,16 @@
       fallback_models = [claudeOpus kimi];
     };
 
-    librarian = {
-      model = deepseekFlash;
-      fallback_models = [claudeHaiku glmFlash];
-    };
+    librarian =
+      if claudeBeforeGlm 10
+      then {
+        model = claudeHaiku;
+        fallback_models = [deepseekFlash glmFlash];
+      }
+      else {
+        model = deepseekFlash;
+        fallback_models = [claudeHaiku glmFlash];
+      };
     explore = {
       model = minimaxFast;
       fallback_models = [claudeHaiku glmFlash];
