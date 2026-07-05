@@ -9,6 +9,7 @@
 }: {
   imports = [
     ./cache.nix
+    ./prewarm.nix
     "${self}/templates/proxmox-lxc.nix"
   ];
 
