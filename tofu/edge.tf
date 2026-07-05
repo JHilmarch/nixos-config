@@ -2,11 +2,6 @@
 #
 # Tofu creates and sizes the container and attaches its NIC to the Proxmox
 # bridge; the container's OS and addressing come from its NixOS flake config.
-#
-# The shared container shape lives in tofu/modules/lxc/. edge is privileged
-# (matches templates/proxmox-lxc.nix), so it has no features block and ignores
-# features in its lifecycle (the API token cannot manage features on a
-# privileged container — HTTP 403).
 
 module "edge" {
   source = "./modules/lxc"
@@ -27,8 +22,6 @@ module "edge" {
   template_file_id    = var.template_file_id
 }
 
-# Resource moved from the root module into module.edge. State follows the new
-# address with no destroy/recreate cycle.
 moved {
   from = proxmox_virtual_environment_container.edge
   to   = module.edge.proxmox_virtual_environment_container.this

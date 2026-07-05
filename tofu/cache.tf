@@ -4,10 +4,6 @@
 # bridge; the container's OS and addressing come from its NixOS flake config
 # (hosts/cache/, flake host nixos-cache). Larger disk than edge because it
 # stores Nix store artifacts served to the LAN.
-#
-# The shared container shape lives in tofu/modules/lxc/. cache is unprivileged
-# with nesting enabled so systemd boots; the API token manages the nesting
-# feature on unprivileged containers.
 
 module "cache" {
   source = "./modules/lxc"
@@ -29,8 +25,6 @@ module "cache" {
   template_file_id    = var.template_file_id
 }
 
-# Resource moved from the root module into module.cache. State follows the new
-# address with no destroy/recreate cycle.
 moved {
   from = proxmox_virtual_environment_container.cache
   to   = module.cache.proxmox_virtual_environment_container.this
