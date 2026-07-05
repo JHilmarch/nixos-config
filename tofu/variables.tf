@@ -83,7 +83,7 @@ variable "cache_swap" {
 }
 
 variable "cache_disk_size" {
-  description = "Root disk size (GB) for the cache container. Larger than edge — it stores served Nix store artifacts."
+  description = "Root disk size (GB) for the cache container. Holds every host's full closure plus upstream artifacts; a thin LVM volume, so it only consumes what is used."
   type        = number
-  default     = 32
+  default     = 128
 }
