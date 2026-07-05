@@ -4,6 +4,10 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    # Pinned for the LXC template only: 26.05 moved container activation into a
+    # stage-1 initrd, which LXC has none of, so 26.05 images never activate
+    # (nixpkgs#529888). 25.11 still activates in the stage-2 init.
+    nixpkgs-lxc.url = "github:nixos/nixpkgs/nixos-25.11";
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     mcp-nixos.url = "github:utensils/mcp-nixos";
@@ -76,7 +80,7 @@
       (pkgs.callPackages ./packages {})
       // {
         lxc-template =
-          (inputs.nixpkgs.lib.nixosSystem {
+          (inputs.nixpkgs-lxc.lib.nixosSystem {
             modules = [
               {nixpkgs.hostPlatform.system = system;}
               ./templates/lxc-base.nix

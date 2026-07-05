@@ -17,6 +17,9 @@
 #
 # Everything beyond that (services, users, secrets, static IPs) is owned by the
 # per-host NixOS configuration under `hosts/<name>/`.
+#
+# systemd stage-1 is disabled: on 26.05 it moves activation into an initrd,
+# which LXC has none of, so the system never activates (nixpkgs#529888).
 {
   modulesPath,
   pkgs,
@@ -32,11 +35,14 @@
   proxmoxLXC = {
     enable = true;
     manageNetwork = false;
-    privileged = true;
+    privileged = false;
   };
 
   services.fstrim.enable = false;
   documentation.man.enable = false;
+
+  # Required for LXC activation — see the header (nixpkgs#529888).
+  boot.initrd.systemd.enable = lib.mkForce false;
 
   networking.useDHCP = lib.mkDefault true;
 
@@ -57,5 +63,5 @@
     vim
   ];
 
-  system.stateVersion = "26.05";
+  system.stateVersion = "25.11";
 }

@@ -1,4 +1,8 @@
-{modulesPath, ...}: {
+{
+  modulesPath,
+  lib,
+  ...
+}: {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
     ./server.nix
@@ -8,7 +12,7 @@
 
   proxmoxLXC = {
     manageNetwork = true;
-    privileged = true;
+    privileged = lib.mkDefault true;
   };
 
   services.fstrim.enable = false; # Let Proxmox host handle fstrim

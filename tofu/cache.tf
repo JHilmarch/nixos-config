@@ -11,12 +11,14 @@ resource "proxmox_virtual_environment_container" "cache" {
   description = "Homelab LAN Nix binary cache. Managed by OpenTofu; OS owned by hosts/ flake config."
   tags        = ["homelab", "cache"]
 
-  # Match templates/proxmox-lxc.nix (privileged = true).
-  unprivileged = false
+  # Unprivileged + nesting so systemd boots and the token can set nesting.
+  unprivileged = true
 
-  # TODO: flip to true once the container is bootstrapped onto its flake config.
-  # Do not auto-start on apply; it is converged via the bootstrap first.
-  started       = false
+  features {
+    nesting = true
+  }
+
+  started       = true
   start_on_boot = true
 
   cpu {
@@ -43,11 +45,11 @@ resource "proxmox_virtual_environment_container" "cache" {
     type             = "nixos"
   }
 
-  # The container is switched to its flake host config after creation, so Tofu
-  # does not manage the OS beyond first boot.
+  # NixOS owns the OS and hostname; see hosts/cache/README-cache.md.
   lifecycle {
     ignore_changes = [
       operating_system,
+      initialization,
     ]
   }
 }

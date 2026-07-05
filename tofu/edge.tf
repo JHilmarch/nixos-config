@@ -41,11 +41,13 @@ resource "proxmox_virtual_environment_container" "edge" {
     type             = "nixos"
   }
 
-  # The container is switched to its flake host config after creation, so Tofu
-  # does not manage the OS beyond first boot.
+  # NixOS owns the OS/hostname; features stay operator-managed on this
+  # privileged container. See hosts/cache/README-cache.md.
   lifecycle {
     ignore_changes = [
       operating_system,
+      initialization,
+      features,
     ]
   }
 }

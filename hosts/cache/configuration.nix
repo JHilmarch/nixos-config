@@ -30,6 +30,9 @@
 
   services.openssh.openFirewall = true;
 
+  # Unprivileged so the tofu API token can set the nesting feature it needs.
+  proxmoxLXC.privileged = false;
+
   sops.secrets."nix-cache-priv-key" = {};
 
   services.nix-serve = {
