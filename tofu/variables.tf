@@ -65,15 +65,21 @@ variable "cache_vm_id" {
 }
 
 variable "cache_cores" {
-  description = "CPU cores for the cache container."
+  description = "CPU cores for the cache container. All host cores — LXC shares CPU and never reserves it, so nix builds parallelize fully."
   type        = number
-  default     = 2
+  default     = 12
 }
 
 variable "cache_memory" {
-  description = "Dedicated RAM (MB) for the cache container."
+  description = "RAM ceiling (MB) for the cache container. Used only during builds; LXC does not pre-reserve it. Leaves headroom for the host + other LXCs."
   type        = number
-  default     = 2048
+  default     = 40960
+}
+
+variable "cache_swap" {
+  description = "Swap (MB) for the cache container — a spike margin so heavy nix builds are not OOM-killed."
+  type        = number
+  default     = 4096
 }
 
 variable "cache_disk_size" {

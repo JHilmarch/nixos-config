@@ -27,6 +27,7 @@ resource "proxmox_virtual_environment_container" "cache" {
 
   memory {
     dedicated = var.cache_memory
+    swap      = var.cache_swap
   }
 
   disk {
