@@ -11,7 +11,7 @@
     modules.opencode = {
       enableWaylandClipboard = true;
       useFable = true;
-      modelPreference = "zai";
+      modelPreference = "balanced";
       codegraphBin = "${pkgs.local.codegraph}/bin/codegraph";
       preSetupScripts = [
         "${self}/scripts/secrets-sops.sh ${config.sops.templates."agents.env".path}"
