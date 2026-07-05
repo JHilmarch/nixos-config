@@ -2,52 +2,34 @@
 #
 # Tofu creates and sizes the container and attaches its NIC to the Proxmox
 # bridge; the container's OS and addressing come from its NixOS flake config.
+#
+# The shared container shape lives in tofu/modules/lxc/. edge is privileged
+# (matches templates/proxmox-lxc.nix), so it has no features block and ignores
+# features in its lifecycle (the API token cannot manage features on a
+# privileged container — HTTP 403).
 
-resource "proxmox_virtual_environment_container" "edge" {
-  node_name   = var.proxmox_node_name
-  vm_id       = var.edge_vm_id
-  description = "Homelab ingress (edge). Managed by OpenTofu; OS owned by hosts/ flake config."
-  tags        = ["homelab", "edge"]
+module "edge" {
+  source = "./modules/lxc"
 
-  # Match templates/proxmox-lxc.nix (privileged = true).
+  vm_id        = var.edge_vm_id
+  description  = "Homelab ingress (edge). Managed by OpenTofu; OS owned by hosts/ flake config."
+  tags         = ["edge"]
+  cores        = var.edge_cores
+  memory       = var.edge_memory
+  disk_size    = var.edge_disk_size
   unprivileged = false
+  nesting      = false
+  started      = false # TODO: flip to true once bootstrapped onto its flake config.
 
-  # TODO: flip to true once the container is bootstrapped onto its flake config.
-  # Do not auto-start on apply; it is converged via the bootstrap first.
-  started       = false
-  start_on_boot = true
+  proxmox_node_name   = var.proxmox_node_name
+  container_datastore = var.container_datastore
+  network_bridge      = var.network_bridge
+  template_file_id    = var.template_file_id
+}
 
-  cpu {
-    cores = var.edge_cores
-  }
-
-  memory {
-    dedicated = var.edge_memory
-  }
-
-  disk {
-    datastore_id = var.container_datastore
-    size         = var.edge_disk_size
-  }
-
-  # NIC on the bridge only — no static IP here (owned by the NixOS config).
-  network_interface {
-    name   = "eth0"
-    bridge = var.network_bridge
-  }
-
-  operating_system {
-    template_file_id = var.template_file_id
-    type             = "nixos"
-  }
-
-  # NixOS owns the OS/hostname; features stay operator-managed on this
-  # privileged container. See hosts/cache/README-cache.md.
-  lifecycle {
-    ignore_changes = [
-      operating_system,
-      initialization,
-      features,
-    ]
-  }
+# Resource moved from the root module into module.edge. State follows the new
+# address with no destroy/recreate cycle.
+moved {
+  from = proxmox_virtual_environment_container.edge
+  to   = module.edge.proxmox_virtual_environment_container.this
 }
