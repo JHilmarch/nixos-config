@@ -3,7 +3,10 @@
   self,
   ...
 }: {
-  imports = ["${self}/modules/defaults.nix"];
+  imports = [
+    "${self}/modules/defaults.nix"
+    "${self}/modules/nix-cache-client.nix"
+  ];
 
   programs = {
     fish.enable = true;

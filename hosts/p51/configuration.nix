@@ -278,8 +278,8 @@ in {
       trusted-users = [username];
       accept-flake-config = true;
       auto-optimise-store = false;
-      extra-substituters = ["https://cache.numtide.com"];
-      extra-trusted-public-keys = ["niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="];
+      # LAN cache + public fallbacks live in modules/nix-cache-client.nix
+      # (imported via templates/common.nix) so they are set once, not per host.
     };
 
     registry = {
