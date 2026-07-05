@@ -34,8 +34,8 @@
       extraDomainNames = ["*.fileshare.se"];
       email = "cloudflare.wilder179@dralias.com";
       dnsProvider = "cloudflare";
-      dnsResolver = "1.1.1.1:53";
-      dnsPropagationCheck = true;
+      # Fixed wait instead of a propagation poll — see hosts/cache/README-cache.md.
+      extraLegoFlags = ["--dns.propagation-wait" "90s"];
       environmentFile = config.sops.templates."cloudflare.env".path;
     };
   };
