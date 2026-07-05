@@ -19,9 +19,10 @@ for host in "${hosts[@]}"; do
   echo "prewarm: realising toplevel for $host"
   attr="$flake#nixosConfigurations.$host.config.system.build.toplevel"
 
-  if ! out=$(nix build --no-link --print-out-paths "$attr" 2>&1); then
+  # Keep build logs on stderr — merging them into stdout pollutes $out with
+  # progress text that nix store sign then rejects as a bad path.
+  if ! out=$(nix build --no-link --print-out-paths "$attr"); then
     echo "prewarm: FAILED to build $host — skipping" >&2
-    printf '%s\n' "$out" >&2
     failures=$((failures + 1))
     continue
   fi
