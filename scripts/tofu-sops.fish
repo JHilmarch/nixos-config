@@ -76,6 +76,28 @@ end
 set -gx PROXMOX_VE_ENDPOINT "$endpoint"
 set -gx PROXMOX_VE_API_TOKEN "$api_token"
 
+# Derive the Proxmox SSH host from the API endpoint so there's one source of
+# truth for the host address. Used by null_resource remote-exec in storage.tf.
+set -l ssh_host (string replace -r '^https?://' '' -- "$endpoint" | string replace -r '[:/].*$' '' --)
+if test -n "$ssh_host"
+    set -gx TF_VAR_proxmox_ssh_host "$ssh_host"
+else
+    echo "Warning: could not derive proxmox_ssh_host from endpoint '$endpoint'" >&2
+end
+
+# --- ZFS dataset passphrase (optional, used by tofu/storage.tf) -------------
+#
+# Only exported when the key is present, so early provisioning runs (before
+# the encrypted dataset exists) still apply without it.
+
+set -l zfs_passphrase (sops --decrypt --extract '["homelab-zfs-passphrase"]' "$secret_file" 2>/dev/null)
+if test $status -eq 0
+    set -gx TF_VAR_homelab_zfs_passphrase "$zfs_passphrase"
+else
+    echo "Note: 'homelab-zfs-passphrase' not found in $secret_file — skipping export." >&2
+    echo "      Required only once the hdd-zfs/keys dataset exists (see issue #166)." >&2
+end
+
 # --- State: decrypt-on-read ----------------------------------------------
 
 function __cleanup_plaintext_state --inherit-variable state_plain
