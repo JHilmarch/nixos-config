@@ -50,10 +50,15 @@ manual `sops updatekeys` each rebuild.
 To make the key (and the derived age identity) survive recreate, the cache host enables `services.sshHostKeyPersistence`
 ([`modules/ssh-host-key-persistence/`](../../modules/ssh-host-key-persistence/)), which redirects both
 `services.openssh.hostKeys` and `sops.age.sshKeyPaths` to `/persist/ssh/ssh_host_ed25519_key`. `/persist` is a Proxmox
-bind mount, declared in `tofu/cache.tf`, that maps the host path `/hdd-zfs/keys/cache` — a subdirectory of the encrypted
-`hdd-zfs/keys` dataset provisioned in #166 — into the container at `/persist`. The dataset is unlocked at the
-Proxmox-host level during `tofu apply`, so a container rebuild needs no password; each container mounts only its own
-subdirectory, so future containers (forge/runners) cannot read the cache's key.
+**bind mount** of the host path `/hdd-zfs/keys/cache` — a subdirectory of the encrypted `hdd-zfs/keys` dataset
+provisioned in #166. The dataset is unlocked at the Proxmox-host level during `tofu apply`, so a container rebuild needs
+no password; each container mounts only its own subdirectory, so future containers (forge/runners) cannot read the
+cache's key.
+
+Proxmox restricts bind mounts to the `root@pam` user, so the API token Tofu authenticates as cannot declare the mount as
+a native `mount_point` block. The LXC module applies it instead via a `null_resource` that runs `pct set -mpN` over root
+SSH (the `id_ed25519_tofu` key from #166) right after the container is created — see `tofu/modules/lxc/main.tf`.
+`replace_triggered_by` re-runs it on every (re)create, so the mount is re-attached automatically on each rebuild.
 
 ### First-ever bootstrap (once per host lifetime)
 
@@ -77,12 +82,76 @@ To adopt persistence on a cache host that already has a committed recipient, cop
 before the first rebuild onto the new config, so the committed recipient never goes stale:
 
 ```fish
-ssh root@<proxmox-host> pct push <ct-id> /etc/ssh/ssh_host_ed25519_key /hdd-zfs/keys/cache/ssh/ssh_host_ed25519_key --perms 600
-ssh root@<proxmox-host> pct push <ct-id> /etc/ssh/ssh_host_ed25519_key.pub /hdd-zfs/keys/cache/ssh/ssh_host_ed25519_key.pub --perms 644
+ssh root@<proxmox-host> 'mkdir -p /hdd-zfs/keys/cache/ssh'
+ssh root@<proxmox-host> pct pull <ct-id> /etc/ssh/ssh_host_ed25519_key     /hdd-zfs/keys/cache/ssh/ssh_host_ed25519_key
+ssh root@<proxmox-host> pct pull <ct-id> /etc/ssh/ssh_host_ed25519_key.pub /hdd-zfs/keys/cache/ssh/ssh_host_ed25519_key.pub
 ```
 
-(`/persist` is `/hdd-zfs/keys/cache` on the host; the `ssh/` subdirectory must exist first.) Then rebuild — no
-re-keying, no `sops updatekeys`.
+**Then chown to the container-root mapping.** `pct pull` writes as host-root (uid 0), which maps to `nobody` (65534)
+inside the **unprivileged** container — sshd and sops run as container-root (host uid 100000 by Proxmox's default
+subuid) and cannot read a `nobody`-owned 600 file. Chown to `100000:100000` on the host so the files appear as
+`root:root` in-container:
+
+```fish
+ssh root@<proxmox-host> chown -R 100000:100000 /hdd-zfs/keys/cache/ssh
+```
+
+(The first-ever bootstrap path — letting sshd generate the key into `/persist/ssh/` — does not hit this: sshd writes as
+container-root, the correct mapped uid already.) Then rebuild per
+[Rebuilding the cache host](#rebuilding-the-cache-host) — no re-keying, no `sops updatekeys`.
+
+## Rebuilding the cache host
+
+After any `tofu destroy`/`apply` of the cache container (or a fresh provision), converge it back onto its flake host
+config. Tofu creates the container **on its static IP `192.168.2.108`** (`ipv4_address` in `tofu/cache.tf`), so there is
+no DHCP-lease hunt — the container is reachable immediately after `apply`.
+
+1. **Apply** — creates CT 108 on the static IP and the `null_resource` attaches the `/persist` bind mount over root SSH:
+
+   ```fish
+   fish scripts/tofu-sops.fish apply
+   ```
+
+1. **Inject the tofu SSH pubkey** into the container (a FIDO2/YubiKey key does not work with `nix-copy-closure`'s
+   non-interactive SSH; the non-FIDO2 `id_ed25519_tofu` key from #166 does). Pipe it over SSH to Proxmox, then
+   `pct push`:
+
+   ```fish
+   cat ~/.ssh/id_ed25519_tofu.pub | ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_sk_<yubikey-serial> root@<proxmox-host> \
+     'cat > /tmp/operator.pub && pct exec 108 -- /run/current-system/sw/bin/mkdir -p -m 700 /root/.ssh && pct push 108 /tmp/operator.pub /root/.ssh/authorized_keys --perms 600 && rm /tmp/operator.pub'
+   ```
+
+1. **Rebuild** from a host with the flake checked out (e.g. p51). The LAN cache is the container being rebuilt, so it is
+   down — override the substituters to skip it and pull straight from the public caches:
+
+   ```fish
+   NIX_SSHOPTS="-o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu" \
+     nixos-rebuild switch --flake .#nixos-cache --target-host root@192.168.2.108 \
+     --option substituters "https://cache.numtide.com https://cache.nixos.org"
+   ```
+
+1. **Reload nginx** if it started before ACME finished issuing the cert (a known bootstrap race; the cert exists on disk
+   but nginx serves the fallback self-signed one until reloaded):
+
+   ```fish
+   ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.108 systemctl reload nginx
+   ```
+
+1. **Verify** end-to-end over TLS:
+
+   ```fish
+   curl -fsS https://cache.fileshare.se/nix-cache-info
+   # → StoreDir: /nix/store
+   #   WantMassQuery: 1
+   #   Priority: 30
+   ```
+
+No `sops updatekeys` at any step — the persisted SSH host key keeps the committed `.sops.yaml` recipient valid across
+destroy/recreate. Commit the refreshed tofu state after the apply:
+
+```fish
+git add tofu/terraform.tfstate.enc
+```
 
 ## Provisioning
 

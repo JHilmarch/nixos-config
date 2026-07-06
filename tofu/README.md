@@ -156,10 +156,13 @@ the dataset exists) the wrapper prints a note and skips the export — apply sti
 1. **`null_resource.zfs_keys_unlock`** SSHes into the Proxmox node and runs `zfs load-key` + `zfs mount` with
    idempotency guards. On first apply the dataset is already unlocked + mounted (the operator just created it), so the
    guards skip both steps.
-1. **Container `mount_point` blocks** bind-mount each container's per-host `hdd-zfs/keys/<host>/` subdirectory into the
-   container at `/persist` (see [Per-container key persistence mount](#per-container-key-persistence-mount)). The
-   dataset is already unlocked host-wide, so a destroy/recreate needs no password — the persisted SSH host key is
-   remounted and the committed `.sops.yaml` recipient stays valid.
+1. Each container with an `ipv4_address` boots **directly on its static IP** — no DHCP-lease hunt during bootstrap. The
+   `initialization` block is in `lifecycle.ignore_changes`, so NixOS owns networking from the first `switch` onward; the
+   IP is applied once at create.
+1. **`null_resource.bind_mounts`** (per container with `mount_points`) attaches the per-host `hdd-zfs/keys/<host>/` bind
+   mount over root SSH (see [Per-container key persistence mount](#per-container-key-persistence-mount)). The dataset is
+   already unlocked host-wide, so a destroy/recreate needs no password — the persisted SSH host key is remounted and the
+   committed `.sops.yaml` recipient stays valid.
 
 ### Reboot-relock
 
@@ -194,23 +197,26 @@ module "cache" {
 }
 ```
 
-The `volume` for a bind mount is the **absolute host path** — not the `<storage>:<size>` form used for storage-backed
-volumes, and no `size` argument is set. The NixOS side (`services.sshHostKeyPersistence.enable` in
+**Bind mounts are applied via root SSH, not as a native `mount_point` block.** Proxmox restricts bind mounts to the
+`root@pam` user — the `root@pam!tofu` API token the provider authenticates as is rejected with HTTP 403
+(`mount point type bind is only allowed for root@pam`). The module therefore emits a `null_resource.bind_mounts` that
+SSHes into the Proxmox node as `root@pam` (the `id_ed25519_tofu` key from #166) and runs `pct set -mpN`.
+`replace_triggered_by` re-runs it whenever the container is (re)created, so the mount is re-attached automatically on
+each rebuild — the underlying host paths (encrypted-dataset subdirectories) survive recreate, so the keys persist.
+Storage-backed Proxmox volumes were ruled out: they are destroyed together with the container, defeating the persistence
+goal.
+
+The NixOS side (`services.sshHostKeyPersistence.enable` in
 [`hosts/cache/configuration.nix`](../hosts/cache/configuration.nix), backed by
 [`modules/ssh-host-key-persistence/`](../modules/ssh-host-key-persistence/)) points `services.openssh.hostKeys` and
 `sops.age.sshKeyPaths` at `/persist/ssh/ssh_host_ed25519_key`, so the key — and the derived age identity — lives on the
 encrypted dataset and survives recreate with no `sops updatekeys`. See
-[`hosts/cache/README-cache.md`](../hosts/cache/README-cache.md) for the first-ever bootstrap and live-host migration
-procedures.
+[`hosts/cache/README-cache.md`](../hosts/cache/README-cache.md) for the first-ever bootstrap, live-host migration, and
+the full [rebuild procedure](../hosts/cache/README-cache.md#rebuilding-the-cache-host).
 
-Per-host isolation is preserved: each container's `mount_point` targets only its own `hdd-zfs/keys/<host>/`
+Per-host isolation is preserved: each container's `mount_points` targets only its own `hdd-zfs/keys/<host>/`
 subdirectory, so the cache container cannot read a future forge container's key. Containers that don't need persistence
-(edge) simply omit `mount_points` and get no block.
-
-> **Bind-mount auth.** Bind-mounting a host path is a privileged Proxmox operation. The `root@pam!tofu` API token
-> carries `VM.Config.Disk`, which covers container mount configuration; if a future Proxmox build tightens this to
-> require the full `root@pam` user, perform the bind mount as the one-time operator step instead and add `mount_point`
-> to the container resource's `lifecycle.ignore_changes`.
+(edge) simply omit `mount_points` and get no `null_resource`.
 
 ## Bootstrap: template container → flake host
 
