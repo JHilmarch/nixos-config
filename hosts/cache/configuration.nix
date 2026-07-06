@@ -10,6 +10,7 @@
   imports = [
     ./cache.nix
     ./prewarm.nix
+    ./gc.nix
     "${self}/modules/acme-wildcard/default.nix"
     "${self}/templates/proxmox-lxc.nix"
   ];
