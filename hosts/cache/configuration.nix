@@ -12,6 +12,7 @@
     ./prewarm.nix
     ./gc.nix
     "${self}/modules/acme-wildcard/default.nix"
+    "${self}/modules/ssh-host-key-persistence/default.nix"
     "${self}/templates/proxmox-lxc.nix"
   ];
 
@@ -42,6 +43,8 @@
 
   # Unprivileged so the tofu API token can set the nesting feature it needs.
   proxmoxLXC.privileged = false;
+
+  services.sshHostKeyPersistence.enable = true;
 
   sops.secrets."nix-cache-priv-key" = {};
 

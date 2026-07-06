@@ -46,6 +46,14 @@ resource "proxmox_virtual_environment_container" "this" {
     size         = var.disk_size
   }
 
+  dynamic "mount_point" {
+    for_each = var.mount_points
+    content {
+      volume = mount_point.value.volume
+      path   = mount_point.value.path
+    }
+  }
+
   # NIC on the bridge only — no static IP here (owned by the NixOS config).
   network_interface {
     name   = "eth0"

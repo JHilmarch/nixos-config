@@ -23,6 +23,13 @@ module "cache" {
   container_datastore = var.container_datastore
   network_bridge      = var.network_bridge
   template_file_id    = var.template_file_id
+
+  mount_points = [
+    {
+      volume = "/hdd-zfs/keys/cache"
+      path   = "/persist"
+    }
+  ]
 }
 
 moved {

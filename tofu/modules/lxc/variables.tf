@@ -77,3 +77,19 @@ variable "template_file_id" {
   description = "Volume id of the NixOS LXC template Tofu boots containers from."
   type        = string
 }
+
+variable "mount_points" {
+  description = <<-EOT
+    Optional host bind mounts to attach to the container. Each entry maps a host
+    path (volume) to an in-container path. The volume must be an absolute host
+    path for a bind mount (e.g. "/hdd-zfs/keys/cache"), not a storage-backed
+    volume id. Bind mounts require root@pam-level trust on the Proxmox API
+    token; the root@pam!tofu token with VM.Config.Disk satisfies this.
+    Default: no mount points (e.g. the edge container mounts nothing).
+  EOT
+  type = list(object({
+    volume = string
+    path   = string
+  }))
+  default = []
+}
