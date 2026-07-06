@@ -46,14 +46,6 @@ resource "proxmox_virtual_environment_container" "this" {
     size         = var.disk_size
   }
 
-  dynamic "mount_point" {
-    for_each = var.mount_points
-    content {
-      volume = mount_point.value.volume
-      path   = mount_point.value.path
-    }
-  }
-
   # NIC on the bridge only — no static IP here (owned by the NixOS config).
   network_interface {
     name   = "eth0"
@@ -75,5 +67,50 @@ resource "proxmox_virtual_environment_container" "this" {
       initialization,
       features,
     ]
+  }
+}
+
+# Bind mounts (var.mount_points) are applied here, not as a native mount_point
+# block above: Proxmox restricts bind mounts to the root@pam user, so the API
+# token the provider authenticates as cannot create them. Instead, SSH in as
+# root@pam (the same id_ed25519_tofu key used by null_resource.zfs_keys_unlock
+# in storage.tf) and run `pct set -mpN`. replace_triggered_by re-runs this
+# whenever the container is (re)created, so a destroy/recreate cycle re-adds
+# the mounts automatically — the underlying host paths (encrypted dataset
+# subdirectories) survive recreate, so the keys persist.
+resource "null_resource" "bind_mounts" {
+  count = length(var.mount_points) > 0 ? 1 : 0
+
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.this]
+  }
+
+  connection {
+    type        = "ssh"
+    user        = "root"
+    host        = var.proxmox_ssh_host
+    private_key = file(pathexpand(var.proxmox_ssh_private_key_path))
+    timeout     = "2m"
+  }
+
+  provisioner "remote-exec" {
+    inline = concat(
+      [
+        "ctid=${proxmox_virtual_environment_container.this.id}",
+        # Idempotent guard: skip when the first declared mount is already
+        # configured. Bind mounts added to a running container only activate
+        # on next start, so stop + start bracket the pct set run.
+        "pct config \"$ctid\" | grep -q 'mp=${var.mount_points[0].path}' || {",
+        "  pct stop \"$ctid\"",
+      ],
+      [
+        for i, mp in var.mount_points :
+        "  pct set \"$ctid\" -mp${i} ${mp.volume},mp=${mp.path}"
+      ],
+      [
+        "  pct start \"$ctid\"",
+        "}",
+      ]
+    )
   }
 }

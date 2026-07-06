@@ -81,15 +81,26 @@ variable "template_file_id" {
 variable "mount_points" {
   description = <<-EOT
     Optional host bind mounts to attach to the container. Each entry maps a host
-    path (volume) to an in-container path. The volume must be an absolute host
-    path for a bind mount (e.g. "/hdd-zfs/keys/cache"), not a storage-backed
-    volume id. Bind mounts require root@pam-level trust on the Proxmox API
-    token; the root@pam!tofu token with VM.Config.Disk satisfies this.
-    Default: no mount points (e.g. the edge container mounts nothing).
+    path (volume) to an in-container path. Bind mounts require root@pam auth,
+    which the Proxmox API token cannot provide, so the module applies them via
+    `pct set -mp` over root SSH (see proxmox_ssh_host / proxmox_ssh_private_key
+    _path) rather than as a native mount_point block. Default: no mount points.
   EOT
   type = list(object({
     volume = string
     path   = string
   }))
   default = []
+}
+
+variable "proxmox_ssh_host" {
+  description = "Proxmox node address for the root SSH session that applies bind mounts. Required when mount_points is non-empty; unused otherwise."
+  type        = string
+  default     = ""
+}
+
+variable "proxmox_ssh_private_key_path" {
+  description = "Path to the root SSH private key (on the Tofu runner) used to apply bind mounts. Required when mount_points is non-empty; unused otherwise."
+  type        = string
+  default     = ""
 }

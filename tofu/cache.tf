@@ -30,6 +30,8 @@ module "cache" {
       path   = "/persist"
     }
   ]
+  proxmox_ssh_host             = var.proxmox_ssh_host
+  proxmox_ssh_private_key_path = var.proxmox_ssh_private_key_path
 }
 
 moved {
