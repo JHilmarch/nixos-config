@@ -14,6 +14,8 @@ modules/
 │   └── fileshare.nix     # Concrete config for home NAS (fileshare.local)
 ├── spotify/
 │   └── firewall.nix      # services.spotifyFirewall.enable — TCP/UDP 5353, 57621
+├── ssh-host-key-persistence/
+│   └── default.nix       # services.sshHostKeyPersistence.enable — persists SSH host ed25519 key on /persist (survives LXC destroy/recreate)
 ├── yubikey-usbip/
 │   └── default.nix       # services.yubikeyUsbip.enable — usbusers group, udev hidraw rule, usbip + wrapped scripts (from scripts/yubikey-usbip/)
 └── systemd/

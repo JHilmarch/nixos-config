@@ -156,6 +156,10 @@ the dataset exists) the wrapper prints a note and skips the export — apply sti
 1. **`null_resource.zfs_keys_unlock`** SSHes into the Proxmox node and runs `zfs load-key` + `zfs mount` with
    idempotency guards. On first apply the dataset is already unlocked + mounted (the operator just created it), so the
    guards skip both steps.
+1. **Container `mount_point` blocks** bind-mount each container's per-host `hdd-zfs/keys/<host>/` subdirectory into the
+   container at `/persist` (see [Per-container key persistence mount](#per-container-key-persistence-mount)). The
+   dataset is already unlocked host-wide, so a destroy/recreate needs no password — the persisted SSH host key is
+   remounted and the committed `.sops.yaml` recipient stays valid.
 
 ### Reboot-relock
 
@@ -169,6 +173,44 @@ sops -d --extract '["homelab-zfs-passphrase"]' secrets/<runner>/secrets.yml | \
 
 Mount the parent before its children — each child mounts under the parent's path. Add another
 `&& zfs mount hdd-zfs/keys/<host>` clause when new per-host subdirectories come online.
+
+### Per-container key persistence mount
+
+Each container that needs to survive destroy/recreate with its sops-nix age identity intact bind-mounts its own per-host
+subdirectory of the encrypted dataset into the container at `/persist`. The shared LXC module (`modules/lxc/main.tf`)
+exposes an optional `mount_points` variable; a container enables persistence by passing one entry mapping the host path
+to `/persist`:
+
+```hcl
+module "cache" {
+  source = "./modules/lxc"
+  # ...
+  mount_points = [
+    {
+      volume = "/hdd-zfs/keys/cache"   # host path on the unlocked dataset
+      path   = "/persist"              # in-container mount point
+    }
+  ]
+}
+```
+
+The `volume` for a bind mount is the **absolute host path** — not the `<storage>:<size>` form used for storage-backed
+volumes, and no `size` argument is set. The NixOS side (`services.sshHostKeyPersistence.enable` in
+[`hosts/cache/configuration.nix`](../hosts/cache/configuration.nix), backed by
+[`modules/ssh-host-key-persistence/`](../modules/ssh-host-key-persistence/)) points `services.openssh.hostKeys` and
+`sops.age.sshKeyPaths` at `/persist/ssh/ssh_host_ed25519_key`, so the key — and the derived age identity — lives on the
+encrypted dataset and survives recreate with no `sops updatekeys`. See
+[`hosts/cache/README-cache.md`](../hosts/cache/README-cache.md) for the first-ever bootstrap and live-host migration
+procedures.
+
+Per-host isolation is preserved: each container's `mount_point` targets only its own `hdd-zfs/keys/<host>/`
+subdirectory, so the cache container cannot read a future forge container's key. Containers that don't need persistence
+(edge) simply omit `mount_points` and get no block.
+
+> **Bind-mount auth.** Bind-mounting a host path is a privileged Proxmox operation. The `root@pam!tofu` API token
+> carries `VM.Config.Disk`, which covers container mount configuration; if a future Proxmox build tightens this to
+> require the full `root@pam` user, perform the bind mount as the one-time operator step instead and add `mount_point`
+> to the container resource's `lifecycle.ignore_changes`.
 
 ## Bootstrap: template container → flake host
 
