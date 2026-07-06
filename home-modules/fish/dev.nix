@@ -4,6 +4,8 @@
   self,
   ...
 }: {
+  home.packages = [pkgs.grc];
+
   programs.fish = {
     enable = true;
     interactiveShellInit = builtins.readFile "${self}/home-modules/fish/dev-shell-init.fish";
