@@ -12,6 +12,7 @@ host; each container's NixOS config (under `hosts/<name>/`) owns its OS, service
 | `variables.tf` | Provisioning inputs — node, datastores, bridge, template, per-host sizing. |
 | `edge.tf`      | The `edge` ingress LXC container resource.                                 |
 | `cache.tf`     | The `cache` LAN Nix binary cache LXC container resource.                   |
+| `storage.tf`   | ZFS pool registration + encrypted-dataset unlock (#166).                   |
 | `.gitignore`   | Keeps plaintext state and the provider cache out of git.                   |
 
 Wrapper: [`scripts/tofu-sops.fish`](../scripts/tofu-sops.fish) — sources credentials and manages encrypted state.
@@ -41,6 +42,24 @@ proxmox_ve_api_token: "root@pam!tofu=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 The `bpg/proxmox` provider reads `PROXMOX_VE_ENDPOINT` and `PROXMOX_VE_API_TOKEN` natively; the wrapper exports exactly
 those from the decrypted secret.
+
+## Proxmox API token permissions
+
+The API token authenticates via a Proxmox role (`TerraformProvision`) scoped to exactly the privileges Tofu needs. On a
+fresh Proxmox host, recreate the role and assign it to the token's group:
+
+```bash
+pveum role add TerraformProvision -privs \
+  "VM.Allocate,VM.Audit,VM.Config.CPU,VM.Config.Memory,VM.Config.Disk,VM.Config.Network,VM.Config.Options,VM.Config.HWType,Datastore.Allocate,Datastore.Audit,Datastore.AllocateSpace,Sys.Audit"
+```
+
+| Privilege                                          | Used for                                       |
+| -------------------------------------------------- | ---------------------------------------------- |
+| `VM.Allocate`, `VM.Audit`                          | Create, read, destroy LXC containers           |
+| `VM.Config.CPU/Memory/Disk/Network/Options/HWType` | Configure container resources                  |
+| `Datastore.Allocate`                               | Register the `hdd-zfs` pool as Proxmox storage |
+| `Datastore.AllocateSpace`, `Datastore.Audit`       | Allocate and read container disk volumes       |
+| `Sys.Audit`                                        | Read node metadata for provider node discovery |
 
 ## Usage
 
@@ -89,6 +108,67 @@ ls -la result/   # proxmox-lxc tarball
 
 Register the built tarball as a Proxmox CT template, then reference it by a stable name from the container resource. See
 [`../templates/README.md`](../templates/README.md) for the registration steps and the template name.
+
+## ZFS pool + encrypted dataset
+
+A ZFS mirror of the two 14.6 TB HDDs on the Proxmox host provides bulk storage and an encrypted dataset for per-host key
+material. Each subdirectory under the encrypted dataset mounts exclusively into its own container.
+
+### Operator steps (one-time on the Proxmox host)
+
+The `bpg/proxmox` provider can register an existing pool as Proxmox storage but **cannot** create one from disks. The
+pool itself is a one-time operator step, like the LXC template upload. Run on the Proxmox host:
+
+```bash
+ssh root@<proxmox-host>
+
+# Verify the two HDDs are present and empty.
+lsblk -o NAME,SIZE,TYPE,MOUNTPOINT /dev/sda /dev/sdb
+wipefs /dev/sda /dev/sdb        # should print nothing
+
+# Mirror pool + encrypted dataset (prompts for passphrase — store it in SOPS, see below).
+zpool create -o ashift=12 hdd-zfs mirror sda sdb
+zfs create -o encryption=on -o keyformat=passphrase -o keylocation=prompt \
+  -o mountpoint=/hdd-zfs/keys hdd-zfs/keys
+
+# Per-host subdirectories — each mounted into its own container only.
+zfs create hdd-zfs/keys/cache
+```
+
+### Passphrase in SOPS
+
+Add the passphrase alongside the existing Proxmox API credentials in `secrets/<runner>/secrets.yml`:
+
+```yaml
+proxmox_ve_endpoint:    "https://<proxmox-host>:8006/"
+proxmox_ve_api_token:   "root@pam!tofu=<uuid>"
+homelab-zfs-passphrase: "<openssl-rand-base64-32>"
+```
+
+`scripts/tofu-sops.fish` exports it as `TF_VAR_homelab_zfs_passphrase` on every run (the SOPS key uses hyphens, the TF
+variable uses underscores because `TF_VAR_*` names must be shell-safe). If the key is absent (early provisioning, before
+the dataset exists) the wrapper prints a note and skips the export — apply still works for resources that don't need it.
+
+### What `tofu apply` does
+
+1. **`proxmox_storage_zfspool.hdd_zfs`** registers the pool as Proxmox storage so container `disk`/`mount_point` blocks
+   can reference `datastore_id = "hdd-zfs"`.
+1. **`null_resource.zfs_keys_unlock`** SSHes into the Proxmox node and runs `zfs load-key` + `zfs mount` with
+   idempotency guards. On first apply the dataset is already unlocked + mounted (the operator just created it), so the
+   guards skip both steps.
+
+### Reboot-relock
+
+After a Proxmox host reboot the encrypted dataset re-locks. Unlock it manually from the Tofu runner using the SOPS-held
+password:
+
+```fish
+sops -d --extract '["homelab-zfs-passphrase"]' secrets/<runner>/secrets.yml | \
+  ssh root@<proxmox-host> 'zfs load-key hdd-zfs/keys && zfs mount hdd-zfs/keys && zfs mount hdd-zfs/keys/cache && zfs mount hdd-zfs/keys/forge'
+```
+
+Mount the parent before its children — each child mounts under the parent's path. Add another
+`&& zfs mount hdd-zfs/keys/<host>` clause when new per-host subdirectories come online.
 
 ## Bootstrap: template container → flake host
 
@@ -189,6 +269,10 @@ GitHub is the single recovery source. Nothing beyond this repo and your YubiKey/
 
 1. **Register the LXC template** on the fresh Proxmox host under the stable name (see
    [`../templates/README.md`](../templates/README.md)) so the container resources resolve.
+
+1. **Provision the ZFS pool + encrypted dataset** per [ZFS pool + encrypted dataset](#zfs-pool--encrypted-dataset) —
+   same one-time operator step on the new Proxmox host, and add `homelab-zfs-passphrase` to
+   `secrets/<runner>/secrets.yml`.
 
 1. **Ensure the Proxmox API token secret** exists for the host you're running from (`secrets/<host>/secrets.yml` with
    `proxmox_ve_endpoint` + `proxmox_ve_api_token` — see [The Proxmox API token secret](#the-proxmox-api-token-secret)).
