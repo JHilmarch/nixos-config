@@ -24,6 +24,9 @@ module "cache" {
   network_bridge      = var.network_bridge
   template_file_id    = var.template_file_id
 
+  ipv4_address = "192.168.2.108/24"
+  ipv4_gateway = "192.168.2.1"
+
   mount_points = [
     {
       volume = "/hdd-zfs/keys/cache"

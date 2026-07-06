@@ -104,3 +104,22 @@ variable "proxmox_ssh_private_key_path" {
   type        = string
   default     = ""
 }
+
+variable "ipv4_address" {
+  description = <<-EOT
+    Static IPv4 (CIDR, e.g. "192.168.2.108/24") applied at create time so the
+    container boots reachable on its final address — avoids a DHCP-lease hunt
+    during bootstrap. Empty (default) = DHCP (the template default). NixOS owns
+    networking from the first switch; this only bootstraps the lease. The
+    initialization block is in lifecycle.ignore_changes, so the value is
+    applied once at create and not reconciled afterward.
+  EOT
+  type    = string
+  default = ""
+}
+
+variable "ipv4_gateway" {
+  description = "IPv4 gateway for ipv4_address. Required when ipv4_address is set."
+  type    = string
+  default = ""
+}

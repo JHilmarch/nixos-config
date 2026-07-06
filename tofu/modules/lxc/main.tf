@@ -46,7 +46,18 @@ resource "proxmox_virtual_environment_container" "this" {
     size         = var.disk_size
   }
 
-  # NIC on the bridge only — no static IP here (owned by the NixOS config).
+  dynamic "initialization" {
+    for_each = var.ipv4_address != "" ? [1] : []
+    content {
+      ip_config {
+        ipv4 {
+          address = var.ipv4_address
+          gateway = var.ipv4_gateway
+        }
+      }
+    }
+  }
+
   network_interface {
     name   = "eth0"
     bridge = var.network_bridge
