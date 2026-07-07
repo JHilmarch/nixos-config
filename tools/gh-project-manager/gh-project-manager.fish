@@ -80,15 +80,41 @@ function resolve_owner_type
     echo "$_OWNER_TYPE"
 end
 
+# Prepend OWNER/ to a bare repo name. `gh` requires OWNER/REPO for every --repo flag.
+function normalize_repo
+    set -l repo $argv[1]
+    if string match -q '*/*' -- "$repo"
+        echo "$repo"
+        return
+    end
+    if test -z "$OWNER"
+        die "Repository '$repo' needs an owner prefix and no --owner is set. Pass 'OWNER/REPO' or use --owner."
+    end
+    echo "$OWNER/$repo"
+end
+
+# Ensure a label exists in the repo, creating it if needed.
 function ensure_label
     set -l repo $argv[1]
     set -l label $argv[2]
-    set -l exists ($GH_CLI label list --repo "$repo" --json name --jq ".[] | select(.name == \"$label\") | .name" 2>/dev/null)
-    if test -z "$exists"
-        $GH_CLI label create "$label" --repo "$repo" >/dev/null 2>&1
-        or die "Failed to create label '$label' in $repo"
+
+    set -l create_out ($GH_CLI label create "$label" --repo "$repo" 2>&1)
+    if test $status -eq 0
         log_info "Created label '$label' in $repo"
+        return 0
     end
+
+    if test -n "$create_out"
+        and string match -q '*already exists*' -- $create_out
+        return 0
+    end
+    set -l exists ($GH_CLI label list --repo "$repo" --json name \
+        --jq ".[] | select(.name == \"$label\") | .name" 2>/dev/null)
+    if test "$exists" = "$label"
+        return 0
+    end
+
+    die "Failed to create label '$label' in $repo: $create_out"
 end
 # ── Project operations ────────────────────────────────────────────────────────
 
@@ -737,7 +763,7 @@ end
 # ── Story & task creation ─────────────────────────────────────────────────────
 
 function create_labeled_issue
-    set -l repo $argv[1]
+    set -l repo (normalize_repo $argv[1])
     set -l title $argv[2]
     set -l default_label $argv[3]
     set -l flag_start $argv[4]
@@ -803,18 +829,20 @@ function link_sub_issue
     echo "$linked"
 end
 
+# Create a story issue. Forwards --label flags (if any) to create_labeled_issue via flag_start=5.
 function cmd_create_story
-    set -l result (create_labeled_issue $argv[1] $argv[2] story 3)
+    set -l result (create_labeled_issue $argv[1] $argv[2] story 5 $argv[3..])
     set -l issue_number (echo "$result" | jq -r '.number')
     log_success "Created story #$issue_number: $argv[2]"
     echo "$result" | jq '{number, node_id, url}'
 end
 
+# Create a task sub-issue linked to a parent. Forwards --label flags (if any) via flag_start=5.
 function cmd_create_task
     set -l repo $argv[1]
     set -l title $argv[2]
     set -l parent_node_id $argv[3]
-    set -l result (create_labeled_issue "$repo" "$title" task 4)
+    set -l result (create_labeled_issue "$repo" "$title" task 5 $argv[4..])
 
     set -l task_info (echo "$result" | jq '{number, node_id, url}')
     set -l task_node_id (echo "$task_info" | jq -r '.node_id')
