@@ -56,5 +56,7 @@
     secretKeyFile = config.sops.secrets."nix-cache-priv-key".path;
   };
 
+  systemd.services.nix-serve.serviceConfig.Environment = ["HOME=/var/empty"];
+
   system.stateVersion = "26.05";
 }

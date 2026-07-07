@@ -15,6 +15,10 @@
     privileged = lib.mkDefault true;
   };
 
-  services.fstrim.enable = false; # Let Proxmox host handle fstrim
+  users.users.root.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINZm7VWZl2HKD6ZPZWawFIunNLo3M6oJZSqe5lTQj64X tofu-remote-exec@p51"
+  ];
+
+  services.fstrim.enable = false;
   documentation.man.enable = false;
 }
