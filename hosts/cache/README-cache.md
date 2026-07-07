@@ -15,6 +15,14 @@ local store, the cache serves both self-built artifacts and any upstream path th
 The name `cache.fileshare.se` resolves to the LAN IP `192.168.2.108` (there is no public port-forward), so LAN clients
 reach the cache directly while still getting a publicly-trusted Let's Encrypt certificate.
 
+The container rootfs — and therefore its `/nix/store` — lives on the bulk **`hdd-zfs`** ZFS mirror pool, not the Proxmox
+host's NVMe `local-lvm` pool. The store wants capacity (it pre-warms every host's full closure plus upstream artifacts),
+not latency, and the cache does no latency-sensitive work. `tofu/cache.tf` overrides the shared module's
+`container_datastore` to `var.hdd_zfs_storage_id` for the cache instance only; the root disk is sized at 512 GB
+(thin-provisioned on ZFS, so only what is written is consumed). See
+[`tofu/README.md` "Cache rootfs on the HDD pool"](../../tofu/README.md#cache-rootfs-on-the-hdd-pool) for the datastore
+mechanism and the operator step to move an existing container's rootfs.
+
 The container is **unprivileged** with the `nesting` feature enabled (`tofu/cache.tf` +
 `proxmoxLXC.privileged = false`). Modern systemd needs nesting inside an LXC or its credential/namespace setup fails and
 the system never activates; the `nesting` feature can only be set via the OpenTofu API token on an unprivileged
@@ -109,6 +117,12 @@ two places so root SSH works across the whole lifecycle: baked into the LXC temp
 ([`templates/lxc-base.nix`](../../templates/lxc-base.nix)) for first boot, and re-declared in the running config
 ([`templates/proxmox-lxc.nix`](../../templates/proxmox-lxc.nix)) so the `nixos-rebuild` switch doesn't remove it as an
 obsolete file — no manual key injection at any step.
+
+> **A destroy/recreate wipes `/nix/store`.** The store lives on the container rootfs (on the `hdd-zfs` pool), which is
+> deleted with the container, so the store re-warms on the next [pre-warm](#pre-warm) run — the first pull comes from
+> the public caches and is slow. The SSH host key survives via the [`/persist` mount](#ssh-host-key-persistence), so no
+> `sops updatekeys` is needed. See
+> [`tofu/README.md` "Cache rootfs on the HDD pool"](../../tofu/README.md#cache-rootfs-on-the-hdd-pool).
 
 1. **Apply** — creates CT 108 on the static IP and the `null_resource` attaches the `/persist` bind mount over root SSH:
 

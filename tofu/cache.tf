@@ -4,6 +4,10 @@
 # bridge; the container's OS and addressing come from its NixOS flake config
 # (hosts/cache/, flake host nixos-cache). Larger disk than edge because it
 # stores Nix store artifacts served to the LAN.
+#
+# The cache's rootfs (and therefore its /nix/store) lives on the bulk
+# `hdd-zfs` pool, not the NVMe `local-lvm` pool: the store wants capacity,
+# not latency. The `container_datastore` override below is the whole change.
 
 module "cache" {
   source = "./modules/lxc"
@@ -20,7 +24,7 @@ module "cache" {
   started      = true
 
   proxmox_node_name   = var.proxmox_node_name
-  container_datastore = var.container_datastore
+  container_datastore = var.hdd_zfs_storage_id
   network_bridge      = var.network_bridge
   template_file_id    = var.template_file_id
 

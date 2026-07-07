@@ -218,6 +218,47 @@ Per-host isolation is preserved: each container's `mount_points` targets only it
 subdirectory, so the cache container cannot read a future forge container's key. Containers that don't need persistence
 (edge) simply omit `mount_points` and get no `null_resource`.
 
+### Cache rootfs on the HDD pool
+
+The cache container is the one host whose rootfs (and therefore its `/nix/store`) deliberately lives on the bulk
+`hdd-zfs` pool rather than the NVMe `local-lvm` pool. The store *wants* capacity — it pre-warms every host's full
+closure plus upstream artifacts — and the cache does no latency-sensitive work, so spinning disk is fine. The whole
+rootfs lives on the HDD pool rather than a split mount (small NVMe rootfs + large HDD `/nix`): no `fileSystems`
+split-mount, no "is `/nix/store` mounted before nix-serve starts?" ordering.
+
+The mechanism is a single per-instance datastore override in [`cache.tf`](cache.tf):
+
+```hcl
+module "cache" {
+  source = "./modules/lxc"
+  # ...
+  # All other containers inherit the default (var.container_datastore = "local-lvm");
+  # the cache overrides to put its whole rootfs on the HDD pool.
+  container_datastore = var.hdd_zfs_storage_id
+}
+```
+
+The shared module's `disk { datastore_id = var.container_datastore }` consumes whatever datastore each instance passes
+in, so the override is the whole change — no module edit needed. `cache_disk_size` (default `512` GB) is sized for bulk
+HDD capacity; ZFS is thin-provisioned, so the volume only consumes what is written.
+
+#### Moving a container's rootfs between datastores
+
+Proxmox cannot relocate a running container's rootfs between datastores in place, so a **destroy/recreate** is what puts
+the rootfs on a different pool — `tofu apply` does not move it on an existing container:
+
+```fish
+scripts/tofu-sops.fish destroy -target module.cache
+scripts/tofu-sops.fish apply
+```
+
+The destroy **wipes `/nix/store`** (the store lives on the rootfs, which is deleted with the container). The store
+re-warms on the next [`cache-prewarm` timer run](../hosts/cache/README-cache.md#pre-warm) — the first run pulls every
+closure from the public caches and is slow; later runs are incremental. The SSH host key survives the recreate via the
+[`/persist` key mount](#per-container-key-persistence-mount), so no `sops updatekeys` is needed. After the recreate,
+follow the [rebuild procedure](../hosts/cache/README-cache.md#rebuilding-the-cache-host) to converge the container back
+onto its flake host config.
+
 ## Bootstrap: template container → flake host
 
 `apply` leaves a new container **created but stopped** (`started = false` in the resource). It still runs the generic

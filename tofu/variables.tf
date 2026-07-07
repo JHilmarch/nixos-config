@@ -83,9 +83,9 @@ variable "cache_swap" {
 }
 
 variable "cache_disk_size" {
-  description = "Root disk size (GB) for the cache container. Holds every host's full closure plus upstream artifacts; a thin LVM volume, so it only consumes what is used."
+  description = "Root disk size (GB) for the cache container. Holds every host's full closure plus upstream artifacts. Lives on the bulk `hdd-zfs` ZFS mirror pool (ZFS is thin-provisioned, so it only consumes what is used) — not the NVMe `local-lvm` pool."
   type        = number
-  default     = 128
+  default     = 512
 }
 
 # --- ZFS mirror pool + encrypted dataset (#166) ------------------------------
