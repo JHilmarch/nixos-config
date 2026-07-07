@@ -150,6 +150,12 @@
       // ── Nix substituters ─────────────────────────────────────────────────
       "cache.numtide.com", // numtide binary cache (devshell, etc.)
 
+      // ── IaC provider registries (Terraform / OpenTofu) ───────────────────
+      "terraform.io", // Terraform provider/module registry + docs
+      "*.terraform.io", // Terraform registry subdomains (registry.*, releases.*, etc.)
+      "registry.opentofu.org", // OpenTofu provider/module registry
+      "*.opentofu.org", // OpenTofu registry / docs subdomains
+
       // ── MCP / research tools ──────────────────────────────────────────────
       "mcp.exa.ai", // websearch MCP endpoint (OMO calls mcp.exa.ai/mcp; Bearer EXA_API_KEY)
       "mcp.grep.app", // grep_app MCP server (OMO built-in; remote MCP endpoint)
