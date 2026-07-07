@@ -28,6 +28,12 @@ The container is **unprivileged** with the `nesting` feature enabled (`tofu/cach
 the system never activates; the `nesting` feature can only be set via the OpenTofu API token on an unprivileged
 container.
 
+DNS is owned by `systemd-resolved` (`services.resolved.enable` + `networking.useHostResolvConf = false`). The
+container-config default `useHostResolvConf = true` expects Proxmox to populate `/etc/resolv.conf`, but the
+OpenTofu-provisioned LXC is created `ostype=unmanaged`, so Proxmox never writes it — leaving `resolv.conf` without a
+nameserver, which breaks DNS resolution and thus ACME. `resolved` instead writes `resolv.conf` from
+`networking.nameservers` on every activation, surviving destroy/recreate.
+
 Clients (`modules/nix-cache-client.nix`, imported by every LAN host) list `https://cache.fileshare.se` as their first
 substituter, with `cache.numtide.com` and the built-in `cache.nixos.org` as ordered fallbacks — a down cache never
 blocks a rebuild. The cache host is excluded from its own substituter list. Clients trust the cache's signing key

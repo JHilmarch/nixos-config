@@ -28,11 +28,11 @@
         }
       ];
     };
-    defaultGateway = {
-      address = "192.168.2.1";
-      interface = "eth0";
-    };
+    defaultGateway = "192.168.2.1";
+    useHostResolvConf = false;
   };
+
+  services.resolved.enable = true;
 
   services.openssh.openFirewall = true;
 
@@ -46,8 +46,6 @@
 
   # Unprivileged so the tofu API token can set the nesting feature it needs.
   proxmoxLXC.privileged = false;
-
-  proxmoxLXC.manageNetwork = lib.mkForce false;
 
   services.sshHostKeyPersistence.enable = true;
 
