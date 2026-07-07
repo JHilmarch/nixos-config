@@ -141,17 +141,24 @@ obsolete file — no manual key injection at any step.
    ssh-keygen -R 192.168.2.108
    ```
 
-1. **Reload nginx** if it started before ACME finished issuing the cert (a known bootstrap race; the cert exists on disk
-   but nginx serves the fallback self-signed one until reloaded). Confirm ACME finished first
-   (`systemctl status acme-fileshare.se.service` shows `status=0/SUCCESS`):
+1. **Reload nginx after ACME finishes.** On a fresh switch nginx starts immediately and serves a generated self-signed
+   fallback cert; ACME takes ~90 s (`--dns.propagation-wait`) to issue the real one, after which nginx must be reloaded
+   to pick it up. **Wait for ACME first** — reload too early and nginx keeps the fallback:
 
    ```fish
-   ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu -o StrictHostKeyChecking=accept-new root@192.168.2.108 systemctl reload nginx
+   # poll until ACME is done (status=0/SUCCESS), then reload — ~90 s after the switch
+   ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu -o StrictHostKeyChecking=accept-new root@192.168.2.108 \
+     'until systemctl show -p ActiveState,Result --value acme-fileshare.se.service | tr "\n" " " | grep -q "inactive success"; do sleep 5; done; systemctl reload nginx'
    ```
+
+   (If you skip the poll, just re-run `systemctl reload nginx` after ~90 s.) The cert itself survives container
+   destroy/recreate only if `/var/lib/acme` is persisted — currently it is not, so ACME re-issues on every recreate;
+   persisting it is a future improvement.
 
    > **nix-serve sets `HOME=/var/empty`** (\[`hosts/cache/configuration.nix`\]) because it runs under `DynamicUser`,
    > whose allocated UID has no passwd entry — without an explicit `HOME`, the nix library's home lookup ABRTs
-   > (`cannot determine user's home directory`) on start. With `HOME` set, the switch starts it clean.
+   > (`cannot determine user's home directory`) on start. With `HOME` set, the switch starts it clean (no reboot
+   > needed).
 
 1. **Verify** end-to-end over TLS:
 
@@ -183,6 +190,18 @@ Each run realises the system closure of every host in the flake into the local s
 a host's build is available on the LAN before that host asks for it. The host list is derived from
 `self.nixosConfigurations` (excluding `nixos-cache`, `iso`, and `wsl-cab`); a single host that fails to build or sign is
 logged and skipped.
+
+To trigger a run manually (e.g. right after a destroy/recreate, when the store is empty), start it without blocking —
+`systemctl start` otherwise waits for the whole (long) oneshot to finish — and tail the log:
+
+```fish
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.108 \
+  'systemctl start --no-block cache-prewarm; journalctl -u cache-prewarm -f'
+```
+
+The first run after a recreate pulls every closure from the public caches (the LAN cache *is* the empty container being
+populated), so it is slow; later timer runs are incremental. Ctrl-C the `journalctl -f` once it's progressing — the
+service keeps running in the background.
 
 ## Files
 
