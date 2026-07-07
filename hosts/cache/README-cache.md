@@ -166,12 +166,15 @@ obsolete file — no manual key injection at any step.
    to pick it up. **Wait for ACME first** — reload too early and nginx keeps the fallback:
 
    ```fish
-   # poll until ACME is done (status=0/SUCCESS), then reload — ~90 s after the switch
+   # Block on the LE order unit (finishes in ~90 s), then reload nginx.
    ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu -o StrictHostKeyChecking=accept-new root@192.168.2.108 \
-     'until systemctl show -p ActiveState,Result --value acme-fileshare.se.service | tr "\n" " " | grep -q "inactive success"; do sleep 5; done; systemctl reload nginx'
+     'systemctl start acme-order-renew-fileshare.se.service && systemctl reload nginx'
    ```
 
-   (If you skip the poll, just re-run `systemctl reload nginx` after ~90 s.) The cert itself survives container
+   Start the **order** unit (`acme-order-renew-fileshare.se.service`), not `acme-fileshare.se.service`: the order unit
+   is the oneshot that runs `lego` and exits when the cert is issued, so `systemctl start` blocks until it finishes.
+   `acme-fileshare.se.service` stays `active` and never reaches an `inactive` state, so polling it hangs forever. (If
+   you skip the wait, just re-run `systemctl reload nginx` after ~90 s.) The cert itself survives container
    destroy/recreate only if `/var/lib/acme` is persisted — currently it is not, so ACME re-issues on every recreate;
    persisting it is a future improvement.
 
