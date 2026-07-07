@@ -104,7 +104,11 @@ container-root, the correct mapped uid already.) Then rebuild per
 
 After any `tofu destroy`/`apply` of the cache container (or a fresh provision), converge it back onto its flake host
 config. Tofu creates the container **on its static IP `192.168.2.108`** (`ipv4_address` in `tofu/cache.tf`), so there is
-no DHCP-lease hunt — the container is reachable immediately after `apply`.
+no DHCP-lease hunt — the container is reachable immediately after `apply`. The operator (tofu) SSH key is declared in
+two places so root SSH works across the whole lifecycle: baked into the LXC template
+([`templates/lxc-base.nix`](../../templates/lxc-base.nix)) for first boot, and re-declared in the running config
+([`templates/proxmox-lxc.nix`](../../templates/proxmox-lxc.nix)) so the `nixos-rebuild` switch doesn't remove it as an
+obsolete file — no manual key injection at any step.
 
 1. **Apply** — creates CT 108 on the static IP and the `null_resource` attaches the `/persist` bind mount over root SSH:
 
@@ -112,30 +116,42 @@ no DHCP-lease hunt — the container is reachable immediately after `apply`.
    fish scripts/tofu-sops.fish apply
    ```
 
-1. **Inject the tofu SSH pubkey** into the container (a FIDO2/YubiKey key does not work with `nix-copy-closure`'s
-   non-interactive SSH; the non-FIDO2 `id_ed25519_tofu` key from #166 does). Pipe it over SSH to Proxmox, then
-   `pct push`:
+1. **Clear the stale host key.** The recreated container boots the template sshd (host key at `/etc/ssh`), which differs
+   from the persisted key that takes over after the switch — so `known_hosts` still holds the old key and refuses the
+   connection. Remove it:
 
    ```fish
-   cat ~/.ssh/id_ed25519_tofu.pub | ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_sk_<yubikey-serial> root@<proxmox-host> \
-     'cat > /tmp/operator.pub && pct exec 108 -- /run/current-system/sw/bin/mkdir -p -m 700 /root/.ssh && pct push 108 /tmp/operator.pub /root/.ssh/authorized_keys --perms 600 && rm /tmp/operator.pub'
+   ssh-keygen -R 192.168.2.108
    ```
 
 1. **Rebuild** from a host with the flake checked out (e.g. p51). The LAN cache is the container being rebuilt, so it is
-   down — override the substituters to skip it and pull straight from the public caches:
+   down — override the substituters to skip it and pull straight from the public caches.
+   `StrictHostKeyChecking=accept-new` auto-accepts the template's new host key without prompting:
 
    ```fish
-   NIX_SSHOPTS="-o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu" \
+   NIX_SSHOPTS="-o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu -o StrictHostKeyChecking=accept-new" \
      nixos-rebuild switch --flake .#nixos-cache --target-host root@192.168.2.108 \
      --option substituters "https://cache.numtide.com https://cache.nixos.org"
    ```
 
-1. **Reload nginx** if it started before ACME finished issuing the cert (a known bootstrap race; the cert exists on disk
-   but nginx serves the fallback self-signed one until reloaded):
+   The switch moves sshd onto the persisted key, so the host key **changes again** at this point. Clear it once more
+   before the next SSH:
 
    ```fish
-   ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.108 systemctl reload nginx
+   ssh-keygen -R 192.168.2.108
    ```
+
+1. **Reload nginx** if it started before ACME finished issuing the cert (a known bootstrap race; the cert exists on disk
+   but nginx serves the fallback self-signed one until reloaded). Confirm ACME finished first
+   (`systemctl status acme-fileshare.se.service` shows `status=0/SUCCESS`):
+
+   ```fish
+   ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu -o StrictHostKeyChecking=accept-new root@192.168.2.108 systemctl reload nginx
+   ```
+
+   > **nix-serve sets `HOME=/var/empty`** (\[`hosts/cache/configuration.nix`\]) because it runs under `DynamicUser`,
+   > whose allocated UID has no passwd entry — without an explicit `HOME`, the nix library's home lookup ABRTs
+   > (`cannot determine user's home directory`) on start. With `HOME` set, the switch starts it clean.
 
 1. **Verify** end-to-end over TLS:
 
