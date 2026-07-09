@@ -70,7 +70,6 @@ resource "proxmox_virtual_environment_container" "this" {
     type             = "nixos"
   }
 
-  # See tofu/README.md "Nesting requirement" and "Per-container key persistence mount".
   lifecycle {
     ignore_changes = [
       operating_system,
