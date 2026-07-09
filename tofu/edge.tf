@@ -12,14 +12,26 @@ module "edge" {
   cores        = var.edge_cores
   memory       = var.edge_memory
   disk_size    = var.edge_disk_size
-  unprivileged = false
-  nesting      = false
-  started      = false # TODO: flip to true once bootstrapped onto its flake config.
+  unprivileged = true
+  nesting      = true
+  started      = true
 
   proxmox_node_name   = var.proxmox_node_name
   container_datastore = var.container_datastore
   network_bridge      = var.network_bridge
   template_file_id    = var.template_file_id
+
+  ipv4_address = "192.168.2.107/24"
+  ipv4_gateway = "192.168.2.1"
+
+  mount_points = [
+    {
+      volume = "/hdd-zfs/keys/edge"
+      path   = "/persist"
+    }
+  ]
+  proxmox_ssh_host             = var.proxmox_ssh_host
+  proxmox_ssh_private_key_path = var.proxmox_ssh_private_key_path
 }
 
 moved {
