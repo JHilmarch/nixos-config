@@ -3,7 +3,7 @@ keys:
     - &jonatan-yubikey-23839166 age1yubikey1q0uurmnvmdn7x49z84r369t4hv0y7njypwhhzzdwnzxqnst6lcnucvtsl8n
   - &hosts:
     - &orion age1qnpen7gae337skxucpx4y2grujh8a0pjl2l4rhp07fz38573ag6sfha3q9
-    - &edge age1g7k05egpsaflz0wuppm9fc049cym0xl066uwwzzp2f34drwmg40sj8jnl3
+    - &edge age15dqf2dzuw6pl2zcdj63rxw4w44l93v3za3e2r9lkxtvcgmg8pg9sehqetw
     - &p51 age1aevpum6lnswls8pxk253u265fuumr2j22vhhe2r6jjy2aqsy4d4szjeu3q
     - &cache age125vlkv4ay48q2psmr5j6eukg2t7ttjr404q59xpj2xkn460vaa0shtuxmk
 creation_rules:
