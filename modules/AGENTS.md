@@ -12,7 +12,7 @@ modules/
 ├── acme-wildcard/
 │   └── default.nix       # services.acmeWildcard.enable — Cloudflare DNS-01 *.fileshare.se wildcard cert (+ nginx→acme group)
 ├── nginx-ingress/
-│   └── default.nix       # services.nginxIngress.{enable,virtualHosts} — nginx recommended* settings, 80/443 firewall, *.fileshare.se reverse-proxy vhost helper (pairs with acmeWildcard)
+│   └── default.nix       # services.nginxIngress.{enable,virtualHosts.<fqdn>.{proxyPass,external}} — nginx recommended* settings, 80/443 firewall, *.fileshare.se reverse-proxy vhost helper; vhosts are LAN-only (RFC1918 allow + deny-all) unless external=true (pairs with acmeWildcard)
 ├── nfs/
 │   ├── default.nix       # Options: nfs.{enable, host, ip, shares, port} → generates fileSystems
 │   └── fileshare.nix     # Concrete config for home NAS (fileshare.local)
