@@ -8,12 +8,18 @@ instead of the public caches.
 
 ## How it works
 
-`nix-serve-ng` serves the host's local `/nix/store` on `127.0.0.1:5000`. Nginx fronts it with TLS on
-`192.168.2.108:443`, using an ACME Cloudflare DNS-01 wildcard certificate for `*.fileshare.se`. Because it proxies the
-local store, the cache serves both self-built artifacts and any upstream path the host has fetched.
+`nix-serve-ng` serves the host's local `/nix/store` on `192.168.2.108:5000` (plaintext HTTP, LAN-only — the firewall
+opens 5000 to the LAN). Because it serves the local store, the cache provides both self-built artifacts and any upstream
+path the host has fetched.
 
-The name `cache.fileshare.se` resolves to the LAN IP `192.168.2.108` (there is no public port-forward), so LAN clients
-reach the cache directly while still getting a publicly-trusted Let's Encrypt certificate.
+TLS is **not** terminated here. The [`edge` ingress](../edge/README-edge.md) (`192.168.2.107`) owns
+`cache.fileshare.se`: it terminates TLS with the `*.fileshare.se` wildcard cert and reverse-proxies to this host's
+`nix-serve` over the plaintext LAN hop. The cache host therefore runs **no nginx and no ACME** — the wildcard cert lives
+only on edge. The name `cache.fileshare.se` resolves to edge's IP `192.168.2.107` (there is no public port-forward), so
+LAN clients reach the cache through edge while still getting a publicly-trusted Let's Encrypt certificate.
+
+The plaintext edge→cache hop is safe: nix-serve signs every path with the cache key, and clients verify that signature
+regardless of transport, so integrity does not depend on TLS on the internal hop.
 
 The container rootfs — and therefore its `/nix/store` — lives on the bulk **`hdd-zfs`** ZFS mirror pool, not the Proxmox
 host's NVMe `local-lvm` pool. The store wants capacity (it pre-warms every host's full closure plus upstream artifacts),
@@ -42,18 +48,16 @@ blocks a rebuild. The cache host is excluded from its own substituter list. Clie
 ## Trust
 
 The signing keypair is dedicated to this cache. The private key lives in SOPS (`secrets/cache/secrets.yml`, key
-`nix-cache-priv-key`) and is passed to `nix-serve` as its `secretKeyFile`. The public key is trusted on every host. The
-`cloudflare-token` secret in the same file drives the ACME DNS-01 challenge.
+`nix-cache-priv-key`) and is passed to `nix-serve` as its `secretKeyFile`. The public key is trusted on every host.
 
 The `nix-cache-priv-key` value must be the whole key `nix-store --generate-binary-cache-key` emits — a single line of
 the form `<name>:<base64-secret>` (e.g. `cache.nixos-homelab-1:…`), with **no** trailing newline. Storing only the
 secret half makes `nix store sign` fail with `key is corrupt`; the pre-warm validates this shape and aborts loudly if it
 is wrong. The `<name>` must match the public key in `modules/nix-cache-client.nix`.
 
-The `fileshare.se` zone uses a `_acme-challenge` CNAME, and Cloudflare's authoritative nameservers refuse lego's
-propagation checks. The shared [`acme-wildcard`](../../modules/acme-wildcard/default.nix) module therefore passes
-`--dns.propagation-wait 90s` so lego waits a fixed interval and lets Let's Encrypt validate the record itself, rather
-than polling.
+TLS/ACME lives on the [`edge` host](../edge/README-edge.md), not here. The `cloudflare-token` challenge for the
+`*.fileshare.se` wildcard cert and the `--dns.propagation-wait 90s` lego workaround are documented there; the cache no
+longer imports `acme-wildcard` or runs nginx.
 
 ## SSH host key persistence
 
@@ -162,31 +166,22 @@ obsolete file — no manual key injection at any step.
    ssh-keygen -R 192.168.2.108
    ```
 
-1. **Reload nginx after ACME finishes.** On a fresh switch nginx starts immediately and serves a generated self-signed
-   fallback cert; ACME takes ~90 s (`--dns.propagation-wait`) to issue the real one, after which nginx must be reloaded
-   to pick it up. **Wait for ACME first** — reload too early and nginx keeps the fallback:
-
-   ```fish
-   # Block on the LE order unit (finishes in ~90 s), then reload nginx.
-   ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu -o StrictHostKeyChecking=accept-new root@192.168.2.108 \
-     'systemctl start acme-order-renew-fileshare.se.service && systemctl reload nginx'
-   ```
-
-   Start the **order** unit (`acme-order-renew-fileshare.se.service`), not `acme-fileshare.se.service`: the order unit
-   is the oneshot that runs `lego` and exits when the cert is issued, so `systemctl start` blocks until it finishes.
-   `acme-fileshare.se.service` stays `active` and never reaches an `inactive` state, so polling it hangs forever. (If
-   you skip the wait, just re-run `systemctl reload nginx` after ~90 s.) The cert itself survives container
-   destroy/recreate only if `/var/lib/acme` is persisted — currently it is not, so ACME re-issues on every recreate;
-   persisting it is a future improvement.
-
    > **nix-serve sets `HOME=/var/empty`** (\[`hosts/cache/configuration.nix`\]) because it runs under `DynamicUser`,
    > whose allocated UID has no passwd entry — without an explicit `HOME`, the nix library's home lookup ABRTs
    > (`cannot determine user's home directory`) on start. With `HOME` set, the switch starts it clean (no reboot
    > needed).
 
-1. **Verify** end-to-end over TLS:
+   No nginx reload / ACME wait is needed on the cache host anymore — TLS termination moved to
+   [`edge`](../edge/README-edge.md). After a cache rebuild, if `cache.fileshare.se` does not serve, check edge's nginx
+   (its ACME/reload flow is documented in [README-edge.md](../edge/README-edge.md)); the cache side only needs
+   `nix-serve` listening on `192.168.2.108:5000`.
+
+1. **Verify** — first hit nix-serve directly on the LAN (no TLS), then end-to-end through edge over TLS:
 
    ```fish
+   # Direct to nix-serve on the cache host (plaintext, LAN-only).
+   curl -fsS http://192.168.2.108:5000/nix-cache-info
+   # End-to-end through the edge ingress over TLS.
    curl -fsS https://cache.fileshare.se/nix-cache-info
    # → StoreDir: /nix/store
    #   WantMassQuery: 1
@@ -229,9 +224,9 @@ service keeps running in the background.
 
 ## Files
 
-| File                | Purpose                                                                                                         |
-| ------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `configuration.nix` | Host config: networking, `nix-serve`, signing key, SSH host key persistence, nginx ingress + ACME cert enables. |
-| `prewarm.nix`       | Twice-daily pre-warm service and timer.                                                                         |
-| `prewarm.sh`        | Pre-warm shell body (build + sign each host closure).                                                           |
-| `home.nix`          | Minimal Home Manager config.                                                                                    |
+| File                | Purpose                                                                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `configuration.nix` | Host config: networking, `nix-serve` (LAN-bound, plaintext 5000), signing key, SSH host key persistence. TLS/ingress lives on edge. |
+| `prewarm.nix`       | Twice-daily pre-warm service and timer.                                                                                             |
+| `prewarm.sh`        | Pre-warm shell body (build + sign each host closure).                                                                               |
+| `home.nix`          | Minimal Home Manager config.                                                                                                        |

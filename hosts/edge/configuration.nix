@@ -46,8 +46,12 @@
     resolved.enable = true;
     openssh.openFirewall = true;
     acmeWildcard.enable = true;
-    nginxIngress.enable = true;
     sshHostKeyPersistence.enable = true;
+
+    nginxIngress = {
+      enable = true;
+      virtualHosts."cache.fileshare.se".proxyPass = "http://192.168.2.108:5000";
+    };
   };
 
   system.stateVersion = "25.11";

@@ -19,11 +19,16 @@ Two things must be in place for a subdomain to work:
 1. **Edge nginx** — a `virtualHosts` entry (see [Adding a backend vhost](#adding-a-backend-vhost)) proxying to the
    backend's LAN address.
 
-Neither `edge.fileshare.se` nor `cache.fileshare.se` has a vhost configured yet — add them when the backends are ready.
+`cache.fileshare.se` is wired: edge terminates its TLS and reverse-proxies to the cache host's `nix-serve` at
+`http://192.168.2.108:5000` (the cache host no longer runs its own nginx/ACME). Its A record must point at edge
+(`192.168.2.107`), not the cache host.
 
 **v1 is LAN-only.** No public port-forward exists, so only LAN clients reach edge — while still getting a
-publicly-trusted Let's Encrypt certificate. The external subdomain tier is codified but dormant: activating it later
-requires a single WAN → `192.168.2.107` port-forward on the home router (ports 80/443).
+publicly-trusted Let's Encrypt certificate. Each vhost is also LAN-only *at the nginx layer*: `external = false` (the
+default) restricts the `/` location to RFC1918 source ranges (`allow 10/8, 172.16/12, 192.168/16; deny all;`), so even
+if the firewall or a port-forward exposed 443, an internal vhost stays private. The external subdomain tier is codified
+but dormant: activating a vhost requires setting `external = true` **and** a single WAN → `192.168.2.107` port-forward
+on the home router (ports 80/443).
 
 ## Adding a backend vhost
 
@@ -34,11 +39,14 @@ The [`nginx-ingress`](../../modules/nginx-ingress/default.nix) module applies `f
 ```nix
 services.nginxIngress.virtualHosts."myapp.fileshare.se" = {
   proxyPass = "http://192.168.2.<backend>:<port>";
+  # external = true;  # opt into the WAN tier (drops the RFC1918 allow-list)
 };
 ```
 
-`recommendedProxySettings` (enabled by the module) supplies the standard proxy headers. v1 is LAN-only at the network
-layer (no public port-forward); per-vhost source-range restriction is not yet wired.
+`recommendedProxySettings` (enabled by the module) supplies the standard proxy headers. Each vhost is **LAN-only by
+default** (`external = false`): the module injects an RFC1918 `allow … deny all;` into the `/` location, so only
+private-range clients reach the backend. Set `external = true` to drop the allow-list and expose the vhost publicly —
+that single flag (plus a router port-forward) is the whole opt-in to the external tier.
 
 ## SSH host key persistence
 

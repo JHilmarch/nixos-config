@@ -10,8 +10,6 @@
   imports = [
     ./prewarm.nix
     ./gc.nix
-    "${self}/modules/acme-wildcard/default.nix"
-    "${self}/modules/nginx-ingress/default.nix"
     "${self}/modules/ssh-host-key-persistence/default.nix"
     "${self}/templates/proxmox-lxc.nix"
   ];
@@ -47,21 +45,17 @@
 
   systemd.services.nix-serve.serviceConfig.Environment = ["HOME=/var/empty"];
 
+  networking.firewall.allowedTCPPorts = [5000];
+
   services = {
     resolved.enable = true;
     openssh.openFirewall = true;
     sshHostKeyPersistence.enable = true;
-    acmeWildcard.enable = true;
-
-    nginxIngress = {
-      enable = true;
-      virtualHosts."cache.fileshare.se".proxyPass = "http://127.0.0.1:5000";
-    };
 
     nix-serve = {
       enable = true;
       package = pkgs.nix-serve-ng;
-      bindAddress = "127.0.0.1";
+      bindAddress = "192.168.2.108";
       port = 5000;
       secretKeyFile = config.sops.secrets."nix-cache-priv-key".path;
     };
