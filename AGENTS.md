@@ -13,7 +13,7 @@ hosts/              # Per-host configuration.nix + home.nix
 ├── p51/            # Laptop (GNOME, LUKS+FIDO2, YubiKey USB/IP)
 ├── wsl-cab/        # WSL dev env (work identity, Copilot CLI, Azure DevOps)
 ├── iso/            # Minimal installation ISO (no Home Manager)
-├── hl-jump/        # Proxmox LXC jump host (nginx, static IP)
+├── edge/           # Proxmox LXC ingress/reverse-proxy (nginx, static IP)
 └── cache/          # Proxmox LXC binary cache (nix-serve-ng behind nginx TLS)
 tofu/               # OpenTofu homelab provisioning (Proxmox LXCs) → [README.md]
 modules/            # System-level NixOS modules → [AGENTS.md]
@@ -59,7 +59,7 @@ mcp-nixos, llm-agents, treefmt-nix, vscode-server. All follow nixpkgs except llm
 - **p51**: inputs/self ✓, username jonatan, hostname nixos-p51, pkgs-unstable ✓, functions ✓, local overlay ✓
 - **wsl-cab**: inputs/self ✓, username jonatan, hostname wsl-cab, pkgs-unstable ✗, functions ✗, local overlay ✓
 - **iso**: inputs/self ✓, username jonatan, hostname iso, pkgs-unstable ✗, functions ✗, local overlay ✗
-- **hl-jump**: inputs/self ✓, username jonatan, hostname hl-jump, pkgs-unstable ✗, functions ✓, local overlay ✗
+- **edge**: inputs/self ✓, username jonatan, hostname edge, pkgs-unstable ✗, functions ✓, local overlay ✗
 
 **Template chain:** `desktop.nix`→`common.nix`→`defaults.nix`;
 `proxmox-lxc.nix`→`server.nix`→`common.nix`→`defaults.nix`

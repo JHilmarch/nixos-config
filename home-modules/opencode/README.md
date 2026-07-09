@@ -263,7 +263,7 @@ keeps terminal-native copy/paste working — **Shift+drag** to select, **Ctrl+Sh
 
 ### `modules.opencode.enableWaylandClipboard` (per-host, default `false`)
 
-Enabled on the Wayland desktop hosts (orion, p51); left `false` on non-graphical hosts (wsl-cab, iso, hl-jump). When
+Enabled on the Wayland desktop hosts (orion, p51); left `false` on non-graphical hosts (wsl-cab, iso, edge). When
 enabled it does two things:
 
 1. Adds `wl-clipboard` to the sandbox PATH so OpenCode's explicit copy actions (the copy button on messages, Ctrl+C in

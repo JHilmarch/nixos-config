@@ -278,12 +278,12 @@
           ];
         };
 
-      hl-jump = let
+      nixos-edge = let
         system = "x86_64-linux";
         specialArgs = {
           inherit inputs self;
           username = "jonatan";
-          hostname = "hl-jump";
+          hostname = "edge";
           functions = import ./functions {
             pkgs = import inputs.nixpkgs {inherit system;};
           };
@@ -295,7 +295,7 @@
             {
               nixpkgs.hostPlatform.system = system;
             }
-            ./hosts/hl-jump/configuration.nix
+            ./hosts/edge/configuration.nix
             inputs.sops-nix.nixosModules.sops
             inputs.home-manager.nixosModules.home-manager
             {
@@ -303,7 +303,7 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "hm-backup";
-              home-manager.users.${specialArgs.username} = import ./hosts/hl-jump/home.nix;
+              home-manager.users.${specialArgs.username} = import ./hosts/edge/home.nix;
             }
           ];
         };
