@@ -51,8 +51,9 @@ secret half makes `nix store sign` fail with `key is corrupt`; the pre-warm vali
 is wrong. The `<name>` must match the public key in `modules/nix-cache-client.nix`.
 
 The `fileshare.se` zone uses a `_acme-challenge` CNAME, and Cloudflare's authoritative nameservers refuse lego's
-propagation checks. `cache.nix` therefore passes `--dns.propagation-wait 90s` so lego waits a fixed interval and lets
-Let's Encrypt validate the record itself, rather than polling.
+propagation checks. The shared [`acme-wildcard`](../../modules/acme-wildcard/default.nix) module therefore passes
+`--dns.propagation-wait 90s` so lego waits a fixed interval and lets Let's Encrypt validate the record itself, rather
+than polling.
 
 ## SSH host key persistence
 
@@ -228,10 +229,9 @@ service keeps running in the background.
 
 ## Files
 
-| File                | Purpose                                                                      |
-| ------------------- | ---------------------------------------------------------------------------- |
-| `configuration.nix` | Host config: networking, `nix-serve`, signing key, SSH host key persistence. |
-| `cache.nix`         | Nginx TLS reverse proxy + ACME Cloudflare wildcard.                          |
-| `prewarm.nix`       | Twice-daily pre-warm service and timer.                                      |
-| `prewarm.sh`        | Pre-warm shell body (build + sign each host closure).                        |
-| `home.nix`          | Minimal Home Manager config.                                                 |
+| File                | Purpose                                                                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `configuration.nix` | Host config: networking, `nix-serve`, signing key, SSH host key persistence, nginx ingress + ACME cert enables. |
+| `prewarm.nix`       | Twice-daily pre-warm service and timer.                                                                         |
+| `prewarm.sh`        | Pre-warm shell body (build + sign each host closure).                                                           |
+| `home.nix`          | Minimal Home Manager config.                                                                                    |

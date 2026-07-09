@@ -27,21 +27,18 @@ requires a single WAN → `192.168.2.107` port-forward on the home router (ports
 
 ## Adding a backend vhost
 
-Add one `virtualHosts` entry per backend service in [`nginx.nix`](./nginx.nix). Use `lanOnly` for LAN-only access or
-`wanOpen` for WAN (requires the router port-forward):
+Add one `services.nginxIngress.virtualHosts` entry per backend service in [`configuration.nix`](./configuration.nix).
+The [`nginx-ingress`](../../modules/nginx-ingress/default.nix) module applies `forceSSL`, `useACMEHost = "fileshare.se"`
+(the wildcard cert), and the `locations."/".proxyPass` wrapper automatically, so each backend is just its upstream:
 
 ```nix
-services.nginx.virtualHosts."myapp.fileshare.se" = {
-  forceSSL = true;
-  useACMEHost = "fileshare.se";      # reuses the wildcard cert
-  extraConfig = lanOnly;             # or wanOpen
-  locations."/" = {
-    proxyPass = "http://192.168.2.<backend>:<port>";
-  };
+services.nginxIngress.virtualHosts."myapp.fileshare.se" = {
+  proxyPass = "http://192.168.2.<backend>:<port>";
 };
 ```
 
-`recommendedProxySettings` supplies the standard proxy headers, so entries stay small.
+`recommendedProxySettings` (enabled by the module) supplies the standard proxy headers. v1 is LAN-only at the network
+layer (no public port-forward); per-vhost source-range restriction is not yet wired.
 
 ## SSH host key persistence
 
@@ -78,8 +75,7 @@ the oneshot that runs `lego` and exits when the cert is issued.
 
 ## Files
 
-| File                | Purpose                                                                 |
-| ------------------- | ----------------------------------------------------------------------- |
-| `configuration.nix` | Host config: networking, static IP, SSH, resolved, privileged override. |
-| `nginx.nix`         | Nginx TLS reverse proxy + ACME wildcard cert + firewall.                |
-| `home.nix`          | Minimal Home Manager config.                                            |
+| File                | Purpose                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `configuration.nix` | Host config: networking, static IP, SSH, resolved, privileged override, nginx ingress + ACME cert enables. |
+| `home.nix`          | Minimal Home Manager config.                                                                               |

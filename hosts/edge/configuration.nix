@@ -8,8 +8,8 @@
   ...
 }: {
   imports = [
-    ./nginx.nix
     "${self}/modules/acme-wildcard/default.nix"
+    "${self}/modules/nginx-ingress/default.nix"
     "${self}/modules/ssh-host-key-persistence/default.nix"
     "${self}/templates/proxmox-lxc.nix"
   ];
@@ -40,13 +40,15 @@
     useHostResolvConf = false;
   };
 
-  services.resolved.enable = true;
-
-  services.openssh.openFirewall = true;
-
   proxmoxLXC.privileged = false;
 
-  services.sshHostKeyPersistence.enable = true;
+  services = {
+    resolved.enable = true;
+    openssh.openFirewall = true;
+    acmeWildcard.enable = true;
+    nginxIngress.enable = true;
+    sshHostKeyPersistence.enable = true;
+  };
 
   system.stateVersion = "25.11";
 }

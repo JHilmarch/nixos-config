@@ -9,6 +9,10 @@ modules/
 ├── defaults.nix          # Base: timezone (Europe/Stockholm), experimental Nix features
 ├── context7/
 │   └── sops-wrapper.nix  # Bridges SOPS secret to context7-mcp binary (crosses system↔HM)
+├── acme-wildcard/
+│   └── default.nix       # services.acmeWildcard.enable — Cloudflare DNS-01 *.fileshare.se wildcard cert (+ nginx→acme group)
+├── nginx-ingress/
+│   └── default.nix       # services.nginxIngress.{enable,virtualHosts} — nginx recommended* settings, 80/443 firewall, *.fileshare.se reverse-proxy vhost helper (pairs with acmeWildcard)
 ├── nfs/
 │   ├── default.nix       # Options: nfs.{enable, host, ip, shares, port} → generates fileSystems
 │   └── fileshare.nix     # Concrete config for home NAS (fileshare.local)
