@@ -8,6 +8,11 @@
 # container's hostname; features on a privileged container can only be
 # changed by root@pam, not the API token).
 #
+# Bind-mounted key material is chowned to 100000 (the unprivileged-LXC subuid
+# base) so it maps to in-container root: sshd and sops-nix run as container-root
+# and cannot read a host-root/nobody-owned key, which crash-loops sshd and
+# breaks secret decryption on first boot.
+#
 # See hosts/cache/README-cache.md "Provisioning" for the ignore_changes
 # rationale, and tofu/README.md for the overall provisioning flow.
 
@@ -102,10 +107,7 @@ resource "null_resource" "bind_mounts" {
         for i, mp in var.mount_points :
         "  pct set \"$ctid\" -mp${i} ${mp.volume},mp=${mp.path}"
       ],
-      # chown to 100000 (the unprivileged-LXC subuid base) so the mount maps to
-      # in-container root: sshd and sops-nix run as container-root and cannot
-      # read a host-root/nobody-owned key, which crash-loops sshd and breaks
-      # secret decryption. Runs before start so ownership is correct on boot.
+      # Map key material to container-root before start (see header).
       [
         for mp in var.mount_points :
         "  mkdir -p ${mp.volume}/ssh && chown -R 100000:100000 ${mp.volume}"
