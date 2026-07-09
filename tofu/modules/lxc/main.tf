@@ -102,6 +102,14 @@ resource "null_resource" "bind_mounts" {
         for i, mp in var.mount_points :
         "  pct set \"$ctid\" -mp${i} ${mp.volume},mp=${mp.path}"
       ],
+      # chown to 100000 (the unprivileged-LXC subuid base) so the mount maps to
+      # in-container root: sshd and sops-nix run as container-root and cannot
+      # read a host-root/nobody-owned key, which crash-loops sshd and breaks
+      # secret decryption. Runs before start so ownership is correct on boot.
+      [
+        for mp in var.mount_points :
+        "  mkdir -p ${mp.volume}/ssh && chown -R 100000:100000 ${mp.volume}"
+      ],
       [
         "  pct start \"$ctid\"",
         "}",
