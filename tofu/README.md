@@ -50,16 +50,36 @@ fresh Proxmox host, recreate the role and assign it to the token's group:
 
 ```bash
 pveum role add TerraformProvision -privs \
-  "VM.Allocate,VM.Audit,VM.Config.CPU,VM.Config.Memory,VM.Config.Disk,VM.Config.Network,VM.Config.Options,VM.Config.HWType,Datastore.Allocate,Datastore.Audit,Datastore.AllocateSpace,Sys.Audit"
+  "VM.Allocate,VM.Audit,VM.Config.CPU,VM.Config.Memory,VM.Config.Disk,VM.Config.Network,VM.Config.Options,VM.Config.HWType,Datastore.Allocate,Datastore.Audit,Datastore.AllocateSpace,Sys.Audit,Sys.Modify,SDN.Use,VM.PowerMgmt"
 ```
 
-| Privilege                                          | Used for                                       |
-| -------------------------------------------------- | ---------------------------------------------- |
-| `VM.Allocate`, `VM.Audit`                          | Create, read, destroy LXC containers           |
-| `VM.Config.CPU/Memory/Disk/Network/Options/HWType` | Configure container resources                  |
-| `Datastore.Allocate`                               | Register the `hdd-zfs` pool as Proxmox storage |
-| `Datastore.AllocateSpace`, `Datastore.Audit`       | Allocate and read container disk volumes       |
-| `Sys.Audit`                                        | Read node metadata for provider node discovery |
+| Privilege                                          | Used for                                                                     |
+| -------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `VM.Allocate`, `VM.Audit`                          | Create, read, destroy LXC containers                                         |
+| `VM.Config.CPU/Memory/Disk/Network/Options/HWType` | Configure container resources                                                |
+| `VM.PowerMgmt`                                     | Start / stop containers (the `started` flag, plus shutdown during update)    |
+| `Datastore.Allocate`                               | Register the `hdd-zfs` pool as Proxmox storage                               |
+| `Datastore.AllocateSpace`, `Datastore.Audit`       | Allocate and read container disk volumes                                     |
+| `Sys.Audit`                                        | Read node metadata for provider node discovery                               |
+| `Sys.Modify`                                       | Set a container's network config (`initialization.ip_config`) at create time |
+| `SDN.Use`                                          | Attach the container NIC to the `vmbr0` bridge (SDN-gated on Proxmox 8+)     |
+
+> Already have the role from an earlier setup? Recreate it with the full privilege set in one shot:
+>
+> ```bash
+> pveum role modify TerraformProvision -privs \
+>   "VM.Allocate,VM.Audit,VM.Config.CPU,VM.Config.Memory,VM.Config.Disk,VM.Config.Network,VM.Config.Options,VM.Config.HWType,Datastore.Allocate,Datastore.Audit,Datastore.AllocateSpace,Sys.Audit,Sys.Modify,SDN.Use,VM.PowerMgmt"
+> ```
+>
+> The role was originally scoped for an older module shape and a pre-SDN Proxmox. Four privileges were added as the
+> module and Proxmox evolved — each surfaces as a sequential `HTTP 403` at apply time, so add them all up front rather
+> than discovering them one-by-one:
+>
+> | Privilege      | When it became necessary                                                                    |
+> | -------------- | ------------------------------------------------------------------------------------------- |
+> | `Sys.Modify`   | Containers booting on a static IP at create time (`initialization.ip_config`)               |
+> | `SDN.Use`      | Proxmox 8+ gating bridge attachment behind SDN permissions                                  |
+> | `VM.PowerMgmt` | Tofu managing the `started` flag (start/stop/shutdown of a running container during update) |
 
 ## Usage
 
@@ -133,6 +153,7 @@ zfs create -o encryption=on -o keyformat=passphrase -o keylocation=prompt \
 
 # Per-host subdirectories — each mounted into its own container only.
 zfs create hdd-zfs/keys/cache
+zfs create hdd-zfs/keys/edge
 ```
 
 ### Passphrase in SOPS
@@ -156,9 +177,10 @@ the dataset exists) the wrapper prints a note and skips the export — apply sti
 1. **`null_resource.zfs_keys_unlock`** SSHes into the Proxmox node and runs `zfs load-key` + `zfs mount` with
    idempotency guards. On first apply the dataset is already unlocked + mounted (the operator just created it), so the
    guards skip both steps.
-1. Each container with an `ipv4_address` boots **directly on its static IP** — no DHCP-lease hunt during bootstrap. The
-   `initialization` block is in `lifecycle.ignore_changes`, so NixOS owns networking from the first `switch` onward; the
-   IP is applied once at create.
+1. Each container's `initialization.ip_config` records its static IP in Proxmox metadata. The **template** still DHCPs
+   for bootstrap (see [Bootstrap](#bootstrap-template-container--flake-host)); the per-host flake config takes over the
+   static address after the first `nixos-rebuild switch`. The `initialization` block is in `lifecycle.ignore_changes`,
+   so NixOS owns networking from the first `switch` onward.
 1. **`null_resource.bind_mounts`** (per container with `mount_points`) attaches the per-host `hdd-zfs/keys/<host>/` bind
    mount over root SSH (see [Per-container key persistence mount](#per-container-key-persistence-mount)). The dataset is
    already unlocked host-wide, so a destroy/recreate needs no password — the persisted SSH host key is remounted and the
@@ -171,7 +193,7 @@ password:
 
 ```fish
 sops -d --extract '["homelab-zfs-passphrase"]' secrets/<runner>/secrets.yml | \
-  ssh root@<proxmox-host> 'zfs load-key hdd-zfs/keys && zfs mount hdd-zfs/keys && zfs mount hdd-zfs/keys/cache && zfs mount hdd-zfs/keys/forge'
+  ssh root@<proxmox-host> 'zfs load-key hdd-zfs/keys && zfs mount hdd-zfs/keys && zfs mount hdd-zfs/keys/cache && zfs mount hdd-zfs/keys/edge && zfs mount hdd-zfs/keys/forge'
 ```
 
 Mount the parent before its children — each child mounts under the parent's path. Add another
@@ -215,8 +237,8 @@ encrypted dataset and survives recreate with no `sops updatekeys`. See
 the full [rebuild procedure](../hosts/cache/README-cache.md#rebuilding-the-cache-host).
 
 Per-host isolation is preserved: each container's `mount_points` targets only its own `hdd-zfs/keys/<host>/`
-subdirectory, so the cache container cannot read a future forge container's key. Containers that don't need persistence
-(edge) simply omit `mount_points` and get no `null_resource`.
+subdirectory, so the cache container cannot read the edge container's key. Both `cache` and `edge` enable persistence; a
+container that needs none simply omits `mount_points` and gets no `null_resource`.
 
 ### Cache rootfs on the HDD pool
 
@@ -259,65 +281,71 @@ closure from the public caches and is slow; later runs are incremental. The SSH 
 follow the [rebuild procedure](../hosts/cache/README-cache.md#rebuilding-the-cache-host) to converge the container back
 onto its flake host config.
 
+## Nesting requirement (systemd 256+)
+
+systemd 256+ (nixpkgs 26.05) attempts to mount a private tmpfs for each service's credential store when spawning it.
+Proxmox's LXC AppArmor profile denies that mount in a container **without `nesting`** → every core service (journald,
+networkd, tmpfiles-setup, resolved…) dies with `exit 243/CREDENTIALS` → cascading boot failure
+([systemd#41311](https://github.com/systemd/systemd/issues/41311),
+[nixpkgs#529888](https://github.com/NixOS/nixpkgs/issues/529888)).
+
+The shared LXC module defaults `nesting = true` and `unprivileged = true`. **Do not override either to `false`** unless
+you also deploy a credential-stripping generator (see Debian's `lxc.generator`). Both `cache` and `edge` use the
+defaults; `edge` previously overrode them to `false` and failed to boot.
+
 ## Bootstrap: template container → flake host
 
-`apply` leaves a new container **created but stopped** (`started = false` in the resource). It still runs the generic
-base template and must be converged onto its real flake host config once, by hand. The mechanism documented here is the
-simplest one: SSH into the container and run `nixos-rebuild` from a local checkout of this repo. Remote pushes
-(`nixos-rebuild --target-host`) and deploy-rs/colmena are possible future alternatives, out of scope for now.
+`apply` creates the container **running** (`started = true`) from the base template. The template boots with DHCP,
+`nesting=true`, and the `id_ed25519_tofu` key baked into root's `authorized_keys` — so no manual key injection or
+`pct start` is needed. The container must be converged onto its real flake host config once, by hand.
 
-The base template ([`../templates/lxc-base.nix`](../templates/lxc-base.nix)) boots with DHCP and runs `sshd` key-only
-(root is `prohibit-password`, password auth off) — but it does **not** bake in an authorized key yet, so step 2 injects
-yours via the Proxmox host. Baking the key into the template is the clean long-term home for this.
+Two approaches:
 
-1. **Create and start the container.** `apply` creates it stopped; start it from the Proxmox host (CT id `107` =
-   `edge`):
+- **`--target-host`** (no push needed): build on a machine with the full nix store (e.g. p51) and push the closure over
+  SSH. Use this when `main` has uncommitted or unpushed changes.
+- **clone + rebuild** (requires push): SSH in, `git clone`, `nixos-rebuild switch`. Use this when the repo is on GitHub
+  and the working tree is clean.
 
-   ```fish
-   scripts/tofu-sops.fish apply
-   ssh root@<proxmox-host> pct start 107
-   ```
-
-1. **Inject your SSH key** (until the template bakes one in):
-
-   ```fish
-   scp ~/.ssh/id_ed25519.pub root@<proxmox-host>:/tmp/operator.pub
-   ssh root@<proxmox-host> pct exec 107 -- mkdir -p -m 700 /root/.ssh
-   ssh root@<proxmox-host> pct push 107 /tmp/operator.pub /root/.ssh/authorized_keys --perms 600
-   ssh root@<proxmox-host> rm /tmp/operator.pub
-   ```
-
-1. **Find the DHCP lease** the template booted with:
-
-   ```fish
-   ssh root@<proxmox-host> pct exec 107 -- ip -4 -br addr show eth0
-   ```
-
-1. **Switch onto the flake host config.** SSH in, clone this repo, rebuild. The template carries `nix` (flakes enabled)
-   and `git` for exactly this:
-
-   ```fish
-   ssh root@<dhcp-addr>
-   git clone https://github.com/JHilmarch/nixos-config.git && cd nixos-config
-   sudo nixos-rebuild switch --flake .#<host>
-   ```
-
-   From here the flake config owns the OS, including static addressing — the DHCP lease is replaced, so reconnect on the
-   static IP. For `edge` the target flake host is the evolved jump host (tracked in #126, not yet in tree); it takes
-   over static IP `192.168.2.107` / gateway `192.168.2.1`, exactly as
-   [`../hosts/hl-jump/configuration.nix`](../hosts/hl-jump/configuration.nix) does today.
-
-1. **Flip `started = true`.** Once converged, resolve the TODO in the container resource (`edge.tf`) so Tofu keeps the
-   container running, re-apply, and commit the encrypted state as usual.
-
-Verify:
+### Option A: `--target-host` (recommended for unpushed work)
 
 ```fish
-# after tofu apply of edge:
-ssh <container>
-sudo nixos-rebuild switch --flake .#<host>
-# host comes up with hostname + static IP 192.168.2.107
+# 1. Find the DHCP lease the template booted with (iproute2 is in the template):
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@<proxmox-host> \
+  'pct exec <ctid> -- /run/current-system/sw/bin/ip -4 -br addr show eth0'
+
+# 2. Build + push the closure + activate (from the repo root on p51):
+set lease <dhcp-addr-from-step-1>
+sudo env NIX_SSHOPTS="-i ~/.ssh/id_ed25519_tofu" \
+  nixos-rebuild switch --flake .#nixos-<host> --target-host root@$lease
 ```
+
+The `switch` stops the template's networkd (DHCP) and starts the host config's scripted networking (static IP). The SSH
+connection to the DHCP address **drops mid-activation** — that is expected, not a hang. The new generation is already
+set as the system profile, so reboot to complete the activation cleanly:
+
+```fish
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@<proxmox-host> 'pct reboot <ctid>'
+```
+
+Reconnect on the static IP (the DHCP lease is gone):
+
+```fish
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@<static-ip>
+hostname  # → <host>, e.g. "edge"
+```
+
+For `edge` the static IP is `192.168.2.107` / gateway `192.168.2.1`, as declared in
+[`../hosts/edge/configuration.nix`](../hosts/edge/configuration.nix).
+
+### Option B: clone + rebuild (requires the repo on GitHub)
+
+```fish
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@<dhcp-addr>
+git clone https://github.com/<owner>/nixos-config.git && cd nixos-config
+sudo nixos-rebuild switch --flake .#nixos-<host>
+```
+
+Reconnect on the static IP after the switch.
 
 ## Destroy / recreate a container from code
 
@@ -326,15 +354,15 @@ A container is disposable: it can be destroyed and rebuilt from this repo alone,
 
 ```fish
 # destroy just the edge container (leave others untouched)
-scripts/tofu-sops.fish destroy -target proxmox_virtual_environment_container.edge
+scripts/tofu-sops.fish destroy -target module.edge
 
-# recreate it, then follow the bootstrap above (start → inject key → nixos-rebuild switch)
-scripts/tofu-sops.fish apply
+# recreate it (boots running with nesting+DHCP), then bootstrap per above
+scripts/tofu-sops.fish apply -target module.edge
 ```
 
-`apply` re-creates the container from the same template and sizing, leaving it **stopped** (`started = false`); run the
-[bootstrap](#bootstrap-template-container--flake-host) again to converge it back onto its flake host config. The result
-is byte-for-byte the same working host — same hostname, static IP, and services — because every input is code.
+`apply` re-creates the container from the same template and sizing, **running** (`started = true`); follow the
+[bootstrap](#bootstrap-template-container--flake-host) to converge it onto its flake host config. The result is the same
+working host — same hostname, static IP, and services — because every input is code.
 
 The encrypted state round-trips automatically through the wrapper (decrypt → `tofu` → re-encrypt → shred plaintext), so
 after a destroy/recreate cycle commit the updated encrypted state:

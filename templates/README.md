@@ -23,11 +23,12 @@ clean checkout and consumed by OpenTofu as a Proxmox CT template.
 
 It is a minimal base that only needs to:
 
-1. boot as a privileged Proxmox LXC,
+1. boot as an unprivileged Proxmox LXC with `nesting=true` (required for systemd 256+ — see
+   [`tofu/README.md`](../tofu/README.md) "Nesting requirement"),
 1. come up on the network (DHCP; the per-host flake config takes over static addressing),
-1. accept key-based SSH, and
-1. carry `nix` + `git` so `nixos-rebuild switch --flake .#<host>` can take over — after which this base is fully
-   superseded by the real host config.
+1. accept key-based SSH (the `id_ed25519_tofu` key is baked into root's `authorized_keys`), and
+1. carry `nix` + `git` + `iproute2` so `nixos-rebuild switch --flake .#<host>` can take over — after which this base is
+   fully superseded by the real host config.
 
 ### Build
 
@@ -87,3 +88,21 @@ resource "proxmox_virtual_environment_container" "edge" {
   }
 }
 ```
+
+### systemd v260 `/run` workaround (nixpkgs#529888)
+
+systemd v260 (nixpkgs 26.05) mounts a fresh tmpfs over `/run` when it starts as PID 1, shadowing `/run/current-system`
+and `/run/booted-system` that stage-2 activation just created. Without a workaround, `register-nix-paths` fails on
+`nix-env --set /run/current-system` (dangling) and every downstream service collapses.
+
+The template applies two fixes:
+
+1. **`boot.postBootCommands`** — loads the nix store db and sets the system profile *before* systemd starts (while
+   `/run/current-system` still exists). This consumes `/nix-path-registration`, so the upstream `register-nix-paths`
+   service is correctly skipped via its `ConditionPathExists`.
+1. **`systemd.tmpfiles.rules`** — recreates the `/run/current-system` and `/run/booted-system` symlinks (pointing
+   through the profile) after systemd's tmpfs wipe, via `systemd-tmpfiles-setup.service` early in boot.
+
+Additionally, the proxmox-lxc module sets `manageNetwork = false` → `useNetworkd = true`, but ships no `.network` file
+for eth0. The template adds a DHCP `.network` so networkd brings the interface up and the container is reachable for the
+first `nixos-rebuild`.
