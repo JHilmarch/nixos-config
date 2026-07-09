@@ -11,4 +11,3 @@ echo "2. 'unlock'"
 echo ""
 echo "See scripts/yubikey-usbip/README.md for the full flow."
 exec /bin/sh
-exit 0

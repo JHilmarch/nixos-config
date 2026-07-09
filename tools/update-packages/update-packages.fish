@@ -19,12 +19,9 @@
 #   azure-devops-mcp       GitHub releases (microsoft/azure-devops-mcp)
 #   azure-mcp-server       NuGet (Azure.Mcp)
 
-# Fish exits on command failure by default; explicit `or return 1`/`or exit 1` used where needed
-
 # ── Load library ──────────────────────────────────────────────────────────────
 
 set -g JSON_MODE false
-set -g REPO_ROOT
 
 set -l script_dir (dirname (status filename))
 source "$script_dir/../common/log.fish"
@@ -209,4 +206,3 @@ switch $command
     case '*'
         die "Unknown command: $command. Run with --help for usage."
 end
-exit 0
