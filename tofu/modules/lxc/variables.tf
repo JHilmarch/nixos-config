@@ -45,7 +45,7 @@ variable "unprivileged" {
 }
 
 variable "nesting" {
-  description = "Enable the nesting feature. Required for systemd inside unprivileged LXCs."
+  description = "Enable the nesting feature. REQUIRED for systemd 256+ (nixpkgs 26.05): without nesting, Proxmox's LXC AppArmor profile denies the per-service credential tmpfs mount → every service dies with exit 243/CREDENTIALS (systemd#41311, nixpkgs#529888)."
   type        = bool
   default     = true
 }
