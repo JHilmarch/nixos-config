@@ -128,15 +128,19 @@
     apps = forAllSystems (system: let
       sbomnixPkg = inputs.sbomnix.packages.${system}.default;
       ghafscanPkg = inputs.ghafscan.packages.${system}.default;
-      mkApp = pkg: bin: {
+      mkApp = pkg: bin: description: {
         type = "app";
         program = "${pkg}/bin/${bin}";
+        meta = {
+          inherit description;
+          mainProgram = bin;
+        };
       };
     in {
-      sbomnix = mkApp sbomnixPkg "sbomnix";
-      vulnxscan = mkApp sbomnixPkg "vulnxscan";
-      nix_outdated = mkApp sbomnixPkg "nix_outdated";
-      ghafscan = mkApp ghafscanPkg "ghafscan";
+      sbomnix = mkApp sbomnixPkg "sbomnix" "Generate an SBOM from a nix target";
+      vulnxscan = mkApp sbomnixPkg "vulnxscan" "Scan a nix target for known CVEs";
+      nix_outdated = mkApp sbomnixPkg "nix_outdated" "List outdated packages in a nix target";
+      ghafscan = mkApp ghafscanPkg "ghafscan" "Automate daily vulnerability scans of nix targets";
     });
 
     formatter = forAllSystems (system: treefmtEval.${system}.config.build.wrapper);
