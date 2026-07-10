@@ -16,6 +16,24 @@ proxmox-lxc.nix ─ server.nix ─ common.nix ─ modules/defaults.nix
 These depend on host machinery (`self`, `username`, `users/`, SOPS) and are only meant to be imported by a
 `nixosConfiguration`, not built on their own.
 
+### `proxmox-lxc.nix` — the shared homelab-container base
+
+Every homelab Proxmox LXC host (`edge`, `cache`, and future ones) imports `proxmox-lxc.nix`. Beyond the raw
+`proxmox-lxc` virtualisation module it layers on the config that every container needs **identically**, so a new host
+only declares its own delta (static IP, `stateVersion`, workload, secrets):
+
+| Concern                   | What the template sets                                                     |
+| ------------------------- | -------------------------------------------------------------------------- |
+| Garbage collection        | `nix.gc` monthly `--delete-older-than 30d`, niced + IO-idle serviceConfig  |
+| DNS                       | `services.resolved.enable` + `networking.useHostResolvConf = false`        |
+| LAN nameservers + gateway | `["192.168.2.1"]` / `"192.168.2.1"` via `mkDefault` (a host can override)  |
+| SSH                       | `openssh.openFirewall` + `services.sshHostKeyPersistence.enable`           |
+| Container                 | `proxmoxLXC.privileged = mkDefault false` (nesting is a tofu feature flag) |
+
+The GC sweep is proactive and store-agnostic; a host under disk pressure (e.g. `cache`) layers its own reactive
+`min-free`/`max-free` on top. To add a new LXC host, use the `scaffold-lxc-host` skill — it walks the full delta (host
+dir, flake wiring, tofu resource, secrets, README).
+
 ## `lxc-base.nix` — the homelab LXC template image
 
 `lxc-base.nix` is deliberately **standalone**: it does *not* import the host chain above, so it can be built from a

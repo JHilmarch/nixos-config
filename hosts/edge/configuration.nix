@@ -10,14 +10,12 @@
   imports = [
     "${self}/modules/acme-wildcard/default.nix"
     "${self}/modules/nginx-ingress/default.nix"
-    "${self}/modules/ssh-host-key-persistence/default.nix"
     "${self}/templates/proxmox-lxc.nix"
   ];
 
   networking = {
     hostName = hostname;
     useDHCP = false;
-    nameservers = ["192.168.2.1"];
     interfaces.eth0 = {
       ipv4.addresses = [
         {
@@ -32,21 +30,14 @@
         }
       ];
     };
-    defaultGateway = "192.168.2.1";
     defaultGateway6 = {
       address = "2001:9b1:26f6:2d00::164";
       interface = "eth0";
     };
-    useHostResolvConf = false;
   };
 
-  proxmoxLXC.privileged = false;
-
   services = {
-    resolved.enable = true;
-    openssh.openFirewall = true;
     acmeWildcard.enable = true;
-    sshHostKeyPersistence.enable = true;
 
     nginxIngress = {
       enable = true;

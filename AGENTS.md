@@ -43,6 +43,9 @@ ai/skills/          # Shared AI agent skills (SKILL.md per directory)
 - **Update a package version** → `tools/update-packages/` — Fish CLI, per-package .fish files
 - **Add a new user** → `users/<name>.nix` — register in `users/default.nix` attrset
 - **Add a new host** → `hosts/<name>/` — add nixosConfiguration in flake.nix
+- **Add a new homelab LXC host** → use the `scaffold-lxc-host` skill — it imports `templates/proxmox-lxc.nix` (which
+  provides GC, DNS, SSH host-key persistence, LAN defaults) and walks the full delta (host dir, flake wiring, tofu
+  resource, secrets, README)
 - **Provision a homelab LXC** → `tofu/` — OpenTofu creates/sizes Proxmox containers; see `tofu/README.md` for bootstrap,
   destroy/recreate, and clean-checkout recovery
 - **Change formatting rules** → `treefmt.nix` — alejandra, mdformat, fish_indent, biome
