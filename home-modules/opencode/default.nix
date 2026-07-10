@@ -106,6 +106,9 @@
     hunk-pkg =
       inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.hunk;
 
+    nono-pkg =
+      inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.nono;
+
     anthropic-auth-sync = pkgs.writeShellApplication {
       name = "opencode-anthropic-auth-sync";
       runtimeInputs = [pkgs.jq];
@@ -151,7 +154,7 @@
 
     opencode-wrapper = pkgs.writeShellApplication {
       name = "opencode";
-      runtimeInputs = [pkgs.nono] ++ agentPackages;
+      runtimeInputs = [nono-pkg] ++ agentPackages;
       checkPhase = "true";
       text = ''
         ${lib.concatMapStrings (script: ''
@@ -188,7 +191,7 @@
   in
     lib.mkIf config.programs.opencode.enable {
       programs.opencode.package = lib.mkForce opencode-wrapper;
-      home.packages = [pkgs.nono pkgs.jq];
+      home.packages = [nono-pkg pkgs.jq];
 
       programs.fish.shellAbbrs.oc-audit = "nono audit list --command opencode";
       programs.fish.functions.oc-audit-verify =
