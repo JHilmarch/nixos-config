@@ -44,6 +44,20 @@
       url = "github:numtide/nix-auth";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # sbomnix suite: SBOM generation + vulnerability scanning (TII / Ghaf project).
+    # ghafscan is a separate repo that orchestrates vulnxscan for daily scans;
+    # it depends on sbomnix, so both are pinned and ghafscan's sbomnix follows
+    # ours to keep a single sbomnix in the closure.
+    sbomnix = {
+      url = "github:tiiuae/sbomnix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    ghafscan = {
+      url = "github:tiiuae/ghafscan";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.sbomnix.follows = "sbomnix";
+    };
   };
 
   outputs = inputs @ {self, ...}: let
@@ -86,6 +100,12 @@
           .system
           .build
           .tarball;
+
+        # Re-expose the sbomnix/ghafscan packages so downstream consumers
+        # (security gate, daily scanners) can pull them as packages or run
+        # them via the apps below.
+        sbomnix = inputs.sbomnix.packages.${system}.default;
+        ghafscan = inputs.ghafscan.packages.${system}.default;
       };
 
     treefmtEval = forAllSystems (
@@ -99,6 +119,25 @@
     };
 
     packages = forAllSystems mkPackages;
+
+    # Entry points for the sbomnix suite. The sbomnix package bundles all
+    # CLIs in one derivation's bin/; ghafscan ships its own binary.
+    # vulnxscan requires grype + vulnix (already on PATH via the package's
+    # wrapper). vulnix reads NVD_API_KEY from the environment — that env-var
+    # is the SEAM for SOPS wiring in a later task (do NOT add secrets here).
+    apps = forAllSystems (system: let
+      sbomnixPkg = inputs.sbomnix.packages.${system}.default;
+      ghafscanPkg = inputs.ghafscan.packages.${system}.default;
+      mkApp = pkg: bin: {
+        type = "app";
+        program = "${pkg}/bin/${bin}";
+      };
+    in {
+      sbomnix = mkApp sbomnixPkg "sbomnix";
+      vulnxscan = mkApp sbomnixPkg "vulnxscan";
+      nix_outdated = mkApp sbomnixPkg "nix_outdated";
+      ghafscan = mkApp ghafscanPkg "ghafscan";
+    });
 
     formatter = forAllSystems (system: treefmtEval.${system}.config.build.wrapper);
 
