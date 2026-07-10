@@ -88,6 +88,32 @@ variable "cache_disk_size" {
   default     = 512
 }
 
+# --- forge host --------------------------------------------------------------
+
+variable "forge_vm_id" {
+  description = "Proxmox CT id for the forge container."
+  type        = number
+  default     = 109
+}
+
+variable "forge_cores" {
+  description = "CPU cores for the forge container. Generously sized for the eventual Postgres + repos workload."
+  type        = number
+  default     = 4
+}
+
+variable "forge_memory" {
+  description = "Dedicated RAM (MB) for the forge container. Sized for Postgres + repos; LXC does not pre-reserve it."
+  type        = number
+  default     = 4096
+}
+
+variable "forge_disk_size" {
+  description = "Root disk size (GB) for the forge container. Holds the git repos and Postgres data (T2)."
+  type        = number
+  default     = 32
+}
+
 # --- ZFS mirror pool + encrypted dataset (#166) ------------------------------
 
 variable "hdd_zfs_pool_name" {

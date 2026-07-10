@@ -33,6 +33,7 @@ Contains NixOS configurations for the following targets:
 - [iso](./hosts/iso/README-iso.md)
 - [wsl-cab](./hosts/wsl-cab/README-wsl-cab.md)
 - [edge](./hosts/edge/README-edge.md)
+- [forge](./hosts/forge/README-forge.md)
 
 How to target a host:
 
