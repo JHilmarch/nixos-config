@@ -8,6 +8,13 @@
 # container's hostname; features on a privileged container can only be
 # changed by root@pam, not the API token).
 #
+# The Proxmox CT hostname (var.hostname → initialization.hostname, e.g.
+# "homelab-edge") is what the Proxmox UI and `pct list` display; it is set at
+# create time only. Because initialization is in lifecycle.ignore_changes,
+# renaming an already-running container is a one-time `pct set <ctid>
+# --hostname <name>` or a destroy/recreate (see tofu/README.md). NixOS still
+# owns the in-container hostname via networking.hostName from the first switch.
+#
 # Bind-mounted key material is chowned to 100000 (the unprivileged-LXC subuid
 # base) so it maps to in-container root: sshd and sops-nix run as container-root
 # and cannot read a host-root/nobody-owned key, which crash-loops sshd and
@@ -49,12 +56,17 @@ resource "proxmox_virtual_environment_container" "this" {
   }
 
   dynamic "initialization" {
-    for_each = var.ipv4_address != "" ? [1] : []
+    for_each = (var.ipv4_address != "" || var.hostname != "") ? [1] : []
     content {
-      ip_config {
-        ipv4 {
-          address = var.ipv4_address
-          gateway = var.ipv4_gateway
+      hostname = var.hostname != "" ? var.hostname : null
+
+      dynamic "ip_config" {
+        for_each = var.ipv4_address != "" ? [1] : []
+        content {
+          ipv4 {
+            address = var.ipv4_address
+            gateway = var.ipv4_gateway
+          }
         }
       }
     }

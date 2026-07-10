@@ -11,6 +11,20 @@ variable "description" {
   type        = string
 }
 
+variable "hostname" {
+  description = <<-EOT
+    Proxmox CT hostname — the name shown in the Proxmox UI and returned by
+    `pct list`. Set at create time; because the initialization block is in
+    lifecycle.ignore_changes, a rename of an already-running container needs a
+    one-time `pct set <ctid> --hostname <name>` (see tofu/README.md) or a
+    destroy/recreate. Empty (default) leaves the Proxmox default `CT<vmid>`.
+    NixOS still owns the in-container hostname via networking.hostName from the
+    first switch onward; this only labels the container on the Proxmox side.
+  EOT
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Extra tags beyond the shared 'homelab' tag."
   type        = list(string)

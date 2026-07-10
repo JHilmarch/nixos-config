@@ -7,6 +7,7 @@ module "edge" {
   source = "./modules/lxc"
 
   vm_id        = var.edge_vm_id
+  hostname     = "homelab-edge"
   description  = "Homelab ingress (edge). Managed by OpenTofu; OS owned by hosts/ flake config."
   tags         = ["edge"]
   cores        = var.edge_cores

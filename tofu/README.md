@@ -129,6 +129,26 @@ ls -la result/   # proxmox-lxc tarball
 Register the built tarball as a Proxmox CT template, then reference it by a stable name from the container resource. See
 [`../templates/README.md`](../templates/README.md) for the registration steps and the template name.
 
+## Container hostname
+
+Each container passes a `hostname` to the shared LXC module (`homelab-edge`, `homelab-cache`, …), which becomes the
+Proxmox CT hostname shown in the Proxmox UI and `pct list`. Without it Proxmox falls back to the default `CT<vmid>`
+(e.g. `CT107`, `CT108`). This is the **Proxmox-side** label only — NixOS still owns the in-container hostname via
+`networking.hostName` from the first `nixos-rebuild switch` onward.
+
+The name is applied at **create time**. Because the module keeps `initialization` in `lifecycle.ignore_changes` (so a
+running container's networking/hostname is never reconciled out from under NixOS), `tofu apply` does **not** rename an
+already-running container. To rename an existing one without a destroy/recreate, set it once over root SSH:
+
+```fish
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@<proxmox-host> 'pct set <ctid> --hostname <name>'
+# e.g. pct set 107 --hostname homelab-edge   (edge)
+#      pct set 108 --hostname homelab-cache  (cache)
+```
+
+A [destroy/recreate](#destroy--recreate-a-container-from-code) also picks up the new name, since the hostname is set on
+create.
+
 ## ZFS pool + encrypted dataset
 
 A ZFS mirror of the two 14.6 TB HDDs on the Proxmox host provides bulk storage and an encrypted dataset for per-host key

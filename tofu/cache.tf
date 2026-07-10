@@ -13,6 +13,7 @@ module "cache" {
   source = "./modules/lxc"
 
   vm_id        = var.cache_vm_id
+  hostname     = "homelab-cache"
   description  = "Homelab LAN Nix binary cache. Managed by OpenTofu; OS owned by hosts/ flake config."
   tags         = ["cache"]
   cores        = var.cache_cores
