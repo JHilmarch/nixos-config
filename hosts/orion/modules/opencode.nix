@@ -15,6 +15,7 @@
       ];
       runtimeInputs = [
         inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
+        pkgs.unstable.adrs # ADR CLI + MCP server (adrs mcp serve)
         pkgs.local.github-personal-mcp
         pkgs.local.github-work-mcp
         pkgs.local.gh-personal # GitHub CLI authenticated with PAT for personal account
@@ -82,6 +83,11 @@
             enabled = true;
             type = "local";
             command = ["mcp-nixos"];
+          };
+          adrs = {
+            enabled = true;
+            type = "local";
+            command = ["adrs" "mcp" "serve"];
           };
           github-personal = {
             enabled = true;

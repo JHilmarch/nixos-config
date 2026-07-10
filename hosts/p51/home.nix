@@ -10,6 +10,7 @@
     jetbrains.rider # IDE for .NET and C# development
     nodejs_24
     signal-desktop # Desktop client for Signal (unstable: avoids pnpm-10.29.2 CVE in stable)
+    adrs # Command-line tool for managing Architectural Decision Records (also provides an MCP server)
   ];
 
   llm-agents-packages = with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [

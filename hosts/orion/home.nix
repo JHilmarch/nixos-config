@@ -15,6 +15,7 @@
     codeql # Semantic code analysis engine for security research and vulnerability detection
     context7-mcp # Context7 MCP CLI (up-to-date documentation for LLMs)
     signal-desktop # Desktop client for Signal (unstable: avoids pnpm-10.29.2 CVE in stable)
+    adrs # Command-line tool for managing Architectural Decision Records (also provides an MCP server)
   ];
 
   llm-agents-packages = with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [

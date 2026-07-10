@@ -143,6 +143,8 @@ nix flake check
 - **SSH Config Workaround:** `home-modules/ssh/` copies Nix store symlink to regular file (SSH rejects nobody-owned
   config).
 - **GitHub MCP:** Personal/work split via base/variant pattern reading PATs from `/run/secrets/`.
+- **ADRs:** Architecture Decision Records live in `doc/adr/` (Nygard format). Managed via the `adrs` CLI and the `adrs`
+  MCP server. New ADRs are created as `proposed` for human review — `adrs new "<title>"` or the MCP `create_adr` tool.
 - **Azure DevOps:** Commits are NOT signed (work policy). wsl-cab uses work git identity.
 - **Linear History:** `merge.ff = only` is set declaratively in every `home-modules/git/*.nix` variant, so every clone
   on every host refuses non-fast-forward merges at the git level. **Enforcement boundary:** the default `git merge`

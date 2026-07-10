@@ -3,6 +3,10 @@
     "nixos": {
       "command": "mcp-nixos"
     },
+    "adrs": {
+      "command": "adrs",
+      "args": ["mcp", "serve"]
+    },
     "context7": {
       "command": "context7-with-sops",
       "enabled": false

@@ -18,6 +18,7 @@
       ];
       runtimeInputs = [
         inputs.mcp-nixos.packages.${pkgs.stdenv.hostPlatform.system}.mcp-nixos
+        pkgs.unstable.adrs # ADR CLI + MCP server (adrs mcp serve)
         pkgs.local.codegraph # code-intelligence MCP server (codegraph serve --mcp)
         pkgs.local.github-personal-mcp
         pkgs.local.github-work-mcp
@@ -86,6 +87,11 @@
             enabled = true;
             type = "local";
             command = ["mcp-nixos"];
+          };
+          adrs = {
+            enabled = true;
+            type = "local";
+            command = ["adrs" "mcp" "serve"];
           };
           github-personal = {
             enabled = true;
