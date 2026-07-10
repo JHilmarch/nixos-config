@@ -105,6 +105,16 @@ mcp-nixos, llm-agents, treefmt-nix, vscode-server. All follow nixpkgs except llm
   `home-modules/opencode/` for the nono profile.
 - **Conventional Commits enforced** by hooks/commit-msg (50-char subject, 72-char body)
 
+## Comments & Documentation
+
+- **Avoid inline comments.** Prefer refactoring into a well-named method/function over explaining code. Write an inline
+  comment ONLY when you can't refactor for readability, or to explain why a convention is broken. Keep it to 1 line.
+- **File/module/function docs** go in a short doc section above the function or at the top of the file/module — not
+  scattered inline.
+- **Longer explanations** (how a subsystem works, guidelines, troubleshooting) go in a `README`, focused on how it works
+  **right now**. No architecture-decision logs, logbooks, plan references, or "how it used to / will work".
+- **NEVER reference issue/PR numbers** in comments or docs. Only exception: a `TODO` comment pointing at an open bug.
+
 ## Commands
 
 ```fish
