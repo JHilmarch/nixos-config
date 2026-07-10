@@ -149,6 +149,7 @@
 
       // ── Nix substituters ─────────────────────────────────────────────────
       "cache.numtide.com", // numtide binary cache (devshell, etc.)
+      "*.fileshare.se", // homelab domain (cache.fileshare.se nix-serve binary cache, NAS, ingress vhosts)
 
       // ── IaC provider registries (Terraform / OpenTofu) ───────────────────
       "terraform.io", // Terraform provider/module registry + docs
