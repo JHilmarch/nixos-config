@@ -101,8 +101,6 @@ mcp-nixos, llm-agents, treefmt-nix, vscode-server. All follow nixpkgs except llm
 - **ALWAYS** use `--json` flag with ck, update-packages, project-manager tools
 - **ALWAYS** format after editing Nix files (hooks do this automatically)
 - **ALWAYS** wait for user approval before creating GitHub issues
-- **NEVER** re-add jail-nix for OpenCode — use nono (Landlock). jail-nix was removed in #119; see
-  `home-modules/opencode/` for the nono profile.
 - **Conventional Commits enforced** by hooks/commit-msg (50-char subject, 72-char body)
 
 ## Comments & Documentation
