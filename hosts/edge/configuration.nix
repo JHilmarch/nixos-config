@@ -42,6 +42,7 @@
     nginxIngress = {
       enable = true;
       virtualHosts."cache.fileshare.se".proxyPass = "http://192.168.2.108:5000";
+      virtualHosts."forge.fileshare.se".proxyPass = "http://192.168.2.109:3000";
     };
   };
 
