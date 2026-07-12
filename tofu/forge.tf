@@ -1,8 +1,10 @@
 # forge — the homelab's git forge LXC.
 #
 # Tofu creates and sizes the container and attaches its NIC to the Proxmox
-# bridge; the container's OS and addressing come from its NixOS flake config.
-# Bare base host today (no workload); Forgejo + Postgres land in T2.
+# bridge; the container's OS and addressing come from its NixOS flake config
+# (hosts/forge/ — Forgejo on a local PostgreSQL). The rootfs (state dir + DB)
+# stays on NVMe; git repositories live on the encrypted hdd-zfs/data/forge
+# dataset via the second bind mount below.
 
 module "forge" {
   source = "./modules/lxc"
@@ -30,6 +32,10 @@ module "forge" {
     {
       volume = "/hdd-zfs/keys/forge"
       path   = "/persist"
+    },
+    {
+      volume = "/hdd-zfs/data/forge"
+      path   = "/var/lib/forgejo-repos"
     }
   ]
   proxmox_ssh_host             = var.proxmox_ssh_host

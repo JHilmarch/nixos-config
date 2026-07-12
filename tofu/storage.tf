@@ -1,4 +1,4 @@
-# hdd-zfs — bulk HDD-backed ZFS mirror + encrypted host-key dataset (#166).
+# hdd-zfs — bulk HDD-backed ZFS mirror + encrypted datasets (keys + data).
 #
 # The pool itself (mirror of sda+sdb on pve) is a one-time operator step
 # OUTSIDE Tofu: the bpg/proxmox provider can register an existing zpool as
@@ -12,13 +12,17 @@
 #      using the SOPS-held passphrase (exported as TF_VAR_ by
 #      scripts/tofu-sops.fish).
 #
+# Two encrypted trees, each its own encryptionroot but sharing one
+# passphrase: hdd-zfs/keys (per-host key material, e.g. hdd-zfs/keys/forge)
+# and hdd-zfs/data (bulk service data, e.g. hdd-zfs/data/forge for the
+# Forgejo git repositories).
+#
 # ZFS dataset encryption is a Proxmox-host-level concern. An LXC container
-# cannot unlock the dataset (no access to the host's zfs tooling). The
-# container only reads its persisted SSH key via a mount point targeting
-# its own per-host subdirectory (e.g. hdd-zfs/keys/cache/). Once unlocked
-# at the host level, the dataset stays unlocked across container
-# destroy/recreate — rebuilds need no password. The passphrase is required
-# only at:
+# cannot unlock a dataset (no access to the host's zfs tooling). The
+# container only reads its own subdirectory via a mount point (e.g.
+# hdd-zfs/keys/cache/, hdd-zfs/data/forge/). Once unlocked at the host
+# level, the datasets stay unlocked across container destroy/recreate —
+# rebuilds need no password. The passphrase is required only at:
 #   (a) initial provisioning (here, in Tofu);
 #   (b) after a Proxmox host reboot — manual `zfs load-key` (see README).
 
@@ -48,13 +52,13 @@ resource "proxmox_storage_zfspool" "hdd_zfs" {
 # ---------------------------------------------------------------------------
 
 resource "null_resource" "zfs_keys_unlock" {
-  # Re-run only when the passphrase changes (sha256 keeps the value out of
-  # state — plain var.homelab_zfs_passphrase would land there in plaintext).
-  # Since state is SOPS-encrypted, even plaintext-in-state is acceptable,
-  # but the hash is defence-in-depth.
+  # Re-run only when the passphrase or the dataset list changes (sha256 keeps
+  # the value out of state — plain var.homelab_zfs_passphrase would land
+  # there in plaintext). Since state is SOPS-encrypted, even
+  # plaintext-in-state is acceptable, but the hash is defence-in-depth.
   triggers = {
     passphrase_hash = sha256(var.homelab_zfs_passphrase)
-    dataset         = "${var.hdd_zfs_pool_name}/keys"
+    datasets        = "${var.hdd_zfs_pool_name}/keys ${var.hdd_zfs_pool_name}/data"
   }
 
   connection {
@@ -84,6 +88,11 @@ resource "null_resource" "zfs_keys_unlock" {
       "zfs mount | grep -q '^${var.hdd_zfs_pool_name}/keys/cache ' || zfs mount ${var.hdd_zfs_pool_name}/keys/cache",
       "zfs mount | grep -q '^${var.hdd_zfs_pool_name}/keys/edge '  || zfs mount ${var.hdd_zfs_pool_name}/keys/edge",
       "zfs mount | grep -q '^${var.hdd_zfs_pool_name}/keys/forge ' || zfs mount ${var.hdd_zfs_pool_name}/keys/forge",
+      # hdd-zfs/data — separate encryptionroot, same passphrase. Parent
+      # before child: each child mounts under the parent's path.
+      "[ \"$(zfs get -H -o value keystatus ${var.hdd_zfs_pool_name}/data)\" = \"available\" ] || cat /root/.zfs-keys-passphrase.tf | zfs load-key ${var.hdd_zfs_pool_name}/data",
+      "zfs mount | grep -q '^${var.hdd_zfs_pool_name}/data '       || zfs mount ${var.hdd_zfs_pool_name}/data",
+      "zfs mount | grep -q '^${var.hdd_zfs_pool_name}/data/forge ' || zfs mount ${var.hdd_zfs_pool_name}/data/forge",
       # Cleanup: shred then remove the passphrase file.
       "shred -u /root/.zfs-keys-passphrase.tf",
     ]

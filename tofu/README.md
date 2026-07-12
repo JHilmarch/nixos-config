@@ -151,8 +151,10 @@ create.
 
 ## ZFS pool + encrypted dataset
 
-A ZFS mirror of the two 14.6 TB HDDs on the Proxmox host provides bulk storage and an encrypted dataset for per-host key
-material. Each subdirectory under the encrypted dataset mounts exclusively into its own container.
+A ZFS mirror of the two 14.6 TB HDDs on the Proxmox host provides bulk storage and two encrypted datasets:
+`hdd-zfs/keys` for per-host key material and `hdd-zfs/data` for bulk service data (today: `hdd-zfs/data/forge`, the
+Forgejo repository root). Each is its own encryptionroot, unlocked with the same SOPS-held passphrase. Each subdirectory
+under an encrypted dataset mounts exclusively into its own container.
 
 ### Operator steps (one-time on the Proxmox host)
 
@@ -174,6 +176,11 @@ zfs create -o encryption=on -o keyformat=passphrase -o keylocation=prompt \
 # Per-host subdirectories — each mounted into its own container only.
 zfs create hdd-zfs/keys/cache
 zfs create hdd-zfs/keys/edge
+
+# Bulk-data tree — separate encryptionroot, SAME passphrase as hdd-zfs/keys.
+zfs create -o encryption=on -o keyformat=passphrase -o keylocation=prompt \
+  -o mountpoint=/hdd-zfs/data hdd-zfs/data
+zfs create hdd-zfs/data/forge
 ```
 
 ### Passphrase in SOPS
@@ -194,9 +201,9 @@ the dataset exists) the wrapper prints a note and skips the export — apply sti
 
 1. **`proxmox_storage_zfspool.hdd_zfs`** registers the pool as Proxmox storage so container `disk`/`mount_point` blocks
    can reference `datastore_id = "hdd-zfs"`.
-1. **`null_resource.zfs_keys_unlock`** SSHes into the Proxmox node and runs `zfs load-key` + `zfs mount` with
-   idempotency guards. On first apply the dataset is already unlocked + mounted (the operator just created it), so the
-   guards skip both steps.
+1. **`null_resource.zfs_keys_unlock`** SSHes into the Proxmox node and runs `zfs load-key` + `zfs mount` for both
+   encrypted datasets (`hdd-zfs/keys` and `hdd-zfs/data`, children included) with idempotency guards. On first apply the
+   datasets are already unlocked + mounted (the operator just created them), so the guards skip both steps.
 1. Each container's `initialization.ip_config` records its static IP in Proxmox metadata. The **template** still DHCPs
    for bootstrap (see [Bootstrap](#bootstrap-template-container--flake-host)); the per-host flake config takes over the
    static address after the first `nixos-rebuild switch`. The `initialization` block is in `lifecycle.ignore_changes`,
@@ -208,16 +215,19 @@ the dataset exists) the wrapper prints a note and skips the export — apply sti
 
 ### Reboot-relock
 
-After a Proxmox host reboot the encrypted dataset re-locks. Unlock it manually from the Tofu runner using the SOPS-held
-password:
+After a Proxmox host reboot both encrypted datasets re-lock. Unlock them manually from the Tofu runner using the
+SOPS-held password (one decrypt, one `ssh` per encryptionroot):
 
 ```fish
-sops -d --extract '["homelab-zfs-passphrase"]' secrets/<runner>/secrets.yml | \
-  ssh root@<proxmox-host> 'zfs load-key hdd-zfs/keys && zfs mount hdd-zfs/keys && zfs mount hdd-zfs/keys/cache && zfs mount hdd-zfs/keys/edge && zfs mount hdd-zfs/keys/forge'
+set -l pass (sops -d --extract '["homelab-zfs-passphrase"]' secrets/<runner>/secrets.yml)
+echo $pass | ssh root@<proxmox-host> 'zfs load-key hdd-zfs/keys && zfs mount hdd-zfs/keys && zfs mount hdd-zfs/keys/cache && zfs mount hdd-zfs/keys/edge && zfs mount hdd-zfs/keys/forge'
+echo $pass | ssh root@<proxmox-host> 'zfs load-key hdd-zfs/data && zfs mount hdd-zfs/data && zfs mount hdd-zfs/data/forge'
 ```
 
-Mount the parent before its children — each child mounts under the parent's path. Add another
-`&& zfs mount hdd-zfs/keys/<host>` clause when new per-host subdirectories come online.
+Keep it to **one `zfs load-key` per `ssh` invocation**: `load-key` reads the passphrase from stdin through buffered
+stdio, so a second `load-key` chained in the same remote shell finds its stdin already drained and fails. Mount the
+parent before its children — each child mounts under the parent's path. Add another `&& zfs mount <dataset>/<host>`
+clause to the matching line when new per-host subdirectories come online.
 
 ### Per-container key persistence mount
 
@@ -259,6 +269,14 @@ the full [rebuild procedure](../hosts/cache/README-cache.md#rebuilding-the-cache
 Per-host isolation is preserved: each container's `mount_points` targets only its own `hdd-zfs/keys/<host>/`
 subdirectory, so the cache container cannot read the edge container's key. Both `cache` and `edge` enable persistence; a
 container that needs none simply omits `mount_points` and gets no `null_resource`.
+
+The same mechanism carries bulk data mounts: `forge` adds a second entry mapping `hdd-zfs/data/forge` to
+`/var/lib/forgejo-repos`, so the Forgejo repository root lives encrypted on the HDD pool while the container rootfs
+(Forgejo state dir + PostgreSQL) stays on NVMe. Note that adding a mount to an **already-running** container is not
+picked up by `tofu apply` alone — the `bind_mounts` provisioner only re-runs on container replacement, and its guard
+keys off the first mount (`/persist`) already being attached. Either attach it once by hand over root SSH
+(`pct stop 109 && pct set 109 -mp1 /hdd-zfs/data/forge,mp=/var/lib/forgejo-repos && pct start 109`) or
+[destroy/recreate](#destroy--recreate-a-container-from-code) the container.
 
 ### Cache rootfs on the HDD pool
 
