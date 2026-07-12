@@ -28,6 +28,7 @@
     sops # Simple and flexible tool for managing secrets
     age # Modern encryption tool with small explicit keys
     age-plugin-yubikey # YubiKey plugin for age
+    ssh-to-age # Derive a host's &<name> age recipient from its persisted SSH host key during LXC bootstrap
     opentofu # Homelab provisioning; run via scripts/tofu-sops.fish
     tree-sitter # A parser generator tool
     alejandra # nix linter
