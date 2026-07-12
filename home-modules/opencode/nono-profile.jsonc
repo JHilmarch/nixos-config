@@ -133,6 +133,8 @@
       "*.githubusercontent.com", // GitHub user content CDN (raw, objects, avatars, camo, release-assets, ...)
       "codeload.github.com", // GitHub archive downloads (go get, etc.)
       "api.github.com", // GitHub REST API (gh CLI, MCP server)
+      "forgejo.org", // Forgejo project site (docs, releases)
+      "*.forgejo.org", // Forgejo subdomains (codeberg mirror, code.forgejo.org, etc.)
       "pypi.org", // Python package index
       "*.pypi.org", // PyPI CDN / mirrors
       "files.pythonhosted.org", // PyPI file hosting
