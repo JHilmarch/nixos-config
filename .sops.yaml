@@ -6,6 +6,7 @@ keys:
     - &edge age15dqf2dzuw6pl2zcdj63rxw4w44l93v3za3e2r9lkxtvcgmg8pg9sehqetw
     - &p51 age1aevpum6lnswls8pxk253u265fuumr2j22vhhe2r6jjy2aqsy4d4szjeu3q
     - &cache age125vlkv4ay48q2psmr5j6eukg2t7ttjr404q59xpj2xkn460vaa0shtuxmk
+    - &forge age1f4stq97hqjqpmwc4z52jjxadph77zly48j84d3eqkpt3yxkqccnqckpxd0
 creation_rules:
   - path_regex: secrets/orion/[^/]+\.(yaml|yml|json|env|ini)$
     key_groups:
@@ -23,6 +24,13 @@ creation_rules:
     key_groups:
       - age:
         - *cache
+        - *orion
+        - *p51
+        - *jonatan-yubikey-23839166
+  - path_regex: secrets/forge/[^/]+\.(yaml|yml|json|env|ini)$
+    key_groups:
+      - age:
+        - *forge
         - *orion
         - *p51
         - *jonatan-yubikey-23839166
