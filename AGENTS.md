@@ -14,7 +14,8 @@ hosts/              # Per-host configuration.nix + home.nix
 ├── wsl-cab/        # WSL dev env (work identity, Copilot CLI, Azure DevOps)
 ├── iso/            # Minimal installation ISO (no Home Manager)
 ├── edge/           # Proxmox LXC ingress/reverse-proxy (nginx, static IP)
-└── cache/          # Proxmox LXC binary cache (nix-serve-ng behind nginx TLS)
+├── cache/          # Proxmox LXC binary cache (nix-serve-ng behind nginx TLS)
+└── forge/          # Proxmox LXC git forge (Forgejo on Postgres, repos on hdd-zfs, restic→NAS)
 tofu/               # OpenTofu homelab provisioning (Proxmox LXCs) → [README.md]
 modules/            # System-level NixOS modules → [AGENTS.md]
 home-modules/       # Home Manager modules → [AGENTS.md]

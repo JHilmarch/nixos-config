@@ -1,20 +1,40 @@
 # forge — homelab git forge
 
-A Proxmox LXC that will host the homelab's self-hosted git forge (Forgejo + Postgres). Base host with SSH host-key
-persistence and SOPS secrets in place; the Forgejo + Postgres workload lands in T2.
+A Proxmox LXC that hosts the homelab's self-hosted git forge: **Forgejo on a local PostgreSQL**, reached at
+`https://forge.fileshare.se` through the edge reverse proxy, with a daily encrypted restic backup to the Synology NAS.
 
 - **Host:** `nixos-forge` (flake attribute) / `forge` (hostname), CT 109, static IP `192.168.2.109`.
 - **Container:** unprivileged + `nesting=true` (see
   [tofu/README.md "Nesting requirement"](../../tofu/README.md#nesting-requirement-systemd-256)).
 
-## Current state
+## Workload
 
-The host imports [`templates/proxmox-lxc.nix`](../../templates/proxmox-lxc.nix) and declares only its unique delta:
-hostname, static IP (`192.168.2.109/24`), `stateVersion`, SSH host-key persistence, and its SOPS secret entries. The
-template provides nix.gc, resolved/DNS, LAN nameservers + gateway, openssh `openFirewall`, unprivileged + nesting, and
-SOPS wiring.
+[`forgejo.nix`](configuration.nix) enables `services.forgejo` backed by a local PostgreSQL (the module provisions the
+role + database because `database.type = "postgres"` and `createDatabase = true`). Forgejo binds the host LAN address
+`192.168.2.109:3000` — edge terminates TLS for `forge.fileshare.se` and reverse-proxies to it over the LAN (RFC1918
+allow-list), so no port is exposed off-LAN. Registration is disabled (single-operator forge — the admin account is
+created out of band, below); session cookies are HTTPS-only; the small-instance `twoqueue` in-memory cache is used (no
+external Redis); and the footer version is hidden.
 
-No Forgejo or Postgres workload is configured yet — that arrives in T2.
+`SECRET_KEY`, `INTERNAL_TOKEN`, and the DB password are read from the SOPS secrets (see below) rather than the module's
+auto-generated files, so they are stable across a container recreate.
+
+### Storage split (repos on HDD, DB on NVMe)
+
+The git repositories and the Postgres data directory live on **different** pools, deliberately:
+
+| Data                 | Path                     | Pool                                  | Why                                              |
+| -------------------- | ------------------------ | ------------------------------------- | ------------------------------------------------ |
+| Git repositories     | `/var/lib/forgejo-repos` | `hdd-zfs/data/forge` (encrypted, HDD) | bulk capacity; spinning disk is fine for a forge |
+| Postgres data        | `/var/lib/postgresql`    | NVMe rootfs (`local-lvm`)             | latency-sensitive; keep the DB fast              |
+| Forgejo state/config | `/var/lib/forgejo`       | NVMe rootfs (`local-lvm`)             | small, module default                            |
+
+`repositoryRoot = "/var/lib/forgejo-repos"` points Forgejo's repo root at the `hdd-zfs/data/forge` bind mount declared
+in [`tofu/forge.tf`](../../tofu/forge.tf). `hdd-zfs/data` is a separate encrypted dataset (its own encryptionroot,
+sharing the keys passphrase) unlocked by `null_resource.zfs_keys_unlock` in [`tofu/storage.tf`](../../tofu/storage.tf);
+like `/persist`, the repo data survives a container destroy/recreate because the dataset lives on the Proxmox host. See
+[`tofu/README.md` "ZFS pool + encrypted dataset"](../../tofu/README.md#zfs-pool--encrypted-dataset) for the operator
+`zfs create` step and the reboot-relock clause.
 
 ## Secrets and key persistence
 
@@ -101,9 +121,70 @@ Every later `tofu destroy`/`apply` skips this — the persisted key is remounted
 Generate the Forgejo secret values with `nix run nixpkgs#forgejo -- generate secret SECRET_KEY` (and `INTERNAL_TOKEN`);
 the DB and restic passwords are any `openssl rand -base64 32`.
 
+## Admin user (once per host lifetime)
+
+Registration is disabled, so the first (admin) account is created out of band with the Forgejo CLI, run as the `forgejo`
+user inside the container:
+
+```fish
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@<proxmox-host> \
+  'pct exec 109 -- runuser -u forgejo -- \
+     /run/current-system/sw/bin/forgejo admin user create \
+       --admin --username <name> --email <you@example.com> --random-password'
+```
+
+`--random-password` prints a one-time password to log in with; change it in the UI afterwards. Additional users are
+created the same way (drop `--admin`) or invited from within Forgejo.
+
+## Backup and restore
+
+[`restic.nix`](configuration.nix) runs `services.restic.backups.forge` daily at 05:30. Its `backupPrepareCommand` first
+produces a consistent dump into `/var/lib/forgejo-backup` on the NVMe rootfs — a `forgejo dump` archive
+(`forgejo-dump.tar`, repos + config + DB) plus a plain-SQL `pg_dump` (`forgejo-db.sql`) — then restic snapshots that
+staging dir into an encrypted, deduplicated repository at `/mnt/FILESHARE_FORGE_BACKUP/restic` on the Synology NAS (an
+NFS automount). Retention is `--keep-daily 7 --keep-weekly 4 --keep-monthly 6`; the repo password is the
+`restic-forge-password` SOPS secret.
+
+> The NAS must export `/volume2/forge-backup` over NFS with root write access — a one-time operator step on the
+> Synology, like the existing shares in [`modules/nfs/fileshare.nix`](../../modules/nfs/default.nix).
+
+Run a backup on demand and list snapshots (restic reads its repo/password from the unit's environment):
+
+```fish
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.109 \
+  'systemctl start restic-backups-forge.service && journalctl -u restic-backups-forge -n 20 --no-pager'
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.109 \
+  'systemctl start --wait restic-backups-forge-check 2>/dev/null; \
+   restic -r /mnt/FILESHARE_FORGE_BACKUP/restic \
+     --password-file /run/secrets/restic-forge-password snapshots'
+```
+
+**Restore** (into a scratch dir, then re-import — do a dry run at least once):
+
+```fish
+# 1. Restore the latest snapshot's dump files to a scratch dir.
+restic -r /mnt/FILESHARE_FORGE_BACKUP/restic --password-file /run/secrets/restic-forge-password \
+  restore latest --target /tmp/forge-restore
+
+# 2. Recreate the Postgres DB from the SQL dump (stop Forgejo first).
+systemctl stop forgejo
+runuser -u postgres -- psql -d forgejo -f /tmp/forge-restore/var/lib/forgejo-backup/forgejo-db.sql
+
+# 3. Restore repos/config from the forgejo dump per the Forgejo restore docs, then:
+systemctl start forgejo
+```
+
+The `forgejo dump` archive is a standard zip/tar; unpack `repos/` back under `/var/lib/forgejo-repos` and the config
+back under `/var/lib/forgejo` following the
+[Forgejo backup-and-restore docs](https://forgejo.org/docs/latest/admin/backup-and-restore/). Because the repo root and
+`/persist` live on the host's ZFS datasets, a container destroy/recreate alone already preserves repos + host key; the
+restic restore is for NAS-side disaster recovery (lost container *and* pool).
+
 ## Files
 
 | File                | Purpose                                                                            |
 | ------------------- | ---------------------------------------------------------------------------------- |
 | `configuration.nix` | Host config: networking, static IP, SSH host-key persistence, SOPS secret entries. |
+| `forgejo.nix`       | Forgejo on local PostgreSQL; repo root on the `hdd-zfs` mount, DB + state on NVMe. |
+| `restic.nix`        | Daily restic backup (Forgejo + Postgres dump) to the Synology NAS over NFS.        |
 | `home.nix`          | Minimal Home Manager config (matches cache).                                       |
