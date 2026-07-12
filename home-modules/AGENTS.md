@@ -79,3 +79,5 @@ load from: `ai/skills/` (shared) + agent-specific dirs.
 - **NEVER** create new HM module with `programs.<name>` options — use `modules.<name>`
 - **NEVER** edit files in `gpg/public-keys/` that aren't `.asc` — binary keys will corrupt
 - **NEVER** bypass sandbox for agent wrappers — security boundary
+- **NEVER** validate `opencode/nono-profile.jsonc` with a network-fetched tool (blocked by egress) or a `sed`/`//`
+  comment strip (mangles `https://`). Use `biome check <file>` — already on the sandbox PATH, offline, JSONC-aware.
