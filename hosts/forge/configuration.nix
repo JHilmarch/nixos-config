@@ -8,6 +8,7 @@
   ...
 }: {
   imports = [
+    ./forgejo.nix
     "${self}/templates/proxmox-lxc.nix"
   ];
 
@@ -27,9 +28,18 @@
   services.sshHostKeyPersistence.enable = true;
 
   sops.secrets = {
-    "forgejo-secret-key" = {};
-    "forgejo-internal-token" = {};
-    "forgejo-db-password" = {};
+    "forgejo-secret-key" = {
+      owner = "forgejo";
+      group = "forgejo";
+    };
+    "forgejo-internal-token" = {
+      owner = "forgejo";
+      group = "forgejo";
+    };
+    "forgejo-db-password" = {
+      owner = "forgejo";
+      group = "forgejo";
+    };
     "restic-forge-password" = {};
   };
 
