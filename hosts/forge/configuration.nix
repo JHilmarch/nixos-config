@@ -9,6 +9,7 @@
 }: {
   imports = [
     ./forgejo.nix
+    ./restic.nix
     "${self}/templates/proxmox-lxc.nix"
   ];
 
