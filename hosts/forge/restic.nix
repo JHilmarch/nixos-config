@@ -4,40 +4,32 @@
 # backupPrepareCommand first produces a consistent `forgejo dump` archive
 # (repos + DB + config) plus a plain-SQL pg_dump into the staging dir, and
 # restic then snapshots that dir into an encrypted, deduplicated, auto-pruned
-# repository on the NAS (NFS automount). Uncompressed dump formats are chosen
-# deliberately: restic's own chunking/compression dedups them across days.
+# repository on the NAS. Uncompressed dump formats are chosen deliberately:
+# restic's own chunking/compression dedups them across days.
+#
+# forge is an UNPRIVILEGED LXC, which cannot mount NFS from inside the guest
+# (the kernel denies the mount() syscall — Operation not permitted). So the
+# Proxmox host mounts the NAS and bind-mounts it into the container at
+# /var/lib/forgejo-backup-repo (a third tofu mount_points entry). restic sees
+# a plain local directory; the NFS lives entirely on the privileged host. See
+# tofu/README.md "NAS-backed backup mount" and hosts/forge/README-forge.md.
 {
   config,
   lib,
   pkgs,
-  self,
   ...
-}: {
-  imports = [
-    "${self}/modules/nfs/default.nix"
-  ];
-
-  nfs = {
-    enable = true;
-    host = "fileshare.local";
-    ip = "192.168.2.103";
-    shares = [
-      {
-        path = "/mnt/FILESHARE_FORGE_BACKUP";
-        device = "/volume2/forge-backup";
-      }
-    ];
-  };
-
+}: let
+  stagingDir = "/var/lib/forgejo-backup";
+  repoDir = "/var/lib/forgejo-backup-repo";
+in {
   services.restic.backups.forge = {
     initialize = true;
-    repository = "/mnt/FILESHARE_FORGE_BACKUP/restic";
+    repository = "${repoDir}/restic";
     passwordFile = config.sops.secrets."restic-forge-password".path;
-    paths = ["/var/lib/forgejo-backup"];
+    paths = [stagingDir];
 
     backupPrepareCommand = let
       forgejo = config.services.forgejo;
-      stagingDir = "/var/lib/forgejo-backup";
       # services.postgresql.package only has a value once T2 enables postgres.
       postgresqlPackage =
         if config.services.postgresql.enable
@@ -75,8 +67,9 @@
     ];
   };
 
-  systemd.services.restic-backups-forge = {
-    requires = ["mnt-FILESHARE_FORGE_BACKUP.automount"];
-    after = ["mnt-FILESHARE_FORGE_BACKUP.automount"];
-  };
+  # The repo lives on the pve-mounted NAS bind mount; fail loudly if it is not
+  # present rather than silently backing up into the container rootfs.
+  systemd.services.restic-backups-forge.serviceConfig.ExecStartPre = lib.mkBefore [
+    "${pkgs.coreutils}/bin/test -d ${repoDir}"
+  ];
 }

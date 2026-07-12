@@ -118,10 +118,14 @@ resource "null_resource" "bind_mounts" {
         for i, mp in var.mount_points :
         "  pct set \"$ctid\" -mp${i} ${mp.volume},mp=${mp.path}"
       ],
-      # Map key material to container-root before start (see header).
+      # Map key material to container-root before start (see header). Only the
+      # /persist key mount needs it — sshd/sops-nix run as container-root and
+      # cannot read a host-root-owned key. Data mounts (repos, the NAS backup
+      # repo) keep their host ownership; their in-container services own them
+      # via tmpfiles/runtime, and chowning an NFS-backed mount would misown it.
       [
-        for mp in var.mount_points :
-        "  mkdir -p ${mp.volume}/ssh && chown -R 100000:100000 ${mp.volume}"
+        for mp in var.mount_points : "  mkdir -p ${mp.volume}/ssh && chown -R 100000:100000 ${mp.volume}"
+        if mp.path == "/persist"
       ],
       [
         "  pct start \"$ctid\"",

@@ -4,7 +4,10 @@
 # bridge; the container's OS and addressing come from its NixOS flake config
 # (hosts/forge/ — Forgejo on a local PostgreSQL). The rootfs (state dir + DB)
 # stays on NVMe; git repositories live on the encrypted hdd-zfs/data/forge
-# dataset via the second bind mount below.
+# dataset via the second bind mount below. The third bind mount carries the
+# restic backup repository: the Proxmox host mounts the Synology NAS (an
+# unprivileged LXC cannot NFS-mount itself) and bind-mounts it in, so restic
+# writes to a plain local path. See tofu/README.md "NAS-backed backup mount".
 
 module "forge" {
   source = "./modules/lxc"
@@ -36,6 +39,10 @@ module "forge" {
     {
       volume = "/hdd-zfs/data/forge"
       path   = "/var/lib/forgejo-repos"
+    },
+    {
+      volume = "/mnt/nas-forge-backup"
+      path   = "/var/lib/forgejo-backup-repo"
     }
   ]
   proxmox_ssh_host             = var.proxmox_ssh_host

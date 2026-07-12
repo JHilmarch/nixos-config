@@ -278,6 +278,34 @@ keys off the first mount (`/persist`) already being attached. Either attach it o
 (`pct stop 109 && pct set 109 -mp1 /hdd-zfs/data/forge,mp=/var/lib/forgejo-repos && pct start 109`) or
 [destroy/recreate](#destroy--recreate-a-container-from-code) the container.
 
+Only the `/persist` key mount is chowned to the unprivileged-LXC subuid base (`100000`) — that mapping exists so
+container-root's `sshd`/`sops-nix` can read the host key. Data mounts (the repo dataset, the NAS backup repo below) keep
+their host ownership; their in-container services own them via tmpfiles/runtime, and recursively chowning an NFS-backed
+mount to the subuid base would misown it on the NAS.
+
+### NAS-backed backup mount
+
+`forge` runs a daily restic backup to the Synology NAS ([`hosts/forge/restic.nix`](../hosts/forge/restic.nix)). Because
+`forge` is an **unprivileged** LXC it cannot mount NFS from inside the guest — the kernel denies the `mount()` syscall
+(`mount.nfs: Operation not permitted`, exit 32) for any share or NFS version, even ones a bare-metal host mounts fine.
+So the **Proxmox host** mounts the NAS and bind-mounts it into the container; restic sees a plain local directory and
+the NFS lives entirely on the privileged host.
+
+**Operator step (one-time on the Proxmox host):** mount the Synology export at the host path the container maps in
+(`/mnt/nas-forge-backup`). Key the NFS export to the Proxmox host's LAN IP (not `forge.fileshare.se`, which resolves to
+edge). A persistent systemd/fstab entry on pve:
+
+```bash
+# /etc/fstab on pve — the NAS export the container's third mount_points entry maps in.
+fileshare.local:/volume2/forge-backup  /mnt/nas-forge-backup  nfs  nfsvers=4,_netdev,x-systemd.automount,noauto  0 0
+```
+
+Then `systemctl daemon-reload && mount /mnt/nas-forge-backup`. The container's `mount_points` third entry maps
+`/mnt/nas-forge-backup → /var/lib/forgejo-backup-repo`; restic's repository is `…/restic` under it. The mount is
+attached the same way as the others (over root SSH on create/recreate; hand-attach with
+`pct set 109 -mp2 /mnt/nas-forge-backup,mp=/var/lib/forgejo-backup-repo` on an already-running container). After a pve
+reboot the NAS remounts via its own `x-systemd.automount`, independent of the encrypted-dataset relock.
+
 ### Cache rootfs on the HDD pool
 
 The cache container is the one host whose rootfs (and therefore its `/nix/store`) deliberately lives on the bulk
