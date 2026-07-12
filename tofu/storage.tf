@@ -82,6 +82,8 @@ resource "null_resource" "zfs_keys_unlock" {
       # Guard: `zfs mount` errors on already-mounted filesystems.
       "zfs mount | grep -q '^${var.hdd_zfs_pool_name}/keys '       || zfs mount ${var.hdd_zfs_pool_name}/keys",
       "zfs mount | grep -q '^${var.hdd_zfs_pool_name}/keys/cache ' || zfs mount ${var.hdd_zfs_pool_name}/keys/cache",
+      "zfs mount | grep -q '^${var.hdd_zfs_pool_name}/keys/edge '  || zfs mount ${var.hdd_zfs_pool_name}/keys/edge",
+      "zfs mount | grep -q '^${var.hdd_zfs_pool_name}/keys/forge ' || zfs mount ${var.hdd_zfs_pool_name}/keys/forge",
       # Cleanup: shred then remove the passphrase file.
       "shred -u /root/.zfs-keys-passphrase.tf",
     ]

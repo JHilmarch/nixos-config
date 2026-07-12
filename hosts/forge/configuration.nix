@@ -24,5 +24,14 @@
     };
   };
 
+  services.sshHostKeyPersistence.enable = true;
+
+  sops.secrets = {
+    "forgejo-secret-key" = {};
+    "forgejo-internal-token" = {};
+    "forgejo-db-password" = {};
+    "restic-forge-password" = {};
+  };
+
   system.stateVersion = "26.05";
 }

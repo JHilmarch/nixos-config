@@ -26,6 +26,12 @@ module "forge" {
   ipv4_address = "192.168.2.109/24"
   ipv4_gateway = "192.168.2.1"
 
+  mount_points = [
+    {
+      volume = "/hdd-zfs/keys/forge"
+      path   = "/persist"
+    }
+  ]
   proxmox_ssh_host             = var.proxmox_ssh_host
   proxmox_ssh_private_key_path = var.proxmox_ssh_private_key_path
 }
