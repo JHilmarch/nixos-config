@@ -124,13 +124,17 @@ the DB and restic passwords are any `openssl rand -base64 32`.
 ## Admin user (once per host lifetime)
 
 Registration is disabled, so the first (admin) account is created out of band with the Forgejo CLI, run as the `forgejo`
-user inside the container:
+user inside the container. The `forgejo` binary is **not** on the system `PATH` (the module runs it from the package
+store path), so resolve it from the running service unit and pass the same work/custom dirs the service uses:
 
 ```fish
-ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@<proxmox-host> \
-  'pct exec 109 -- runuser -u forgejo -- \
-     /run/current-system/sw/bin/forgejo admin user create \
-       --admin --username <name> --email <you@example.com> --random-password'
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.109 \
+  'BIN=$(dirname $(systemctl show -p ExecStart --value forgejo | sed -n "s/.*path=\([^ ;]*\).*/\1/p")); \
+   runuser -u forgejo -- env \
+     FORGEJO_WORK_DIR=/var/lib/forgejo FORGEJO_CUSTOM=/var/lib/forgejo/custom \
+     "$BIN/forgejo" admin user create \
+       --admin --username <name> --email <you@example.com> --random-password \
+       --config /var/lib/forgejo/custom/conf/app.ini'
 ```
 
 `--random-password` prints a one-time password to log in with; change it in the UI afterwards. Additional users are
@@ -141,12 +145,16 @@ created the same way (drop `--admin`) or invited from within Forgejo.
 [`restic.nix`](configuration.nix) runs `services.restic.backups.forge` daily at 05:30. Its `backupPrepareCommand` first
 produces a consistent dump into `/var/lib/forgejo-backup` on the NVMe rootfs — a `forgejo dump` archive
 (`forgejo-dump.tar`, repos + config + DB) plus a plain-SQL `pg_dump` (`forgejo-db.sql`) — then restic snapshots that
-staging dir into an encrypted, deduplicated repository at `/mnt/FILESHARE_FORGE_BACKUP/restic` on the Synology NAS (an
-NFS automount). Retention is `--keep-daily 7 --keep-weekly 4 --keep-monthly 6`; the repo password is the
-`restic-forge-password` SOPS secret.
+staging dir into an encrypted, deduplicated repository at `/var/lib/forgejo-backup-repo/restic`. Retention is
+`--keep-daily 7 --keep-weekly 4 --keep-monthly 6`; the repo password is the `restic-forge-password` SOPS secret.
 
-> The NAS must export `/volume2/forge-backup` over NFS with root write access — a one-time operator step on the
-> Synology, like the existing shares in [`modules/nfs/fileshare.nix`](../../modules/nfs/default.nix).
+> **The repo lives on the NAS, bind-mounted in from the Proxmox host — restic never mounts NFS itself.** `forge` is an
+> unprivileged LXC and cannot mount NFS from inside the guest (`mount.nfs: Operation not permitted`, exit 32, for any
+> share or version — even ones a bare-metal host mounts fine). So pve mounts the Synology export and bind-mounts it into
+> the container at `/var/lib/forgejo-backup-repo` (the third `mount_points` entry in
+> [`tofu/forge.tf`](../../tofu/forge.tf)). The one-time operator setup — the pve `/etc/fstab` NFS entry (key the
+> Synology export to the **Proxmox host's** LAN IP, not `forge.fileshare.se`, which resolves to edge) and attaching the
+> bind mount — is in [`tofu/README.md` "NAS-backed backup mount"](../../tofu/README.md#nas-backed-backup-mount).
 
 Run a backup on demand and list snapshots (restic reads its repo/password from the unit's environment):
 
@@ -154,8 +162,7 @@ Run a backup on demand and list snapshots (restic reads its repo/password from t
 ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.109 \
   'systemctl start restic-backups-forge.service && journalctl -u restic-backups-forge -n 20 --no-pager'
 ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.109 \
-  'systemctl start --wait restic-backups-forge-check 2>/dev/null; \
-   restic -r /mnt/FILESHARE_FORGE_BACKUP/restic \
+  'restic -r /var/lib/forgejo-backup-repo/restic \
      --password-file /run/secrets/restic-forge-password snapshots'
 ```
 
@@ -163,7 +170,7 @@ ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.109 \
 
 ```fish
 # 1. Restore the latest snapshot's dump files to a scratch dir.
-restic -r /mnt/FILESHARE_FORGE_BACKUP/restic --password-file /run/secrets/restic-forge-password \
+restic -r /var/lib/forgejo-backup-repo/restic --password-file /run/secrets/restic-forge-password \
   restore latest --target /tmp/forge-restore
 
 # 2. Recreate the Postgres DB from the SQL dump (stop Forgejo first).

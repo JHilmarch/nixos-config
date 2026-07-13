@@ -306,6 +306,14 @@ attached the same way as the others (over root SSH on create/recreate; hand-atta
 `pct set 109 -mp2 /mnt/nas-forge-backup,mp=/var/lib/forgejo-backup-repo` on an already-running container). After a pve
 reboot the NAS remounts via its own `x-systemd.automount`, independent of the encrypted-dataset relock.
 
+**Set the Synology export squash to "Map all users to admin".** restic runs as the container's root, which on an
+unprivileged LXC is host uid `100000` (the subuid base) once it crosses the bind mount to NFS. A default (root-only /
+"No mapping") export lets *pve*'s real uid 0 write but squashes the container's uid `100000` to a denied anon — restic
+then fails to even `stat`/`mkdir` the repo (`permission denied`) despite a `0777` directory, because the NAS denies at
+the NFS layer, not on the Unix mode. "Map all users to admin" writes every incoming request as the NAS admin, so the
+container's uid-`100000` writes land correctly. The share is single-purpose (forge's backup only), so all-squash has no
+downside here. This is a NAS-side setting; no config in this repo encodes it.
+
 ### Cache rootfs on the HDD pool
 
 The cache container is the one host whose rootfs (and therefore its `/nix/store`) deliberately lives on the bulk

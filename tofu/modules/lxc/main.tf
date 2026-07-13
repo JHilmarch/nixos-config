@@ -15,10 +15,11 @@
 # --hostname <name>` or a destroy/recreate (see tofu/README.md). NixOS still
 # owns the in-container hostname via networking.hostName from the first switch.
 #
-# Bind-mounted key material is chowned to 100000 (the unprivileged-LXC subuid
+# Only the /persist key mount is chowned to 100000 (the unprivileged-LXC subuid
 # base) so it maps to in-container root: sshd and sops-nix run as container-root
 # and cannot read a host-root/nobody-owned key, which crash-loops sshd and
-# breaks secret decryption on first boot.
+# breaks secret decryption on first boot. Data mounts (repos, the NAS backup
+# repo) keep their host ownership — chowning an NFS-backed mount would misown it.
 #
 # See hosts/cache/README-cache.md "Provisioning" for the ignore_changes
 # rationale, and tofu/README.md for the overall provisioning flow.
@@ -118,11 +119,6 @@ resource "null_resource" "bind_mounts" {
         for i, mp in var.mount_points :
         "  pct set \"$ctid\" -mp${i} ${mp.volume},mp=${mp.path}"
       ],
-      # Map key material to container-root before start (see header). Only the
-      # /persist key mount needs it — sshd/sops-nix run as container-root and
-      # cannot read a host-root-owned key. Data mounts (repos, the NAS backup
-      # repo) keep their host ownership; their in-container services own them
-      # via tmpfiles/runtime, and chowning an NFS-backed mount would misown it.
       [
         for mp in var.mount_points : "  mkdir -p ${mp.volume}/ssh && chown -R 100000:100000 ${mp.volume}"
         if mp.path == "/persist"
