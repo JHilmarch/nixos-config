@@ -12,6 +12,7 @@ host; each container's NixOS config (under `hosts/<name>/`) owns its OS, service
 | `variables.tf` | Provisioning inputs — node, datastores, bridge, template, per-host sizing. |
 | `edge.tf`      | The `edge` ingress LXC container resource.                                 |
 | `cache.tf`     | The `cache` LAN Nix binary cache LXC container resource.                   |
+| `runners.tf`   | The `runners` CI build-host LXC container resource.                        |
 | `storage.tf`   | ZFS pool registration + encrypted-dataset unlock (#166).                   |
 | `.gitignore`   | Keeps plaintext state and the provider cache out of git.                   |
 

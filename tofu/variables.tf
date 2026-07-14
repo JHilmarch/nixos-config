@@ -114,6 +114,38 @@ variable "forge_disk_size" {
   default     = 32
 }
 
+# --- runners host ------------------------------------------------------------
+
+variable "runners_vm_id" {
+  description = "Proxmox CT id for the runners container."
+  type        = number
+  default     = 110
+}
+
+variable "runners_cores" {
+  description = "CPU cores for the runners container. Capped below the cache host (12) so a runaway build cannot starve the fleet."
+  type        = number
+  default     = 6
+}
+
+variable "runners_memory" {
+  description = "RAM ceiling (MB) for the runners container. Used only during builds; LXC does not pre-reserve it. Leaves headroom for the host + other LXCs."
+  type        = number
+  default     = 12288
+}
+
+variable "runners_swap" {
+  description = "Swap (MB) for the runners container — a spike margin so heavy nix builds are not OOM-killed."
+  type        = number
+  default     = 4096
+}
+
+variable "runners_disk_size" {
+  description = "Root disk size (GB) for the runners container. Holds the build working set on the NVMe `local-lvm` pool."
+  type        = number
+  default     = 32
+}
+
 # --- ZFS mirror pool + encrypted dataset (#166) ------------------------------
 
 variable "hdd_zfs_pool_name" {
