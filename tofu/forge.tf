@@ -35,10 +35,12 @@ module "forge" {
     {
       volume = "/hdd-zfs/keys/forge"
       path   = "/persist"
+      owner  = "100000:100000"
     },
     {
       volume = "/hdd-zfs/data/forge"
       path   = "/var/lib/forgejo-repos"
+      owner  = "100996:100995"
     },
     {
       volume = "/mnt/nas-forge-backup"

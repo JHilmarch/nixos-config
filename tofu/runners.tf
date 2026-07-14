@@ -35,6 +35,7 @@ module "runners" {
     {
       volume = "/hdd-zfs/keys/runners"
       path   = "/persist"
+      owner  = "100000:100000"
     }
   ]
   proxmox_ssh_host             = var.proxmox_ssh_host

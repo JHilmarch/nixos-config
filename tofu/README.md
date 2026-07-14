@@ -245,6 +245,7 @@ module "cache" {
     {
       volume = "/hdd-zfs/keys/cache"   # host path on the unlocked dataset
       path   = "/persist"              # in-container mount point
+      owner  = "100000:100000"         # chown host-side to container-root (subuid base)
     }
   ]
 }
@@ -279,10 +280,15 @@ keys off the first mount (`/persist`) already being attached. Either attach it o
 (`pct stop 109 && pct set 109 -mp1 /hdd-zfs/data/forge,mp=/var/lib/forgejo-repos && pct start 109`) or
 [destroy/recreate](#destroy--recreate-a-container-from-code) the container.
 
-Only the `/persist` key mount is chowned to the unprivileged-LXC subuid base (`100000`) — that mapping exists so
-container-root's `sshd`/`sops-nix` can read the host key. Data mounts (the repo dataset, the NAS backup repo below) keep
-their host ownership; their in-container services own them via tmpfiles/runtime, and recursively chowning an NFS-backed
-mount to the subuid base would misown it on the NAS.
+A mount is chowned host-side only when its `mount_points` entry sets an `owner` (`"uid:gid"` in the Proxmox host
+namespace). This is required because on an unprivileged LXC the host root (uid 0) is not mapped into the guest: a fresh
+host-root-owned dataset is squashed to `nobody` (`65534`) inside the container, and the in-container service **cannot
+chown a host-owned bind mount itself** (`chown: Operation not permitted`, even as container-root). The owner is the
+subuid base (`100000`) plus the in-container uid/gid — `"100000:100000"` for the `/persist` key mount so
+container-root's `sshd`/`sops-nix` can read the host key, and `"100996:100995"` for the forge repo dataset so the
+`forgejo` service can create repositories under it. A mount that omits `owner` keeps its host ownership — correct for
+the NFS-backed NAS backup mount, whose ownership is fixed on the NAS side (recursively chowning it to a subuid would
+misown it).
 
 ### NAS-backed backup mount
 

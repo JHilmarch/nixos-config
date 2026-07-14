@@ -29,6 +29,7 @@ module "edge" {
     {
       volume = "/hdd-zfs/keys/edge"
       path   = "/persist"
+      owner  = "100000:100000"
     }
   ]
   proxmox_ssh_host             = var.proxmox_ssh_host

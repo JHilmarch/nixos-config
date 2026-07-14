@@ -15,11 +15,16 @@
 # --hostname <name>` or a destroy/recreate (see tofu/README.md). NixOS still
 # owns the in-container hostname via networking.hostName from the first switch.
 #
-# Only the /persist key mount is chowned to 100000 (the unprivileged-LXC subuid
-# base) so it maps to in-container root: sshd and sops-nix run as container-root
-# and cannot read a host-root/nobody-owned key, which crash-loops sshd and
-# breaks secret decryption on first boot. Data mounts (repos, the NAS backup
-# repo) keep their host ownership — chowning an NFS-backed mount would misown it.
+# A mount is chowned host-side only when its entry sets `owner` ("uid:gid" in the
+# Proxmox host namespace). On an unprivileged LXC host-root (uid 0) is not mapped
+# into the guest, so a fresh host-root-owned dataset is squashed to nobody (65534)
+# inside the container and the in-container service cannot chown it itself. The
+# owner is therefore the subuid base (100000) plus the in-container uid/gid:
+# /persist uses "100000:100000" (container-root, so sshd/sops-nix can read the
+# host key — otherwise sshd crash-loops and secret decryption fails on first
+# boot); the forge repo dataset uses "100996:100995" (forgejo). Mounts with no
+# `owner` keep their host ownership — correct for the NFS-backed NAS mount, whose
+# ownership is fixed on the NAS side and must not be chowned to a subuid.
 #
 # See hosts/cache/README-cache.md "Provisioning" for the ignore_changes
 # rationale, and tofu/README.md for the overall provisioning flow.
@@ -120,8 +125,12 @@ resource "null_resource" "bind_mounts" {
         "  pct set \"$ctid\" -mp${i} ${mp.volume},mp=${mp.path}"
       ],
       [
-        for mp in var.mount_points : "  mkdir -p ${mp.volume}/ssh && chown -R 100000:100000 ${mp.volume}"
+        for mp in var.mount_points : "  mkdir -p ${mp.volume}/ssh"
         if mp.path == "/persist"
+      ],
+      [
+        for mp in var.mount_points : "  chown -R ${mp.owner} ${mp.volume}"
+        if mp.owner != null
       ],
       [
         "  pct start \"$ctid\"",

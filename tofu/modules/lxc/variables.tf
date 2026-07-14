@@ -99,10 +99,21 @@ variable "mount_points" {
     which the Proxmox API token cannot provide, so the module applies them via
     `pct set -mp` over root SSH (see proxmox_ssh_host / proxmox_ssh_private_key
     _path) rather than as a native mount_point block. Default: no mount points.
+
+    owner (optional): host-side "uid:gid" to recursively chown the volume to,
+    expressed in the Proxmox host's namespace. On an unprivileged LXC the host
+    root (uid 0) is NOT mapped into the guest, so a fresh host-root-owned dataset
+    is squashed to nobody (65534) inside the container and the in-container
+    service cannot chown it itself. Set owner to the subuid base (100000) plus
+    the in-container uid/gid so the guest sees the intended owner — e.g.
+    "100000:100000" for container-root (/persist), "100996:100995" for forgejo.
+    Omit to leave the host ownership untouched (correct for NFS-backed mounts,
+    which must keep their NAS-side ownership).
   EOT
   type = list(object({
     volume = string
     path   = string
+    owner  = optional(string)
   }))
   default = []
 }
