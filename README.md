@@ -34,6 +34,7 @@ Contains NixOS configurations for the following targets:
 - [wsl-cab](./hosts/wsl-cab/README-wsl-cab.md)
 - [edge](./hosts/edge/README-edge.md)
 - [forge](./hosts/forge/README-forge.md)
+- [runners](./hosts/runners/README-runners.md)
 
 How to target a host:
 

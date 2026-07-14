@@ -401,6 +401,36 @@
             }
           ];
         };
+
+      nixos-runners = let
+        system = "x86_64-linux";
+        specialArgs = {
+          inherit inputs self;
+          username = "jonatan";
+          hostname = "runners";
+          functions = import ./functions {
+            pkgs = import inputs.nixpkgs {inherit system;};
+          };
+        };
+      in
+        inputs.nixpkgs.lib.nixosSystem {
+          specialArgs = specialArgs;
+          modules = [
+            {
+              nixpkgs.hostPlatform.system = system;
+            }
+            ./hosts/runners/configuration.nix
+            inputs.sops-nix.nixosModules.sops
+            inputs.home-manager.nixosModules.home-manager
+            {
+              home-manager.extraSpecialArgs = specialArgs;
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.backupFileExtension = "hm-backup";
+              home-manager.users.${specialArgs.username} = import ./hosts/runners/home.nix;
+            }
+          ];
+        };
     };
   };
 }
