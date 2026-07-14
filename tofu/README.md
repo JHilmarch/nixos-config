@@ -221,7 +221,7 @@ SOPS-held password (one decrypt, one `ssh` per encryptionroot):
 
 ```fish
 set -l pass (sops -d --extract '["homelab-zfs-passphrase"]' secrets/<runner>/secrets.yml)
-echo $pass | ssh root@<proxmox-host> 'zfs load-key hdd-zfs/keys && zfs mount hdd-zfs/keys && zfs mount hdd-zfs/keys/cache && zfs mount hdd-zfs/keys/edge && zfs mount hdd-zfs/keys/forge'
+echo $pass | ssh root@<proxmox-host> 'zfs load-key hdd-zfs/keys && zfs mount hdd-zfs/keys && zfs mount hdd-zfs/keys/cache && zfs mount hdd-zfs/keys/edge && zfs mount hdd-zfs/keys/forge && zfs mount hdd-zfs/keys/runners'
 echo $pass | ssh root@<proxmox-host> 'zfs load-key hdd-zfs/data && zfs mount hdd-zfs/data && zfs mount hdd-zfs/data/forge'
 ```
 
