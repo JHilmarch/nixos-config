@@ -47,6 +47,8 @@
         ADAPTER = "twoqueue";
         HOST = ''{"size":100,"recent_ratio":0.25,"ghost_ratio":0.5}'';
       };
+
+      actions.ENABLED = true;
     };
 
     # The module hard-sets both to files it generates on first boot, so
