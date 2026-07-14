@@ -84,6 +84,10 @@ mcp-nixos, llm-agents, treefmt-nix, vscode-server. All follow nixpkgs except llm
 - **Searching code:** The opencode jail lacks GNU `grep`; use **`ck` (preferred)** or `rg` for shell-based code search.
   The built-in Grep tool wraps `rg` and is always safe. Bare `grep` from a shell fails (`grep: command not found`) and
   wastes a round-trip.
+- **Worktree directory:** create git worktrees under `~/.worktrees/<project>/<branch>` (e.g.
+  `~/.worktrees/nixos-config/feat-x`) — NEVER a sibling of the repo like `../nixos-config-worktrees`. The opencode nono
+  sandbox only grants write access to the repo workdir and `$HOME/.worktrees`; any other parent directory fails with
+  `Permission denied`. The `/using-git-worktrees` skill reads this line to pick the location without guessing.
 
 ## Anti-Patterns
 

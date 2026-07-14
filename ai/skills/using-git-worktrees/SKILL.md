@@ -16,9 +16,24 @@ without switching.
 
 ## Directory Selection Process
 
-Follow this priority order:
+Follow this priority order.
 
-### 1. Check Existing Directories
+> **Sandbox constraint (read first).** When running inside an agent sandbox (e.g. opencode's nono jail), only two
+> locations are writable: the **repo workdir** and **`$HOME/.worktrees`**. Any other parent — especially a sibling of
+> the repo like `../<repo>-worktrees` — is denied with `Permission denied`. **Never invent a sibling directory.** If the
+> preferred location does not exist yet, **create it** (`mkdir -p ~/.worktrees`); do not fall through to guessing or to
+> a sibling path. `~/.worktrees` lives in `$HOME`, outside the repo, so it needs no `.gitignore` handling.
+
+### 1. Check AGENTS.md first
+
+```bash
+grep -i "worktree.*director" AGENTS.md 2>/dev/null
+```
+
+**If a preference is specified:** use it without asking. AGENTS.md wins over the existence checks below, because a
+declared path may not have been created yet (create it in step 3 if missing).
+
+### 2. Check Existing Directories
 
 ```bash
 # Check in priority order
@@ -26,26 +41,27 @@ ls -d ~/.worktrees 2>/dev/null # Preferred
 ls -d ./worktrees 2>/dev/null # Alternative
 ```
 
-**If found:** Use that directory. If both exist, `~/.worktrees` wins.
+**If found:** use that directory. If both exist, `~/.worktrees` wins.
 
-### 2. Check AGENTS.md
+### 3. Create the preferred location (do NOT skip to asking)
+
+If neither exists and AGENTS.md gave no preference, the default is still `~/.worktrees` — **create it** rather than
+guessing or asking:
 
 ```bash
-grep -i "worktree.*director" AGENTS.md 2>/dev/null
+mkdir -p ~/.worktrees
 ```
 
-**If preference specified:** Use it without asking.
-
-### 3. Ask User
-
-If no directory exists and no AGENTS.md preference:
+Only ask the user if `~/.worktrees` is genuinely unavailable (e.g. `mkdir` fails for an unrelated reason):
 
 ```
-No worktree directory found. Where should I create worktrees?
-1. ~/.worktrees/  (global location)
-2. .worktrees/    (project-local, hidden)
+Could not use ~/.worktrees. Where should I create worktrees?
+1. ~/.worktrees/  (global location, sandbox-writable)
+2. .worktrees/    (project-local, hidden — must be gitignored)
 Which would you prefer?
 ```
+
+Never propose a sibling of the repo (`../<repo>-worktrees`) — it is not sandbox-writable.
 
 ## Safety Verification
 
@@ -214,7 +230,12 @@ baseline | Report failures + ask | | No package.json/Cargo.toml | Skip dependenc
 ### Assuming directory location
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > AGENTS.md → ask
+- **Fix:** Follow priority: AGENTS.md > existing > create `~/.worktrees`. Only ask if `~/.worktrees` is unavailable.
+
+### Inventing a sibling directory
+
+- **Problem:** A path like `../<repo>-worktrees` is outside the sandbox's writable set → `Permission denied`
+- **Fix:** Use `~/.worktrees/<project>/<branch>` (or the AGENTS.md path); never a sibling of the repo
 
 ### Proceeding with failing tests
 
@@ -250,12 +271,14 @@ Ready to implement auth feature
 - Proceed with failing tests without asking
 - Assume directory location when ambiguous
 - Skip AGENTS.md check
+- Create a worktree in a sibling of the repo (`../<repo>-worktrees`) — not sandbox-writable, fails with
+  `Permission denied`
 - Use `git merge --no-ff` — always rebase + `git merge --ff-only` for linear history
 - Use `merge:` as a Conventional Commit type — it's invalid; the merge step itself shouldn't create a commit
 
 **Always:**
 
-- Follow directory priority: existing > AGENTS.md > ask
+- Follow directory priority: AGENTS.md > existing > create `~/.worktrees` (only ask if that is unavailable)
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
