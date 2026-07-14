@@ -35,7 +35,7 @@
 
   claudeFable = "anthropic/claude-fable-5";
   claudeOpus = "anthropic/claude-opus-4-8";
-  claudeSonnet = "anthropic/claude-sonnet-4-6";
+  claudeSonnet = "anthropic/claude-sonnet-5";
   claudeHaiku = "anthropic/claude-haiku-4-5";
 
   kimi = "opencode-go/kimi-k2.7-code"; # vision-capable

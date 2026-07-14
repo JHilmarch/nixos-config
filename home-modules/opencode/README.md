@@ -25,7 +25,7 @@ Four providers, three auth strategies. The model catalog and per-agent rationale
 | ----------------- | --------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------- |
 | `zai-coding-plan` | apiKey in `provider.*.options.apiKey` (host config) | SOPS env var `ZAI_API_KEY`                           | GLM-5.2 / 5.1 / 5-turbo / 5v-turbo (first non-Anthropic fallback layer)    |
 | `openai`          | apiKey in `provider.*.options.apiKey` (host config) | SOPS env var `OPENAI_API_KEY`                        | GPT-5.5 (Hephaestus only, plus last-resort fallbacks)                      |
-| `anthropic`       | Model IDs in OMO config (`anthropic/claude-*`)      | `@ex-machina/opencode-anthropic-auth` plugin (OAuth) | Fable 5 / Opus 4.8 / Sonnet 4.6 / Haiku 4.5 (Claude Code Max $90/mo)       |
+| `anthropic`       | Model IDs in OMO config (`anthropic/claude-*`)      | `@ex-machina/opencode-anthropic-auth` plugin (OAuth) | Fable 5 / Opus 4.8 / Sonnet 5 / Haiku 4.5 (Claude Code Max $90/mo)         |
 | `opencode-go`     | Model IDs in OMO config (`opencode-go/*`)           | `opencode auth login --provider opencode-go` (OAuth) | Kimi K2.7-code, Qwen 3.7-plus, MiniMax M3/M2.7, DeepSeek V4 Flash ($10/mo) |
 
 SOPS is only suitable for the two **API-key** providers (top two rows). OAuth-based providers store dynamically
@@ -107,7 +107,7 @@ primary and Haiku the first fallback:
 | Sisyphus          | `anthropic/claude-opus-4-8`      | — (no Fable)                      | `glm-5.2`        | `kimi`             |
 | Orchestrators     | `anthropic/claude-fable-5`       | `anthropic/claude-opus-4-8`       | `glm-5.2`        | `kimi` / `gpt-5.5` |
 | Deep / review     | `anthropic/claude-fable-5` (max) | `anthropic/claude-opus-4-8` (max) | `glm-5.2`        | `kimi` → `gpt-5.5` |
-| Workers (junior)  | `anthropic/claude-sonnet-4-6`    | `kimi` (Claude-like)              | `glm-5.2`        | `minimax-m3`       |
+| Workers (junior)  | `anthropic/claude-sonnet-5`      | `kimi` (Claude-like)              | `glm-5.2`        | `minimax-m3`       |
 | Visual / artistry | `opencode-go/qwen3.7-plus`       | `opencode-go/qwen3.6-plus`        | —                | `gpt-5.5`          |
 | Librarian         | `anthropic/claude-haiku-4-5`     | `opencode-go/deepseek-v4-flash`   | `glm-5-turbo`    |                    |
 | Explore           | `opencode-go/minimax-m2.7`       | `anthropic/claude-haiku-4-5`      | `glm-5-turbo`    |                    |
