@@ -8,6 +8,7 @@
   ...
 }: {
   imports = [
+    ./forgejo-runner.nix
     "${self}/templates/proxmox-lxc.nix"
   ];
 
@@ -31,6 +32,13 @@
   };
 
   services.sshHostKeyPersistence.enable = true;
+
+  sops.secrets = {
+    # operator stores the value as TOKEN=<registration-token>
+    "forgejo-runner-token" = {};
+    # operator stores the value as NVD_API_KEY=<key>
+    "nvd-api-key" = {};
+  };
 
   system.stateVersion = "26.05";
 }
