@@ -32,6 +32,20 @@ in {
         ControlPath = "~/.ssh/S.%r@%h:%p";
         ControlPersist = "60m";
       };
+
+      "forge" = {
+        HostName = "192.168.2.109";
+        User = "forgejo";
+        Port = 22;
+        IdentitiesOnly = true;
+        IdentityFile = [
+          "~/.ssh/id_ed25519_sk_23839166"
+          "~/.ssh/id_ed25519_sk_23839165"
+        ];
+        ControlMaster = "auto";
+        ControlPath = "~/.ssh/S.%r@%h:%p";
+        ControlPersist = "60m";
+      };
     };
   };
 

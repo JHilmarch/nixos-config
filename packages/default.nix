@@ -9,5 +9,6 @@
   gh-personal-project-manager = callPackage ./gh-cli/personal-project-manager.nix {};
   gh-work = callPackage ./gh-cli/work.nix {};
   gh-project-manager = callPackage ./gh-project-manager {inherit gh-personal-project-manager;};
+  forgejo-project-manager = callPackage ./gh-cli/forgejo-project-manager.nix {inherit gh-project-manager;};
   mdformat = callPackage ./mdformat {};
 }
