@@ -13,7 +13,14 @@
 #   --help              Show this help message (--help --json for machine-readable)
 #
 # Environment:
-#   PROJECT_MANAGER_BACKEND   Forge backend: github (default) | forgejo (Phase B, not yet implemented)
+#   PROJECT_MANAGER_BACKEND   Forge backend: github (default) | forgejo
+#   FORGEJO_TOKEN             Required for forgejo backend. PAT for Authorization: token <PAT>
+#   FORGEJO_API_BASE          Optional forgejo base URL (default: https://forge.fileshare.se/api/v1)
+#
+# Backend parity:
+#   GitHub backend supports all commands (Projects v2). Forgejo backend supports
+#   issue/label/milestone operations only: list-items, count-items, get-content-id,
+#   report, create-story, create-task. Project-board ops are honestly rejected.
 #
 # Commands:
 #   Project operations:
@@ -57,6 +64,7 @@ set -g _OWNER_TYPE ""
 set -l script_dir (dirname (status filename))
 source "$script_dir/../common/log.fish"
 source "$script_dir/_backend_github.fish"
+source "$script_dir/_backend_forgejo.fish"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -85,16 +93,16 @@ function normalize_repo
 end
 # ── Backend dispatch ──────────────────────────────────────────────────────────
 # One _op_<name> wrapper per operation routes to the active backend
-# implementation. Phase B fills in each forgejo case with a
-# _backend_forgejo_<name> call; cmd_* functions and the dispatch table below
-# stay untouched.
+# implementation. Forgejo cases call _backend_forgejo_<name>; GitHub cases call
+# _backend_github_<name>. cmd_* functions and the dispatch table below stay
+# untouched when adding new backends.
 
 function _op_list_projects
     switch $PROJECT_MANAGER_BACKEND
         case github
             _backend_github_list_projects $argv
         case forgejo
-            die "forgejo backend: list-projects not yet implemented (Phase B pending)"
+            _backend_forgejo_list_projects $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -105,7 +113,7 @@ function _op_view_project
         case github
             _backend_github_view_project $argv
         case forgejo
-            die "forgejo backend: view-project not yet implemented (Phase B pending)"
+            _backend_forgejo_view_project $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -116,7 +124,7 @@ function _op_create_project
         case github
             _backend_github_create_project $argv
         case forgejo
-            die "forgejo backend: create-project not yet implemented (Phase B pending)"
+            _backend_forgejo_create_project $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -127,7 +135,7 @@ function _op_list_fields
         case github
             _backend_github_list_fields $argv
         case forgejo
-            die "forgejo backend: list-fields not yet implemented (Phase B pending)"
+            _backend_forgejo_list_fields $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -138,7 +146,7 @@ function _op_create_field
         case github
             _backend_github_create_field $argv
         case forgejo
-            die "forgejo backend: create-field not yet implemented (Phase B pending)"
+            _backend_forgejo_create_field $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -149,7 +157,7 @@ function _op_list_items
         case github
             _backend_github_list_items $argv
         case forgejo
-            die "forgejo backend: list-items not yet implemented (Phase B pending)"
+            _backend_forgejo_list_items $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -160,7 +168,7 @@ function _op_count_items
         case github
             _backend_github_count_items $argv
         case forgejo
-            die "forgejo backend: count-items not yet implemented (Phase B pending)"
+            _backend_forgejo_count_items $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -171,7 +179,7 @@ function _op_add_item
         case github
             _backend_github_add_item $argv
         case forgejo
-            die "forgejo backend: add-item not yet implemented (Phase B pending)"
+            _backend_forgejo_add_item $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -182,7 +190,7 @@ function _op_add_item_by_id
         case github
             _backend_github_add_item_by_id $argv
         case forgejo
-            die "forgejo backend: add-item-by-id not yet implemented (Phase B pending)"
+            _backend_forgejo_add_item_by_id $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -193,7 +201,7 @@ function _op_remove_item
         case github
             _backend_github_remove_item $argv
         case forgejo
-            die "forgejo backend: remove-item not yet implemented (Phase B pending)"
+            _backend_forgejo_remove_item $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -204,7 +212,7 @@ function _op_update_select
         case github
             _backend_github_update_select $argv
         case forgejo
-            die "forgejo backend: update-select not yet implemented (Phase B pending)"
+            _backend_forgejo_update_select $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -215,7 +223,7 @@ function _op_update_text
         case github
             _backend_github_update_text $argv
         case forgejo
-            die "forgejo backend: update-text not yet implemented (Phase B pending)"
+            _backend_forgejo_update_text $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -226,7 +234,7 @@ function _op_update_number
         case github
             _backend_github_update_number $argv
         case forgejo
-            die "forgejo backend: update-number not yet implemented (Phase B pending)"
+            _backend_forgejo_update_number $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -237,7 +245,7 @@ function _op_update_date
         case github
             _backend_github_update_date $argv
         case forgejo
-            die "forgejo backend: update-date not yet implemented (Phase B pending)"
+            _backend_forgejo_update_date $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -248,7 +256,7 @@ function _op_get_project_id
         case github
             _backend_github_get_project_id $argv
         case forgejo
-            die "forgejo backend: get-project-id not yet implemented (Phase B pending)"
+            _backend_forgejo_get_project_id $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -259,7 +267,7 @@ function _op_get_content_id
         case github
             _backend_github_get_content_id $argv
         case forgejo
-            die "forgejo backend: get-content-id not yet implemented (Phase B pending)"
+            _backend_forgejo_get_content_id $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -270,7 +278,7 @@ function _op_report
         case github
             _backend_github_report $argv
         case forgejo
-            die "forgejo backend: report not yet implemented (Phase B pending)"
+            _backend_forgejo_report $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -281,7 +289,7 @@ function _op_create_story
         case github
             _backend_github_create_story $argv
         case forgejo
-            die "forgejo backend: create-story not yet implemented (Phase B pending)"
+            _backend_forgejo_create_story $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -292,7 +300,7 @@ function _op_create_task
         case github
             _backend_github_create_task $argv
         case forgejo
-            die "forgejo backend: create-task not yet implemented (Phase B pending)"
+            _backend_forgejo_create_task $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -303,7 +311,7 @@ function _op_add_to_board
         case github
             _backend_github_add_to_board $argv
         case forgejo
-            die "forgejo backend: add-to-board not yet implemented (Phase B pending)"
+            _backend_forgejo_add_to_board $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -314,7 +322,7 @@ function _op_set_field
         case github
             _backend_github_set_field $argv
         case forgejo
-            die "forgejo backend: set-field not yet implemented (Phase B pending)"
+            _backend_forgejo_set_field $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end
@@ -325,7 +333,7 @@ function _op_check_prerequisites
         case github
             _backend_github_check_prerequisites $argv
         case forgejo
-            die "forgejo backend: check-prerequisites not yet implemented (Phase B pending)"
+            _backend_forgejo_check_prerequisites $argv
         case '*'
             die "Unknown PROJECT_MANAGER_BACKEND: $PROJECT_MANAGER_BACKEND (expected github or forgejo)"
     end

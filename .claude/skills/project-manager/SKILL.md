@@ -39,6 +39,38 @@ To auto-detect the repo, run:
 git -C . remote get-url origin | sed 's|.*github.com[/:]||; s|\.git$||'
 ```
 
+## Backend Selection
+
+The CLI supports two backends via the `PROJECT_MANAGER_BACKEND` env var:
+
+| Backend   | Default | Credentials                                                                                        | Supports                                                                                                               |
+| --------- | ------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `github`  | yes     | `GH_CLI` / `--cli` (default `gh-personal-project-manager`)                                         | **All commands**: project boards, fields, items, updates, reports, stories, tasks                                      |
+| `forgejo` | no      | `FORGEJO_TOKEN` env var; optional `FORGEJO_API_BASE` (default `https://forge.fileshare.se/api/v1`) | **Issue/label/milestone only**: `list-items`, `count-items`, `get-content-id`, `report`, `create-story`, `create-task` |
+
+Set the backend explicitly when the repository lives on Forgejo:
+
+```bash
+export PROJECT_MANAGER_BACKEND=forgejo
+export FORGEJO_TOKEN=<pat>
+# optional: export FORGEJO_API_BASE=https://forge.fileshare.se/api/v1
+```
+
+### Forgejo backend notes
+
+- Forgejo 15.0.3 has **no project/board API**, so project-board commands (`list-projects`, `view-project`,
+  `create-project`, `list-fields`, `create-field`, `add-item`, `add-item-by-id`, `remove-item`, `update-select`,
+  `update-text`, `update-number`, `update-date`, `get-project-id`, `add-to-board`, `set-field`) are rejected with an
+  explicit error. Use the GitHub backend for project-board planning.
+- `list-items`, `count-items`, and `report` operate on a **repository** (the first positional argument is `owner/repo`
+  or just `repo` with `--owner`), not a project number. Pagination uses Forgejo's `page` + `limit` query params;
+  `--after` is interpreted as a 1-based page number.
+- `create-task`'s third positional argument is interpreted as the **parent issue number** in the same repository; the
+  backend attempts to create a Forgejo issue dependency (`POST /repos/{owner}/{repo}/issues/{parent}/dependencies`). If
+  dependency linking fails, the task is still created and `linked: false` is reported.
+- Output shapes differ slightly from GitHub because Forgejo returns integer issue IDs rather than GraphQL node IDs. The
+  CLI maps `id` to a `node_id` string field where possible for consumers that expect the GitHub key name.
+
 ## Planning instructions
 
 1. Ask the user what feature to plan. They can reference an existing issue, file, or describe it freely
