@@ -24,6 +24,12 @@
     };
   };
 
+  nix.settings = {
+    max-jobs = 6;
+    cores = 0;
+    trusted-users = ["root" username];
+  };
+
   services.sshHostKeyPersistence.enable = true;
 
   system.stateVersion = "26.05";
