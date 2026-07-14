@@ -27,7 +27,7 @@ sudo mount /dev/disk/by-label/ESP /mnt/boot
 ```
 sudo mkdir -p /mnt/install
 cd /mnt/install
-git clone https://github.com/JHilmarch/nixos-config.git
+git clone https://forge.fileshare.se/jonatan/nixos-config.git
 ```
 
 ### Install

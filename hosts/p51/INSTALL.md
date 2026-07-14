@@ -67,7 +67,7 @@ git config --global url."ssh://git@github.com/".insteadOf "https://github.com/"
 ```bash
 # Clone the repository (using nix-auth if configured)
 cd /root
-git clone https://github.com/JHilmarch/nixos-config.git
+git clone https://forge.fileshare.se/jonatan/nixos-config.git
 cd nixos-config
 ```
 
