@@ -28,10 +28,6 @@ end
 function _backend_forgejo_check_prerequisites
     not command -v curl >/dev/null 2>&1; and die "curl not found in PATH."
     test -z "$FORGEJO_TOKEN"; and die "FORGEJO_TOKEN not set (required for PROJECT_MANAGER_BACKEND=forgejo)."
-    set -l http_code (curl -sS -o /dev/null -w "%{http_code}" -H "Authorization: token $FORGEJO_TOKEN" \
-        -H "Accept: application/json" \
-        "$FORGEJO_API_BASE/user" 2>/dev/null)
-    test "$http_code" = 200; or die "Not authenticated with Forgejo at $FORGEJO_API_BASE (HTTP $http_code; check FORGEJO_TOKEN)."
 end
 
 function _backend_forgejo_split_repo
@@ -43,19 +39,31 @@ end
 function _backend_forgejo_api_get
     set -l path "$argv[1]"
     set -e argv[1]
-    curl -sS -G -H "Authorization: token $FORGEJO_TOKEN" \
+    set -l raw (curl -sS -G -w "\n%{http_code}" -H "Authorization: token $FORGEJO_TOKEN" \
         -H "Accept: application/json" \
-        "$FORGEJO_API_BASE$path" $argv
+        "$FORGEJO_API_BASE$path" $argv)
+    set -l parts (string split \n -- "$raw")
+    set -l http_code $parts[-1]
+    if test -n "$http_code"; and test "$http_code" -ge 400 2>/dev/null
+        die "Forgejo API request to $path failed (HTTP $http_code). Check FORGEJO_TOKEN scopes (needs read/write for issues + repository)."
+    end
+    string join \n -- $parts[1..-2]
 end
 
 function _backend_forgejo_api_post
     set -l path "$argv[1]"
-    set -l body "$argv[2]"
-    curl -sS -X POST -H "Authorization: token $FORGEJO_TOKEN" \
+    set -l payload "$argv[2]"
+    set -l raw (curl -sS -X POST -w "\n%{http_code}" -H "Authorization: token $FORGEJO_TOKEN" \
         -H "Accept: application/json" \
         -H "Content-Type: application/json" \
-        -d "$body" \
-        "$FORGEJO_API_BASE$path"
+        -d "$payload" \
+        "$FORGEJO_API_BASE$path")
+    set -l parts (string split \n -- "$raw")
+    set -l http_code $parts[-1]
+    if test -n "$http_code"; and test "$http_code" -ge 400 2>/dev/null
+        die "Forgejo API request to $path failed (HTTP $http_code). Check FORGEJO_TOKEN scopes (needs read/write for issues + repository)."
+    end
+    string join \n -- $parts[1..-2]
 end
 
 # Ensure a label exists in the repo, creating it with a default color if needed.
@@ -69,7 +77,7 @@ function _backend_forgejo_ensure_label
     set -l repo_name "$parts[2]"
 
     set -l label_json (_backend_forgejo_api_get "/repos/$owner/$repo_name/labels" \
-        --data-urlencode "limit=100" 2>/dev/null \
+        --data-urlencode "limit=100" \
         | jq --arg name "$label_name" '[.[] | select(.name == $name)][0]')
 
     if test -n "$label_json" -a "$label_json" != null
