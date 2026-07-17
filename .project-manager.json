@@ -1,0 +1,17 @@
+{
+  "default_provider": "github",
+  "providers": {
+    "github": {
+      "enabled": true,
+      "owner": "JHilmarch",
+      "repo": "nixos-config",
+      "cli": "github-project-manager"
+    },
+    "forgejo": {
+      "enabled": true,
+      "owner": "jonatan",
+      "repo": "nixos-config",
+      "api_base": "https://forge.fileshare.se/api/v1"
+    }
+  }
+}
