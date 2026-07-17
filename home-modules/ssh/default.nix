@@ -39,8 +39,8 @@ in {
         Port = 22;
         IdentitiesOnly = true;
         IdentityFile = [
-          "~/.ssh/id_ed25519_sk_23839166"
-          "~/.ssh/id_ed25519_sk_23839165"
+          "~/.ssh/id_ed25519_sk_23839166_forge_fileshare_se"
+          "~/.ssh/id_ed25519_sk_23839165_forge_fileshare_se"
         ];
         ControlMaster = "auto";
         ControlPath = "~/.ssh/S.%r@%h:%p";
