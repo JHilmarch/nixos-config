@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 # @fish-lsp-disable 4004
 #
-# project-manager — GitHub Projects v2 / Forgejo management & feature planning CLI
+# project-manager — Multi-provider (GitHub + Forgejo) project management CLI
 #
 # Usage:
 #   fish tools/project-manager/project-manager.fish [OPTIONS] <command> [ARGS]
@@ -10,10 +10,16 @@
 #   --json              Output structured JSON (suppresses all logging)
 #   --owner <owner>     Default owner (or GH_PROJECT_OWNER env var)
 #   --cli <cmd>         GitHub CLI command (default: github-project-manager, or GH_CLI env var)
+#   --provider <name>   Provider: github | forgejo (overrides config default_provider)
 #   --help              Show this help message (--help --json for machine-readable)
 #
+# Configuration:
+#   .project-manager.json (git repo root first, then CWD) declares default_provider and
+#   per-provider settings (enabled, owner, cli, api_base). Provider resolution:
+#   --provider flag > config default_provider > PROJECT_MANAGER_BACKEND env var > error.
+#
 # Environment:
-#   PROJECT_MANAGER_BACKEND   Forge backend: github (default) | forgejo
+#   PROJECT_MANAGER_BACKEND   Fallback provider: github | forgejo (lowest priority, no default)
 #   FORGEJO_TOKEN             Required for forgejo backend. PAT for Authorization: token <PAT>
 #   FORGEJO_API_BASE          Optional forgejo base URL (default: https://forge.fileshare.se/api/v1)
 #
@@ -58,8 +64,12 @@
 set -g JSON_MODE false
 set -q GH_CLI; or set -g GH_CLI github-project-manager
 set -q GH_PROJECT_OWNER; and set -g OWNER $GH_PROJECT_OWNER; or set -g OWNER ""
-set -q PROJECT_MANAGER_BACKEND; or set -g PROJECT_MANAGER_BACKEND github
+set -q PROJECT_MANAGER_BACKEND; or set -g PROJECT_MANAGER_BACKEND ""
 set -g _OWNER_TYPE ""
+set -g _PROVIDER_FLAG ""
+set -g _OWNER_FLAG_PASSED false
+set -g _CLI_FLAG_PASSED false
+set -q FORGEJO_API_BASE; and set -g _FORGEJO_API_BASE_FROM_ENV true; or set -g _FORGEJO_API_BASE_FROM_ENV false
 
 set -l script_dir (dirname (status filename))
 source "$script_dir/../common/log.fish"
@@ -67,6 +77,20 @@ source "$script_dir/_backend_github.fish"
 source "$script_dir/_backend_forgejo.fish"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+function find_config_file
+    # Prefer git repo root, fall back to CWD-only if not in a git repo
+    set -l git_root (git rev-parse --show-toplevel 2>/dev/null)
+    if test -n "$git_root" -a -f "$git_root/.project-manager.json"
+        echo "$git_root/.project-manager.json"
+        return 0
+    end
+    if test -f ".project-manager.json"
+        echo (pwd)/.project-manager.json
+        return 0
+    end
+    return 1
+end
 
 function resolve_owner
     set -l override "$argv[1]"
@@ -429,7 +453,7 @@ function show_help
     if test "$JSON_MODE" = true
         echo '{}' | jq '{
             name: "project-manager",
-            description: "GitHub Projects v2 / Forgejo management & feature planning CLI",
+            description: "Multi-provider (GitHub + Forgejo) project management CLI",
             commands: [
                 {name: "list-projects", params: ["[owner]"], description: "List projects for an owner"},
                 {name: "view-project", params: ["<number>", "[owner]"], description: "View project details"},
@@ -457,11 +481,12 @@ function show_help
                 {name: "--json", description: "Output structured JSON (suppresses all other output)"},
                 {name: "--owner <owner>", description: "Default owner (or GH_PROJECT_OWNER env var)"},
                 {name: "--cli <cmd>", description: "GitHub CLI command (default: github-project-manager, or GH_CLI env var)"},
+                {name: "--provider <github|forgejo>", description: "Select provider (overrides config default_provider)"},
                 {name: "--help", description: "Show this help (--help --json for machine-readable)"}
             ]
         }'
     else
-        echo "project-manager — GitHub Projects v2 / Forgejo management & feature planning CLI"
+        echo "project-manager — Multi-provider (GitHub + Forgejo) project management CLI"
         echo ""
         echo "Usage: fish tools/project-manager/project-manager.fish [OPTIONS] <command> [ARGS]"
         echo ""
@@ -469,6 +494,7 @@ function show_help
         echo "  --json              Output structured JSON (suppresses all logging)"
         echo "  --owner <owner>     Default owner (or GH_PROJECT_OWNER env var)"
         echo "  --cli <cmd>         GitHub CLI command (default: github-project-manager, or GH_CLI env var)"
+        echo "  --provider <name>   Provider: github | forgejo (overrides config default_provider)"
         echo "  --help              Show this help message (--help --json for machine-readable)"
         echo ""
         echo "Project operations:"
@@ -514,9 +540,16 @@ function show_help
         echo "  fish tools/project-manager/project-manager.fish add-to-board <project-number> <node-id> [node-id ...]"
         echo "  fish tools/project-manager/project-manager.fish set-field <project-id> <item-id> <field-name> <option-name>"
         echo ""
+        echo "Configuration:"
+        echo "  .project-manager.json (git repo root first, then CWD) declares default_provider"
+        echo "  and per-provider settings: providers.<name>.{enabled,owner,cli,api_base}"
+        echo "  Provider resolution: --provider flag > config default_provider >"
+        echo "  PROJECT_MANAGER_BACKEND env var > error (no hardcoded default)"
+        echo ""
         echo "Environment:"
         echo "  GH_PROJECT_OWNER    Default owner"
         echo "  GH_CLI              GitHub CLI command (default: github-project-manager)"
+        echo "  PROJECT_MANAGER_BACKEND  Fallback provider (--provider and config default_provider override it)"
     end
 end
 # ── Argument parsing ─────────────────────────────────────────────────────────
@@ -536,9 +569,14 @@ while test $i -le (count $argv)
         case --owner
             set i (math $i + 1)
             set -g OWNER $argv[$i]
+            set -g _OWNER_FLAG_PASSED true
         case --cli
             set i (math $i + 1)
             set -g GH_CLI $argv[$i]
+            set -g _CLI_FLAG_PASSED true
+        case --provider
+            set i (math $i + 1)
+            set -g _PROVIDER_FLAG $argv[$i]
         case --help -- -h
             show_help
             exit 0
@@ -548,6 +586,60 @@ while test $i -le (count $argv)
     set i (math $i + 1)
 end
 set argv $_remaining_args
+
+# ── Provider resolution ──────────────────────────────────────────────────────
+# Priority: --provider flag > config default_provider > PROJECT_MANAGER_BACKEND
+# env var > error. No hardcoded default provider.
+
+set -g CONFIG_FILE (find_config_file)
+if test -n "$CONFIG_FILE"
+    jq -e . "$CONFIG_FILE" >/dev/null 2>&1; or die "Malformed JSON in $CONFIG_FILE"
+end
+
+set -l config_default ""
+if test -n "$CONFIG_FILE"
+    set config_default (jq -r '.default_provider // empty' "$CONFIG_FILE")
+end
+
+if test -n "$_PROVIDER_FLAG"
+    set -g PROVIDER "$_PROVIDER_FLAG"
+else if test -n "$config_default"
+    set -g PROVIDER "$config_default"
+else if test -n "$PROJECT_MANAGER_BACKEND"
+    set -g PROVIDER "$PROJECT_MANAGER_BACKEND"
+else
+    die "No provider specified. Use --provider <github|forgejo>, set default_provider in .project-manager.json, or set PROJECT_MANAGER_BACKEND env var."
+end
+
+contains -- "$PROVIDER" github forgejo; or die "Unknown provider: $PROVIDER (expected github or forgejo)"
+
+if test -n "$CONFIG_FILE"
+    set -l enabled (jq -r --arg p "$PROVIDER" 'if .providers[$p].enabled == false then "false" else "true" end' "$CONFIG_FILE")
+    test "$enabled" = false; and die "Provider '$PROVIDER' is disabled in $CONFIG_FILE"
+
+    if test -z "$_PROVIDER_FLAG" -a -n "$config_default"
+        set -l default_ok (jq -r --arg p "$config_default" '(.providers[$p] != null) and (.providers[$p].enabled != false)' "$CONFIG_FILE")
+        test "$default_ok" = true; or die "default_provider '$config_default' is not an enabled provider in $CONFIG_FILE"
+    end
+end
+
+set -g PROJECT_MANAGER_BACKEND "$PROVIDER"
+
+# Apply config values with priority flag > config > env > default
+if test -n "$CONFIG_FILE"
+    if test "$_OWNER_FLAG_PASSED" = false -a -z "$OWNER"
+        set -l config_owner (jq -r --arg p "$PROVIDER" '.providers[$p].owner // empty' "$CONFIG_FILE")
+        test -n "$config_owner"; and set -g OWNER "$config_owner"
+    end
+    if test "$PROVIDER" = github -a "$_CLI_FLAG_PASSED" = false
+        set -l config_cli (jq -r '.providers.github.cli // empty' "$CONFIG_FILE")
+        test -n "$config_cli"; and set -g GH_CLI "$config_cli"
+    end
+    if test "$PROVIDER" = forgejo -a "$_FORGEJO_API_BASE_FROM_ENV" = false
+        set -l config_api_base (jq -r '.providers.forgejo.api_base // empty' "$CONFIG_FILE")
+        test -n "$config_api_base"; and set -g FORGEJO_API_BASE "$config_api_base"
+    end
+end
 
 # ── Prerequisites ─────────────────────────────────────────────────────────────
 
