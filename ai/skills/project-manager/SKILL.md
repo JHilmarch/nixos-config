@@ -55,10 +55,10 @@ do NOT auto-detect from git remote.
 The CLI supports two providers. Selection priority: `--provider` flag > config `default_provider` >
 `PROJECT_MANAGER_BACKEND` env var > error (no hardcoded default).
 
-| Provider  | Config key | Credentials                                                              | Supports                                                                                               |
-| --------- | ---------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `github`  | `github`   | `GH_CLI` (from config `providers.github.cli`)                            | **All 21 commands**: project boards, fields, items, updates, reports, stories, tasks                   |
-| `forgejo` | `forgejo`  | `FORGEJO_TOKEN` (injected by package) + `FORGEJO_API_BASE` (from config) | **6 commands**: `list-items`, `count-items`, `get-content-id`, `report`, `create-story`, `create-task` |
+| Provider  | Config key | Credentials                                                                                                    | Supports                                                                             |
+| --------- | ---------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `github`  | `github`   | `GH_CLI` (from config `providers.github.cli`)                                                                  | **All 21 commands**: project boards, fields, items, updates, reports, stories, tasks |
+| `forgejo` | `forgejo`  | `FORGEJO_TOKEN` (REST: issues/labels) + `FORGEJO_WEB_USER`/`FORGEJO_WEB_PASS` (board GUI) + `FORGEJO_API_BASE` | **All 21 commands**: board ops via GUI emulation; issues via REST                    |
 
 To use the non-default provider:
 
@@ -74,10 +74,18 @@ project-manager --json <command>
 
 ### Forgejo provider notes
 
-- Forgejo 15.0.3 has **no project/board API**, so project-board commands (`list-projects`, `view-project`,
-  `create-project`, `list-fields`, `create-field`, `add-item`, `add-item-by-id`, `remove-item`, `update-select`,
-  `update-text`, `update-number`, `update-date`, `get-project-id`, `add-to-board`, `set-field`) are rejected with an
-  explicit error. Use the GitHub provider for project-board planning.
+- Forgejo's REST API has **no project/board endpoints**. Board ops (`list-projects`, `view-project`, `create-project`,
+  `list-fields`, `create-field`, `add-item`, `add-item-by-id`, `remove-item`, `update-select`, `get-project-id`,
+  `add-to-board`, `set-field`) drive the **web GUI** via HTTP-session emulation (curl replays the exact browser form
+  POSTs). They require `FORGEJO_WEB_USER` / `FORGEJO_WEB_PASS` (a bot account) because web routes need an `i_like_gitea`
+  session cookie — a PAT does not authenticate them. REST ops (`list-items`, `count-items`, `get-content-id`, `report`,
+  `create-story`, `create-task`) use `FORGEJO_TOKEN` and are unaffected. `update-text`, `update-number`, `update-date`
+  are honestly rejected: Forgejo boards have no such fields, only column placement. See
+  `tools/project-manager/FORGEJO-WEB-ROUTES.md` for the source-verified route table.
+- Forgejo boards map onto the GitHub Projects vocabulary as: project → Forgejo repo project (id == number), column → the
+  board's single "Status" single-select field, card → an issue on the board (internal id), move card → set the issue's
+  column (`update-select` / `set-field`). `list-fields` returns the Status field with columns as its options;
+  `create-field` with `type=SINGLE_SELECT` creates a column.
 - `list-items`, `count-items`, and `report` operate on a **repository** (the first positional argument is `owner/repo`
   or just `repo` with `--owner`), not a project number. Pagination uses Forgejo's `page` + `limit` query params;
   `--after` is interpreted as a 1-based page number.
@@ -125,9 +133,9 @@ project-manager --json <command>
 
 ## Fallback routines
 
-For operations not supported by the project-manager CLI, use the following:
+Both providers now support all board operations natively (Forgejo via GUI emulation). For operations outside the
+project-manager CLI's scope:
 
-- **Project board operations** → use `github-project-manager` (classic PAT via the Fish CLI)
-- **Other GitHub operations** (issues, PRs, repos, etc.) → use the `github-personal` MCP tools
+- **Other GitHub operations** (PRs, repos, etc.) → use the `github-personal` MCP tools
   - **Fallback for unsupported queries** → use `gh-personal` CLI wrapper
   - **Never use bare `gh`** — always use `gh-personal` (personal) or `gh-work` (work) wrappers instead

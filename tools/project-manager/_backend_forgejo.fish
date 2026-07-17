@@ -5,25 +5,35 @@
 # Sourced by project-manager.fish; never run directly. The _op_* dispatchers
 # in the main script route here when PROJECT_MANAGER_BACKEND=forgejo.
 #
-# Ground-truth API: Forgejo 15.0.3 at https://forge.fileshare.se/api/v1
-# (live Swagger saved at /tmp/opencode/forgejo-swagger.json). This version has
-# NO project/board/kanban API endpoints — project-board operations are honestly
-# rejected. Implementable operations map to issues, labels, milestones, and
-# issue dependencies.
+# Two-tier backend:
+#
+#   1. REST tier (FORGEJO_TOKEN) — issues, labels, milestones, dependencies.
+#      Forgejo's /api/v1 has NO project/board/kanban endpoints, so the board
+#      cannot be managed over REST.
+#
+#   2. GUI-emulation tier (FORGEJO_WEB_USER/PASS) — project boards. Forgejo's web
+#      UI drives boards through server-rendered form POSTs; this backend replays
+#      those exact requests over a curl web session (the approach of the reference
+#      project patrickzzz/forgejo-web). Web routes require the `i_like_gitea`
+#      session cookie — a PAT does NOT authenticate them — plus an `Origin` header
+#      for CSRF (SameSite cookie + Origin check, no `_csrf` form field). See
+#      FORGEJO-WEB-ROUTES.md for the source-verified route/form table.
 #
 # Env vars:
-#   FORGEJO_TOKEN     Required. Personal access token for Authorization header.
+#   FORGEJO_TOKEN     Required. PAT for the REST tier (Authorization: token <PAT>).
 #   FORGEJO_API_BASE  Optional. Defaults to https://forge.fileshare.se/api/v1
+#   FORGEJO_WEB_USER  Required for board ops. Bot account username for web login.
+#   FORGEJO_WEB_PASS  Required for board ops. Bot account password for web login.
+#   FORGEJO_WEB_BASE  Optional. Web base URL; defaults to FORGEJO_API_BASE minus /api/v1.
 
 set -q FORGEJO_API_BASE; or set -g FORGEJO_API_BASE "https://forge.fileshare.se/api/v1"
 set -q FORGEJO_TOKEN; or set -g FORGEJO_TOKEN ""
+set -q FORGEJO_WEB_USER; or set -g FORGEJO_WEB_USER ""
+set -q FORGEJO_WEB_PASS; or set -g FORGEJO_WEB_PASS ""
+set -q FORGEJO_WEB_BASE; or set -g FORGEJO_WEB_BASE ""
+set -g _FORGEJO_WEB_JAR ""
 
 # ── Shared Forgejo helpers ────────────────────────────────────────────────────
-
-function _backend_forgejo_no_projects
-    set -l op "$argv[1]"
-    die "Forgejo backend: $op requires GitHub Projects v2, which is not available in Forgejo 15.0.3 (no project/board API in live swagger). Use GitHub backend for project-board operations."
-end
 
 function _backend_forgejo_check_prerequisites
     not command -v curl >/dev/null 2>&1; and die "curl not found in PATH."
@@ -41,7 +51,7 @@ function _backend_forgejo_api_get
     set -e argv[1]
     set -l raw (curl -sS -G -w "\n%{http_code}" -H "Authorization: token $FORGEJO_TOKEN" \
         -H "Accept: application/json" \
-        "$FORGEJO_API_BASE$path" $argv)
+        "$FORGEJO_API_BASE$path" $argv | string collect)
     set -l parts (string split \n -- "$raw")
     set -l http_code $parts[-1]
     if test -n "$http_code"; and test "$http_code" -ge 400 2>/dev/null
@@ -57,13 +67,300 @@ function _backend_forgejo_api_post
         -H "Accept: application/json" \
         -H "Content-Type: application/json" \
         -d "$payload" \
-        "$FORGEJO_API_BASE$path")
+        "$FORGEJO_API_BASE$path" | string collect)
     set -l parts (string split \n -- "$raw")
     set -l http_code $parts[-1]
     if test -n "$http_code"; and test "$http_code" -ge 400 2>/dev/null
         die "Forgejo API request to $path failed (HTTP $http_code). Check FORGEJO_TOKEN scopes (needs read/write for issues + repository)."
     end
     string join \n -- $parts[1..-2]
+end
+
+# ── Web-session tier (GUI emulation for project boards) ───────────────────────
+# Forgejo has no REST board API; these helpers drive the web UI over a curl
+# session. Web routes need the i_like_gitea cookie (a PAT does not work) and an
+# Origin header for CSRF. Credentials come from FORGEJO_WEB_USER/PASS.
+
+# Derive the web base URL (no trailing slash) from FORGEJO_WEB_BASE, else from
+# FORGEJO_API_BASE with a trailing /api/v1 stripped.
+function _backend_forgejo_web_base
+    if test -n "$FORGEJO_WEB_BASE"
+        string trim -r -c / -- "$FORGEJO_WEB_BASE"
+        return
+    end
+    set -l base (string replace -r '/api/v1/?$' '' -- "$FORGEJO_API_BASE")
+    string trim -r -c / -- "$base"
+end
+
+# Log in once per process, storing the cookie-jar path in the global
+# $_FORGEJO_WEB_JAR. Dies with a clear message if web creds are missing or the
+# login fails. Callers MUST invoke this as a bare statement (never inside a
+# command substitution) so that a `die` reaches the terminal instead of being
+# captured — then read $_FORGEJO_WEB_JAR.
+function _backend_forgejo_web_login
+    test -n "$_FORGEJO_WEB_JAR" -a -f "$_FORGEJO_WEB_JAR"; and return 0
+
+    test -z "$FORGEJO_WEB_USER"; and die "Forgejo board ops require a web session: FORGEJO_WEB_USER not set (bot account username)."
+    test -z "$FORGEJO_WEB_PASS"; and die "Forgejo board ops require a web session: FORGEJO_WEB_PASS not set (bot account password)."
+
+    set -l web_base (_backend_forgejo_web_base)
+    set -l jar (mktemp)
+
+    # Prime the cookie jar (Forgejo sets a csrf cookie on the login GET).
+    curl -sS -c "$jar" -b "$jar" -A "Mozilla/5.0" -o /dev/null "$web_base/user/login"
+
+    set -l code (curl -sS -c "$jar" -b "$jar" -A "Mozilla/5.0" \
+        -H "Origin: $web_base" \
+        -o /dev/null -w '%{http_code}' \
+        --data-urlencode "user_name=$FORGEJO_WEB_USER" \
+        --data-urlencode "password=$FORGEJO_WEB_PASS" \
+        --data-urlencode "remember=on" \
+        "$web_base/user/login")
+
+    # A successful login returns 303 (redirect to /) and writes the `session`
+    # cookie. A failed login returns 200 with the login page re-rendered and no
+    # session cookie. (Forgejo 15 dropped the Gitea-era `i_like_gitea` cookie;
+    # the session carrier is now named `session`.)
+    if not string match -qr session <"$jar"
+        rm -f "$jar"
+        die "Forgejo web login failed (HTTP $code, no session cookie). Check FORGEJO_WEB_USER/FORGEJO_WEB_PASS for the bot account at $web_base."
+    end
+
+    set -g _FORGEJO_WEB_JAR "$jar"
+end
+
+# Authenticated web GET. Args: <path>. Returns the response body; dies on >=400.
+function _backend_forgejo_web_get
+    set -l path "$argv[1]"
+    set -l web_base (_backend_forgejo_web_base)
+    _backend_forgejo_web_login
+    set -l jar "$_FORGEJO_WEB_JAR"
+
+    # -L follows redirects; %{url_effective} reports where we landed, used to
+    # detect the change-password / login intercepts (a bot account with
+    # MustChangePassword set, or a session that dropped). `string collect`
+    # keeps curl's multi-line body as ONE string (fish command substitution
+    # otherwise splits on newlines into a list, collapsing the body).
+    set -l raw (curl -sS -L -b "$jar" -A "Mozilla/5.0" -w "\n%{http_code}\n%{url_effective}" \
+        "$web_base$path" | string collect)
+    set -l parts (string split \n -- "$raw")
+    set -l url_effective $parts[-1]
+    set -l http_code $parts[-2]
+    if test -n "$http_code"; and test "$http_code" -ge 400 2>/dev/null
+        _backend_forgejo_web_die "Forgejo web GET $path failed (HTTP $http_code)."
+    end
+    if string match -qi '*user/login*' -- "$url_effective"
+        _backend_forgejo_web_die "Forgejo session dropped: GET $path redirected to login. Re-check FORGEJO_WEB_USER/FORGEJO_WEB_PASS."
+    end
+    if string match -qi '*user/settings/change_password*' -- "$url_effective"
+        _backend_forgejo_web_die "Forgejo bot account has MustChangePassword set — log in once via the web UI and change the password (or clear the flag as admin), then retry. Login as $FORGEJO_WEB_USER redirected every page to change_password."
+    end
+    string join \n -- $parts[1..-3]
+end
+
+# Authenticated web request with a method + extra curl args (form fields, JSON
+# body, headers). Args: <method> <path> [curl-args...]. Sends the Origin header
+# for CSRF. Returns the body; dies on >=400.
+function _backend_forgejo_web_request
+    set -l method "$argv[1]"
+    set -l path "$argv[2]"
+    set -e argv[1..2]
+    set -l web_base (_backend_forgejo_web_base)
+    _backend_forgejo_web_login
+    set -l jar "$_FORGEJO_WEB_JAR"
+
+    set -l raw (curl -sS -b "$jar" -A "Mozilla/5.0" -X "$method" -w "\n%{http_code}" \
+        -H "Origin: $web_base" \
+        "$web_base$path" $argv | string collect)
+    set -l parts (string split \n -- "$raw")
+    set -l http_code $parts[-1]
+    if test -n "$http_code"; and test "$http_code" -ge 400 2>/dev/null
+        _backend_forgejo_web_die "Forgejo web $method $path failed (HTTP $http_code). Body: "(string join \n -- $parts[1..-2])
+    end
+    string join \n -- $parts[1..-2]
+end
+
+function _backend_forgejo_web_post
+    _backend_forgejo_web_request POST $argv
+end
+
+function _backend_forgejo_web_put
+    _backend_forgejo_web_request PUT $argv
+end
+
+function _backend_forgejo_web_delete
+    _backend_forgejo_web_request DELETE $argv
+end
+
+# Fatal-error helper for the web tier. Writes the error to STDERR (never stdout)
+# so it is not swallowed when web_get/web_request are called inside a command
+# substitution, then exits. In JSON mode it emits a JSON error object; otherwise
+# a red "Error:" line. The shared die() cannot be used here because it writes to
+# stdout, which command substitution captures — the message would be lost.
+function _backend_forgejo_web_die
+    set -l msg "$argv[1]"
+    if test "$JSON_MODE" = true
+        echo '{}' | jq --arg msg "$msg" '{error: $msg}' >&2
+    else
+        printf '\033[31mError: %s\033[0m\n' "$msg" >&2
+    end
+    exit 1
+end
+
+# Unescape the handful of HTML entities that appear in scraped titles.
+function _backend_forgejo_html_unescape
+    string replace -a '&amp;' '&' -- "$argv[1]" \
+        | string replace -a '&lt;' '<' \
+        | string replace -a '&gt;' '>' \
+        | string replace -a '&quot;' '"' \
+        | string replace -a '&#39;' "'"
+end
+
+# Resolve the board repo (owner/repo) from a repo arg, honouring an owner
+# override. Prints two lines: owner, repo.
+function _backend_forgejo_board_repo
+    set -l repo_arg "$argv[1]"
+    # Board ops that take no repo argument fall back to the config's OWNER/REPO.
+    if test -z "$repo_arg" -a -n "$OWNER" -a -n "$REPO"
+        printf '%s\n%s' "$OWNER" "$REPO"
+        return
+    end
+    set -l repo (_backend_forgejo_normalize_repo_with_owner "$repo_arg" "$argv[2]")
+    set -l parts (string split '/' "$repo")
+    printf '%s\n%s' "$parts[1]" "$parts[2]"
+end
+
+# Resolve an issue #number to its internal issue DB id (needed by board moves).
+function _backend_forgejo_issue_internal_id
+    set -l owner "$argv[1]"
+    set -l repo_name "$argv[2]"
+    set -l number "$argv[3]"
+    set -l result (_backend_forgejo_api_get "/repos/$owner/$repo_name/issues/$number")
+    set -l iid (echo "$result" | jq -r '.id // empty')
+    test -z "$iid" -o "$iid" = null; and die "Issue #$number not found in $owner/$repo_name."
+    echo "$iid"
+end
+
+# Scrape the projects list HTML into a JSON array of {number,title,state,url}.
+# Args: <owner> <repo> <state> <html>.
+function _backend_forgejo_scrape_projects
+    set -l owner "$argv[1]"
+    set -l repo_name "$argv[2]"
+    set -l state "$argv[3]"
+    set -l html "$argv[4]"
+    set -l web_base (_backend_forgejo_web_base)
+
+    set -l out '[]'
+    # Each project row links to /{owner}/{repo}/projects/{id}"...>Title</a>.
+    # string match -ar returns full-match then capture groups interleaved; walk
+    # them in triples: [full, id, title, full, id, title, ...].
+    set -l pat "href=\"/$owner/$repo_name/projects/([0-9]+)\"[^>]*>([^<]+)</a>"
+    set -l matches (string match -ar $pat -- $html)
+    set -l i 1
+    set -l seen ""
+    while test $i -le (count $matches)
+        # matches: [full, id, title, full, id, title, ...] → step by 3
+        set -l pid $matches[(math $i + 1)]
+        set -l title (string trim -- $matches[(math $i + 2)])
+        set i (math $i + 3)
+        test -z "$pid"; and continue
+        contains -- "$pid" $seen; and continue
+        set -a seen "$pid"
+        set title (_backend_forgejo_html_unescape "$title")
+        set out (echo "$out" | jq \
+            --argjson number "$pid" \
+            --arg title "$title" \
+            --arg state "$state" \
+            --arg url "$web_base/$owner/$repo_name/projects/$pid" \
+            '. + [{number: $number, title: $title, state: $state, url: $url}]')
+    end
+    echo "$out"
+end
+
+# Scrape a project view page into {id,title,columns:[{id,name,cards:[{issue_id}]}]}.
+# Args: <html>.
+function _backend_forgejo_scrape_columns
+    set -l html "$argv[1]"
+
+    set -l project_id (string match -r 'data-project="([0-9]+)"' -- $html)[2]
+    test -z "$project_id"; and set project_id (string match -r '/projects/([0-9]+)' -- $html)[2]
+
+    # Project title: prefer the h1/h2 in the project header, fall back to the
+    # page <title> (stripped of the " - repo - Forgejo" suffix).
+    set -l title (string match -r '<h[12][^>]*>\s*([^<]+?)\s*</h[12]>' -- $html)[2]
+    if test -z "$title"
+        set title (string match -r '<title>([^<]*)</title>' -- $html)[2]
+        set title (string replace -r ' - .*' '' -- "$title")
+    end
+    set title (string trim -- "$title")
+    set title (_backend_forgejo_html_unescape "$title")
+
+    # Columns: extract id-list and name-list with precise anchors, then zip by
+    # index (both appear once per column in document order, so they pair up).
+    #   id:   class="project-column" data-id="N"
+    #   name: <span class="project-column-title-label">NAME</span>
+    set -l col_ids
+    for m in (string match -ar 'class="project-column" data-id="([0-9]+)"' -- $html)
+        string match -qr '^[0-9]+$' -- "$m"; and set -a col_ids "$m"
+    end
+    set -l col_names
+    for m in (string match -ar 'project-column-title-label">([^<]+)</span>' -- $html)
+        # string match -ar yields full-match, capture, full-match, capture, ...
+        # keep only the captured (odd-positioned) entries
+    end
+    set -l name_matches (string match -ar 'project-column-title-label">([^<]+)</span>' -- $html)
+    set -l i 2
+    while test $i -le (count $name_matches)
+        set -a col_names (_backend_forgejo_html_unescape (string trim -- "$name_matches[$i]"))
+        set i (math $i + 2)
+    end
+
+    set -l columns '[]'
+    # Split the HTML into per-column segments at each column's data-id boundary
+    # so cards (data-issue) can be associated with their column. The split token
+    # is the column container opening tag.
+    set -l segs (string match -ar 'class="project-column" data-id="[0-9]+"' -- $html)
+    set -l c 1
+    while test $c -le (count $col_ids)
+        set -l cid $col_ids[$c]
+        set -l cname ""
+        test $c -le (count $col_names); and set cname "$col_names[$c]"
+
+        # Cards in this column = the HTML slice from this column's marker to the
+        # next column's marker. Each column's marker is unique (distinct data-id),
+        # so splitting on it yields [before, this-column-onward]; seg[2] is the
+        # column body, trimmed at the next column's marker.
+        set -l segs (string split "class=\"project-column\" data-id=\"$cid\"" -- $html)
+        set -l after "$segs[2]"
+        set -l slice "$after"
+        if test -n "$after" -a $c -lt (count $col_ids)
+            set -l next_idx (math $c + 1)
+            set -l next_marker "class=\"project-column\" data-id=\"$col_ids[$next_idx]\""
+            set slice (string split "$next_marker" -- $after)[1]
+        end
+
+        set -l cards '[]'
+        set -l card_seen ""
+        if test -n "$slice"
+            for cm in (string match -ar 'data-issue="([0-9]+)"' -- $slice)
+                string match -qr '^[0-9]+$' -- "$cm"; or continue
+                contains -- "$cm" $card_seen; and continue
+                set -a card_seen "$cm"
+                set cards (echo "$cards" | jq --argjson iid "$cm" '. + [{issue_id: $iid}]')
+            end
+        end
+
+        set columns (echo "$columns" | jq --argjson id "$cid" --arg name "$cname" \
+            --argjson cards "$cards" \
+            '. + [{id: $id, name: $name, cards: $cards}]')
+        set c (math $c + 1)
+    end
+
+    echo '{}' | jq \
+        --arg id "$project_id" \
+        --arg title "$title" \
+        --argjson columns "$columns" \
+        '{id: (if $id == "" then null else ($id|tonumber) end), title: $title, columns: $columns}'
 end
 
 # Ensure a label exists in the repo, creating it with a default color if needed.
@@ -236,68 +533,305 @@ function _backend_forgejo_link_dependency
     end
     echo "$linked"
 end
-# ── Unsupported project-board operations ──────────────────────────────────────
+# ── Project-board operations (web/GUI emulation) ──────────────────────────────
+# Forgejo boards map onto the GitHub-Projects CLI vocabulary as follows:
+#   project        → Forgejo repo project (id == "number")
+#   column         → the board's only "field": a single-select named "Status"
+#   card / item    → an issue attached to the board (identified by internal id)
+#   move card      → set the issue's column (update-select / set-field)
+# Ops with no Forgejo equivalent (text/number/date fields) reject specifically.
+
+function _backend_forgejo_no_board_field
+    set -l op "$argv[1]"
+    die "Forgejo backend: $op is not supported. Forgejo boards have no text/number/date fields — only column placement (the Status field) is available. Use update-select / set-field to move a card between columns."
+end
 
 function _backend_forgejo_list_projects
-    _backend_forgejo_no_projects list-projects
+    # Args: [repo] [owner]
+    _backend_forgejo_web_login
+    set -l owner_repo (_backend_forgejo_board_repo "$argv[1]" "$argv[2]")
+    set -l owner "$owner_repo[1]"
+    set -l repo_name "$owner_repo[2]"
+
+    set -l open_html (_backend_forgejo_web_get "/$owner/$repo_name/projects")
+    set -l closed_html (_backend_forgejo_web_get "/$owner/$repo_name/projects?state=closed")
+    set -l open_p (_backend_forgejo_scrape_projects "$owner" "$repo_name" open "$open_html")
+    set -l closed_p (_backend_forgejo_scrape_projects "$owner" "$repo_name" closed "$closed_html")
+    set -l all (echo "$open_p" | jq --argjson c "$closed_p" '. + $c')
+
+    if test "$JSON_MODE" = true
+        echo '{}' | jq --argjson projects "$all" '{projects: $projects}'
+    else
+        echo "$all" | jq -r '.[] | "#\(.number)\t\(.title)\t\(.state)\t\(.url)"' | column -t -s\t
+    end
 end
 
 function _backend_forgejo_view_project
-    _backend_forgejo_no_projects view-project
+    # Args: <id> [repo] [owner]
+    set -l id "$argv[1]"
+    test -z "$id"; and die "Usage: view-project <id> [repo] [owner]"
+    _backend_forgejo_web_login
+    set -l owner_repo (_backend_forgejo_board_repo "$argv[2]" "$argv[3]")
+    set -l owner "$owner_repo[1]"
+    set -l repo_name "$owner_repo[2]"
+
+    set -l html (_backend_forgejo_web_get "/$owner/$repo_name/projects/$id")
+    set -l data (_backend_forgejo_scrape_columns "$html")
+    # The scraper may miss the id from a partial page; pin it from the argument.
+    set data (echo "$data" | jq --argjson id "$id" '.id = $id')
+
+    if test "$JSON_MODE" = true
+        echo "$data"
+    else
+        echo "$data" | jq -r '"Project #\(.id): \(.title)"'
+        echo "$data" | jq -r '.columns[] | "  [\(.id)] \(.name) (\(.cards | length) cards)", (.cards[] | "      issue-id \(.issue_id)")'
+    end
 end
 
 function _backend_forgejo_create_project
-    _backend_forgejo_no_projects create-project
+    # Args: <title> [repo] [owner]
+    set -l title "$argv[1]"
+    test -z "$title"; and die "Usage: create-project <title> [repo] [owner]"
+    _backend_forgejo_web_login
+    set -l owner_repo (_backend_forgejo_board_repo "$argv[2]" "$argv[3]")
+    set -l owner "$owner_repo[1]"
+    set -l repo_name "$owner_repo[2]"
+
+    # template_type=1 (BasicKanban) gives Todo/In-Progress/Done columns, the
+    # closest parity to a default GitHub project board. card_type=0 (TextOnly).
+    _backend_forgejo_web_post "/$owner/$repo_name/projects/new" \
+        --data-urlencode "title=$title" \
+        --data-urlencode "content=" \
+        --data-urlencode "template_type=1" \
+        --data-urlencode "card_type=0" >/dev/null
+
+    # No id is returned on the redirect; re-list and match by title (newest wins).
+    set -l html (_backend_forgejo_web_get "/$owner/$repo_name/projects")
+    set -l projects (_backend_forgejo_scrape_projects "$owner" "$repo_name" open "$html")
+    set -l pid (echo "$projects" | jq -r --arg t "$title" 'map(select(.title == $t)) | (max_by(.number) // {}) | .number // empty')
+
+    test -z "$pid" -o "$pid" = null; and die "Created project POST returned no redirect id and no matching project titled '$title' was found (title >100 chars, or the form was rejected)."
+
+    set -l web_base (_backend_forgejo_web_base)
+    log_success "Created project #$pid: $title"
+    echo '{}' | jq --argjson number "$pid" --arg title "$title" \
+        --arg url "$web_base/$owner/$repo_name/projects/$pid" \
+        '{number: $number, title: $title, url: $url}'
 end
 
 function _backend_forgejo_list_fields
-    _backend_forgejo_no_projects list-fields
+    # Args: <id> [repo] [owner]. Columns are exposed as one SINGLE_SELECT "Status".
+    set -l id "$argv[1]"
+    test -z "$id"; and die "Usage: list-fields <id> [repo] [owner]"
+    _backend_forgejo_web_login
+    set -l owner_repo (_backend_forgejo_board_repo "$argv[2]" "$argv[3]")
+    set -l owner "$owner_repo[1]"
+    set -l repo_name "$owner_repo[2]"
+
+    set -l html (_backend_forgejo_web_get "/$owner/$repo_name/projects/$id")
+    set -l data (_backend_forgejo_scrape_columns "$html")
+    set -l options (echo "$data" | jq '[.columns[] | {id: (.id|tostring), name}]')
+
+    set -l fields (echo '[]' | jq --argjson options "$options" \
+        '. + [{id: "status", name: "Status", type: "SINGLE_SELECT", options: $options}]')
+
+    if test "$JSON_MODE" = true
+        echo '{}' | jq --argjson fields "$fields" '{fields: $fields}'
+    else
+        echo "$fields" | jq -r '.[] | "\(.id)\t\(.name)\t\(.type)", (.options[] | "    \(.id)\t\(.name)")'
+    end
 end
 
 function _backend_forgejo_create_field
-    _backend_forgejo_no_projects create-field
+    # Args: <id> <name> <type> [repo] [owner]. Only SINGLE_SELECT → a new column.
+    set -l id "$argv[1]"
+    set -l name "$argv[2]"
+    set -l type "$argv[3]"
+    test -z "$id" -o -z "$name" -o -z "$type"; and die "Usage: create-field <id> <name> <type> [repo] [owner]"
+
+    if test "$type" != SINGLE_SELECT
+        die "Forgejo boards only support columns (mapped as the Status single-select field). create-field creates a column; pass type SINGLE_SELECT with the column name."
+    end
+
+    _backend_forgejo_web_login
+    set -l owner_repo (_backend_forgejo_board_repo "$argv[4]" "$argv[5]")
+    set -l owner "$owner_repo[1]"
+    set -l repo_name "$owner_repo[2]"
+
+    # Sorting = current column count (append to the end).
+    set -l html (_backend_forgejo_web_get "/$owner/$repo_name/projects/$id")
+    set -l sorting (_backend_forgejo_scrape_columns "$html" | jq '.columns | length')
+
+    set -l resp (_backend_forgejo_web_post "/$owner/$repo_name/projects/$id" \
+        --data-urlencode "title=$name" \
+        --data-urlencode "sorting=$sorting" \
+        --data-urlencode "color=")
+
+    log_success "Created column '$name' in project #$id"
+    echo '{}' | jq --arg name "$name" --argjson project "$id" \
+        '{field: "column", name: $name, project: $project}'
 end
 
 function _backend_forgejo_add_item
-    _backend_forgejo_no_projects add-item
+    # Args: <project-number> <issue-url> [repo] [owner]
+    set -l project "$argv[1]"
+    set -l url "$argv[2]"
+    test -z "$project" -o -z "$url"; and die "Usage: add-item <project-number> <issue-url> [repo] [owner]"
+    _backend_forgejo_web_login
+    set -l owner_repo (_backend_forgejo_board_repo "$argv[3]" "$argv[4]")
+    set -l owner "$owner_repo[1]"
+    set -l repo_name "$owner_repo[2]"
+
+    set -l number (string match -r '/issues/([0-9]+)' -- "$url")[2]
+    test -z "$number"; and die "Could not parse an issue number from URL: $url"
+    set -l iid (_backend_forgejo_issue_internal_id "$owner" "$repo_name" "$number")
+
+    _backend_forgejo_web_post "/$owner/$repo_name/issues/projects" \
+        --data-urlencode "issue_ids=$iid" \
+        --data-urlencode "id=$project" >/dev/null
+
+    log_success "Added issue #$number to project #$project"
+    echo '{}' | jq --argjson project "$project" --argjson issue_id "$iid" \
+        --argjson number "$number" '{added: true, project: $project, issue_id: $issue_id, number: $number}'
 end
 
 function _backend_forgejo_add_item_by_id
-    _backend_forgejo_no_projects add-item-by-id
+    # Args: <project-id> <content-id>. content-id = internal issue id.
+    set -l project "$argv[1]"
+    set -l iid "$argv[2]"
+    test -z "$project" -o -z "$iid"; and die "Usage: add-item-by-id <project-id> <content-id>"
+    _backend_forgejo_web_login
+    set -l owner_repo (_backend_forgejo_board_repo "" "")
+    set -l owner "$owner_repo[1]"
+    set -l repo_name "$owner_repo[2]"
+
+    _backend_forgejo_web_post "/$owner/$repo_name/issues/projects" \
+        --data-urlencode "issue_ids=$iid" \
+        --data-urlencode "id=$project" >/dev/null
+
+    echo '{}' | jq --argjson project "$project" --argjson issue_id "$iid" \
+        '{added: true, project: $project, issue_id: $issue_id}'
 end
 
 function _backend_forgejo_remove_item
-    _backend_forgejo_no_projects remove-item
+    # Args: <project-id> <item-id>. item-id = internal issue id. id=0 removes.
+    set -l project "$argv[1]"
+    set -l iid "$argv[2]"
+    test -z "$project" -o -z "$iid"; and die "Usage: remove-item <project-id> <item-id>"
+    _backend_forgejo_web_login
+    set -l owner_repo (_backend_forgejo_board_repo "" "")
+    set -l owner "$owner_repo[1]"
+    set -l repo_name "$owner_repo[2]"
+
+    _backend_forgejo_web_post "/$owner/$repo_name/issues/projects" \
+        --data-urlencode "issue_ids=$iid" \
+        --data-urlencode "id=0" >/dev/null
+
+    echo '{}' | jq --argjson project "$project" --argjson issue_id "$iid" \
+        '{removed: true, project: $project, issue_id: $issue_id}'
+end
+
+# Move a card (issue) to a target column. Shared by update-select and set-field.
+# Args: <project-id> <issue-internal-id> <column-id> [owner] [repo]
+function _backend_forgejo_move_card
+    set -l project "$argv[1]"
+    set -l iid "$argv[2]"
+    set -l column "$argv[3]"
+    set -l owner "$argv[4]"
+    set -l repo_name "$argv[5]"
+
+    _backend_forgejo_web_login
+    if test -z "$owner" -o -z "$repo_name"
+        set -l owner_repo (_backend_forgejo_board_repo "" "")
+        set owner "$owner_repo[1]"
+        set repo_name "$owner_repo[2]"
+    end
+
+    set -l payload (echo '{}' | jq --argjson iid "$iid" '{issues: [{issueID: $iid, sorting: 0}]}')
+    _backend_forgejo_web_post "/$owner/$repo_name/projects/$project/$column/move" \
+        -H "Content-Type: application/json" \
+        --data-raw "$payload" >/dev/null
+
+    echo '{}' | jq --argjson project "$project" --argjson issue_id "$iid" \
+        --argjson column "$column" '{moved: true, project: $project, issue_id: $issue_id, column: $column}'
 end
 
 function _backend_forgejo_update_select
-    _backend_forgejo_no_projects update-select
+    # Args: <project-id> <item-id> <field-id> <option-id>
+    # item-id = internal issue id; option-id = target column id.
+    set -l project "$argv[1]"
+    set -l iid "$argv[2]"
+    set -l column "$argv[4]"
+    test -z "$project" -o -z "$iid" -o -z "$column"; and die "Usage: update-select <project-id> <item-id> <field-id> <option-id>"
+    _backend_forgejo_move_card "$project" "$iid" "$column"
 end
 
 function _backend_forgejo_update_text
-    _backend_forgejo_no_projects update-text
+    _backend_forgejo_no_board_field update-text
 end
 
 function _backend_forgejo_update_number
-    _backend_forgejo_no_projects update-number
+    _backend_forgejo_no_board_field update-number
 end
 
 function _backend_forgejo_update_date
-    _backend_forgejo_no_projects update-date
+    _backend_forgejo_no_board_field update-date
 end
 
 function _backend_forgejo_get_project_id
-    _backend_forgejo_no_projects get-project-id
+    # Args: <number> [owner]. For Forgejo the project id IS the number.
+    set -l number "$argv[1]"
+    test -z "$number"; and die "Usage: get-project-id <number> [owner]"
+    if test "$JSON_MODE" = true
+        echo '{}' | jq --argjson pid "$number" '{project_id: $pid}'
+    else
+        echo "$number"
+    end
 end
 
 function _backend_forgejo_add_to_board
-    _backend_forgejo_no_projects add-to-board
+    # Args: <project-number> <issue-internal-id> [issue-internal-id ...]
+    set -l project "$argv[1]"
+    set -e argv[1]
+    test -z "$project" -o (count $argv) -lt 1; and die "Usage: add-to-board <project-number> <issue-id> [issue-id ...]"
+    _backend_forgejo_web_login
+    set -l owner_repo (_backend_forgejo_board_repo "" "")
+    set -l owner "$owner_repo[1]"
+    set -l repo_name "$owner_repo[2]"
+
+    set -l ids (string join ',' $argv)
+    _backend_forgejo_web_post "/$owner/$repo_name/issues/projects" \
+        --data-urlencode "issue_ids=$ids" \
+        --data-urlencode "id=$project" >/dev/null
+
+    set -l ids_json (printf '%s\n' $argv | jq -R 'tonumber' | jq -s '.')
+    log_success "Added "(count $argv)" issue(s) to project #$project"
+    echo '{}' | jq --argjson project "$project" --argjson issue_ids "$ids_json" \
+        '{added: true, project: $project, issue_ids: $issue_ids, count: ($issue_ids | length)}'
 end
 
 function _backend_forgejo_set_field
-    _backend_forgejo_no_projects set-field
+    # Args: <project-id> <item-id> <field-name> <option-name>
+    # Resolve the column named <option-name> to its id, then move the card.
+    set -l project "$argv[1]"
+    set -l iid "$argv[2]"
+    set -l field_name "$argv[3]"
+    set -l option_name "$argv[4]"
+    test -z "$project" -o -z "$iid" -o -z "$option_name"; and die "Usage: set-field <project-id> <item-id> <field-name> <option-name>"
+
+    _backend_forgejo_web_login
+    set -l owner_repo (_backend_forgejo_board_repo "" "")
+    set -l owner "$owner_repo[1]"
+    set -l repo_name "$owner_repo[2]"
+
+    set -l html (_backend_forgejo_web_get "/$owner/$repo_name/projects/$project")
+    set -l column (_backend_forgejo_scrape_columns "$html" \
+        | jq -r --arg n "$option_name" '.columns[] | select(.name == $n) | .id' | head -n1)
+
+    test -z "$column"; and die "Column '$option_name' not found in project #$project. Run list-fields to see available columns."
+    _backend_forgejo_move_card "$project" "$iid" "$column" "$owner" "$repo_name"
 end
-# ── Implementable operations ──────────────────────────────────────────────────
+# ── Issue-level operations (REST API) ─────────────────────────────────────────
 
 function _backend_forgejo_list_items
     # Args: <repo> [--query <text>] [--first <n>] [--all] [--after <page>] [owner]

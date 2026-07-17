@@ -47,6 +47,14 @@
         owner = username;
         mode = "0400";
       };
+      forgejo-web-user = {
+        owner = username;
+        mode = "0400";
+      };
+      forgejo-web-pass = {
+        owner = username;
+        mode = "0400";
+      };
     };
 
     templates = {

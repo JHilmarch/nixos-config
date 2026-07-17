@@ -626,11 +626,17 @@ end
 set -g PROJECT_MANAGER_BACKEND "$PROVIDER"
 
 # Apply config values with priority flag > config > env > default
+set -g REPO ""
 if test -n "$CONFIG_FILE"
     if test "$_OWNER_FLAG_PASSED" = false -a -z "$OWNER"
         set -l config_owner (jq -r --arg p "$PROVIDER" '.providers[$p].owner // empty' "$CONFIG_FILE")
         test -n "$config_owner"; and set -g OWNER "$config_owner"
     end
+    # REPO is loaded from the active provider's config; board ops that take no
+    # repo argument (set-field, add-item-by-id, remove-item, add-to-board,
+    # move-card) fall back to it.
+    set -l config_repo (jq -r --arg p "$PROVIDER" '.providers[$p].repo // empty' "$CONFIG_FILE")
+    test -n "$config_repo"; and set -g REPO "$config_repo"
     if test "$PROVIDER" = github -a "$_CLI_FLAG_PASSED" = false
         set -l config_cli (jq -r '.providers.github.cli // empty' "$CONFIG_FILE")
         test -n "$config_cli"; and set -g GH_CLI "$config_cli"
