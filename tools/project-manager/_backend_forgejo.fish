@@ -835,6 +835,10 @@ function _backend_forgejo_add_to_board
     set -l project "$argv[1]"
     set -e argv[1]
     test -z "$project" -o (count $argv) -lt 1; and die "Usage: add-to-board <project-number> <issue-id> [issue-id ...]"
+    string match -qr '^[0-9]+$' -- "$project"; or die "add-to-board: project-number must be numeric, got '$project'."
+    for id in $argv
+        string match -qr '^[0-9]+$' -- "$id"; or die "add-to-board: issue-id must be a numeric internal issue id, got '$id'. This command takes internal issue ids (from get-content-id / list-items), not an owner/repo or issue number."
+    end
     _backend_forgejo_web_login
     set -l owner_repo (_backend_forgejo_board_repo "" "")
     set -l owner "$owner_repo[1]"
