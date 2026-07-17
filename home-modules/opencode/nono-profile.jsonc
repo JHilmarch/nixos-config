@@ -135,6 +135,8 @@
       "api.github.com", // GitHub REST API (gh CLI, MCP server)
       "forgejo.org", // Forgejo project site (docs, releases)
       "*.forgejo.org", // Forgejo subdomains (codeberg mirror, code.forgejo.org, etc.)
+      "codeberg.org", // Codeberg Forgejo instance (git clone, API, releases)
+      "*.codeberg.org", // Codeberg subdomains (docs, ci, etc.)
       "pypi.org", // Python package index
       "*.pypi.org", // PyPI CDN / mirrors
       "files.pythonhosted.org", // PyPI file hosting
