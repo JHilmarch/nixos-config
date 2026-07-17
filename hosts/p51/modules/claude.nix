@@ -11,6 +11,6 @@
       "${self}/home-modules/claude/scripts/gnome-pinentry.sh ${pkgs.pinentry-gnome3}"
     ];
 
-    modules.claude.runtimeInputs = [pkgs.pinentry-gnome3];
+    modules.claude.runtimeInputs = [pkgs.pinentry-gnome3 pkgs.local.forgejo-mcp];
   };
 }

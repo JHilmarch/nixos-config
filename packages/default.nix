@@ -1,4 +1,7 @@
-{callPackage}: rec {
+{
+  callPackage,
+  forgejo-mcp-unstable,
+}: rec {
   azure-devops-mcp = callPackage ./azure-devops-mcp {};
   codegraph = callPackage ./codegraph {};
   azure-mcp-server = callPackage ./azure-mcp-server {};
@@ -10,5 +13,6 @@
   github-project-manager = callPackage ./project-manager/github.nix {};
   project-manager = callPackage ./project-manager {inherit github-project-manager;};
   forgejo-project-manager = callPackage ./project-manager/forgejo.nix {inherit project-manager;};
+  forgejo-mcp = callPackage ./forgejo-mcp {forgejo-mcp-bin = forgejo-mcp-unstable;};
   mdformat = callPackage ./mdformat {};
 }

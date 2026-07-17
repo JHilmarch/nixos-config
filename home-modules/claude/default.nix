@@ -237,6 +237,10 @@ in {
           type = "stdio";
           command = "playwright-mcp";
         };
+        forgejo = {
+          type = "stdio";
+          command = "forgejo-mcp";
+        };
       };
     };
 

@@ -21,6 +21,7 @@
         pkgs.local.gh-personal # GitHub CLI authenticated with PAT for personal account
         pkgs.local.github-project-manager # GitHub CLI with classic PAT for project management
         pkgs.local.project-manager # project-manager.fish wrapper (fish --no-config, bakes gh + jq)
+        pkgs.local.forgejo-mcp # Forgejo MCP server (authenticated via /run/secrets/forgejo-pat)
         pkgs.local.gh-work # GitHub CLI authenticated with PAT for work account
         self.formatter.${pkgs.stdenv.hostPlatform.system} # treefmt wrapper (all formatters)
         pkgs.findutils # find, xargs, locate
@@ -98,6 +99,11 @@
             enabled = true;
             type = "local";
             command = ["github-work-mcp"];
+          };
+          forgejo = {
+            enabled = true;
+            type = "local";
+            command = ["forgejo-mcp"];
           };
         };
       };

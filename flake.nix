@@ -84,7 +84,9 @@
     mkPackages = system: let
       pkgs = mkPkgs system;
     in
-      (pkgs.callPackages ./packages {})
+      (pkgs.callPackages ./packages {
+        forgejo-mcp-unstable = inputs.nixpkgs-unstable.legacyPackages.${system}.forgejo-mcp;
+      })
       // {
         lxc-template =
           (inputs.nixpkgs.lib.nixosSystem {
