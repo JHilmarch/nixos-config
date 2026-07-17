@@ -8,10 +8,13 @@
 {
   lib,
   writeShellApplication,
+  findutils,
   forgejo-mcp-bin,
 }:
 writeShellApplication {
   name = "forgejo-mcp";
+
+  runtimeInputs = [findutils];
 
   text = ''
     FORGEJO_TOKEN="$(xargs </run/secrets/forgejo-pat)"
