@@ -6,7 +6,7 @@ Custom packages exposed as `pkgs.local.<name>` via overlay (orion + wsl-cab only
 
 ```
 packages/
-├── default.nix              # Registry: callPackages, 9 exports
+├── default.nix              # Registry: callPackages, 12 exports
 ├── azure-devops-mcp/        # buildNpmPackage of microsoft/azure-devops-mcp
 ├── azure-mcp-server/        # NuGet .NET tool, deps.json, dotnet dnx wrapper
 ├── github-mcp-server/       # Base/variant: personal + work PAT injection
@@ -14,11 +14,15 @@ packages/
 │   ├── personal.nix         # github-personal-mcp (reads gh_personal_pat)
 │   ├── work.nix             # github-work-mcp (reads gh_work_pat)
 │   └── gh-cli.nix           # github-mcp-server via `gh auth token`
-└── gh-cli/                  # Base/variant: gh CLI wrappers with PAT injection
-    ├── base.nix             # Takes serviceName + patSecret
-    ├── personal.nix         # gh-personal
-    ├── work.nix             # gh-work
-    └── personal-project-manager.nix  # gh-personal-project-manager
+├── gh-cli/                  # Base/variant: GitHub CLI account wrappers with PAT injection
+│   ├── base.nix             # Takes serviceName + patSecret
+│   ├── personal.nix         # gh-personal
+│   └── work.nix             # gh-work
+└── project-manager/         # Backend-agnostic Projects CLI + per-forge PAT wrappers
+    ├── default.nix          # project-manager (fish CLI; GitHub + Forgejo backends)
+    ├── github.nix           # github-project-manager (reuses gh-cli/base.nix, gh_personal_project_pat)
+    ├── forgejo-base.nix     # Takes serviceName + patSecret; injects FORGEJO_TOKEN
+    └── forgejo.nix          # forgejo-project-manager (reads forgejo-pat)
 ```
 
 ## Where to Look
@@ -34,7 +38,8 @@ packages/
 ### Base/Variant (personal/work split)
 
 Base module takes `serviceName` and `patSecret` as arguments. Variants call base with specific values. Used by:
-`github-mcp-server/`, `gh-cli/`
+`github-mcp-server/`, `gh-cli/`, `project-manager/` (its `github.nix` reuses `gh-cli/base.nix`; `forgejo-base.nix` is
+its own base)
 
 ### NuGet (.NET tools)
 

@@ -1,9 +1,9 @@
 {
   callPackage,
-  gh-project-manager,
+  project-manager,
 }:
 callPackage ./forgejo-base.nix {
-  inherit gh-project-manager;
+  inherit project-manager;
   serviceName = "forgejo-project-manager";
   patSecret = "forgejo-pat";
 }

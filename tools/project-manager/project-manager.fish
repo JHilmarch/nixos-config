@@ -1,15 +1,15 @@
 #!/usr/bin/env fish
 # @fish-lsp-disable 4004
 #
-# gh-project-manager — GitHub Projects v2 management & feature planning CLI
+# project-manager — GitHub Projects v2 / Forgejo management & feature planning CLI
 #
 # Usage:
-#   fish tools/gh-project-manager/gh-project-manager.fish [OPTIONS] <command> [ARGS]
+#   fish tools/project-manager/project-manager.fish [OPTIONS] <command> [ARGS]
 #
 # Options:
 #   --json              Output structured JSON (suppresses all logging)
 #   --owner <owner>     Default owner (or GH_PROJECT_OWNER env var)
-#   --cli <cmd>         GitHub CLI command (default: gh-personal-project-manager, or GH_CLI env var)
+#   --cli <cmd>         GitHub CLI command (default: github-project-manager, or GH_CLI env var)
 #   --help              Show this help message (--help --json for machine-readable)
 #
 # Environment:
@@ -56,7 +56,7 @@
 #     set-field <project-id> <item-id> <field-name> <option-name>
 
 set -g JSON_MODE false
-set -q GH_CLI; or set -g GH_CLI gh-personal-project-manager
+set -q GH_CLI; or set -g GH_CLI github-project-manager
 set -q GH_PROJECT_OWNER; and set -g OWNER $GH_PROJECT_OWNER; or set -g OWNER ""
 set -q PROJECT_MANAGER_BACKEND; or set -g PROJECT_MANAGER_BACKEND github
 set -g _OWNER_TYPE ""
@@ -428,8 +428,8 @@ end
 function show_help
     if test "$JSON_MODE" = true
         echo '{}' | jq '{
-            name: "gh-project-manager",
-            description: "GitHub Projects v2 management & feature planning CLI",
+            name: "project-manager",
+            description: "GitHub Projects v2 / Forgejo management & feature planning CLI",
             commands: [
                 {name: "list-projects", params: ["[owner]"], description: "List projects for an owner"},
                 {name: "view-project", params: ["<number>", "[owner]"], description: "View project details"},
@@ -456,19 +456,19 @@ function show_help
             global_options: [
                 {name: "--json", description: "Output structured JSON (suppresses all other output)"},
                 {name: "--owner <owner>", description: "Default owner (or GH_PROJECT_OWNER env var)"},
-                {name: "--cli <cmd>", description: "GitHub CLI command (default: gh-personal-project-manager, or GH_CLI env var)"},
+                {name: "--cli <cmd>", description: "GitHub CLI command (default: github-project-manager, or GH_CLI env var)"},
                 {name: "--help", description: "Show this help (--help --json for machine-readable)"}
             ]
         }'
     else
-        echo "gh-project-manager — GitHub Projects v2 management & feature planning CLI"
+        echo "project-manager — GitHub Projects v2 / Forgejo management & feature planning CLI"
         echo ""
-        echo "Usage: fish tools/gh-project-manager/gh-project-manager.fish [OPTIONS] <command> [ARGS]"
+        echo "Usage: fish tools/project-manager/project-manager.fish [OPTIONS] <command> [ARGS]"
         echo ""
         echo "Options:"
         echo "  --json              Output structured JSON (suppresses all logging)"
         echo "  --owner <owner>     Default owner (or GH_PROJECT_OWNER env var)"
-        echo "  --cli <cmd>         GitHub CLI command (default: gh-personal-project-manager, or GH_CLI env var)"
+        echo "  --cli <cmd>         GitHub CLI command (default: github-project-manager, or GH_CLI env var)"
         echo "  --help              Show this help message (--help --json for machine-readable)"
         echo ""
         echo "Project operations:"
@@ -507,16 +507,16 @@ function show_help
         echo "  report <number> [owner]"
         echo ""
         echo "Story & task creation (body from stdin):"
-        echo "  echo \"\$body\" | fish tools/gh-project-manager/gh-project-manager.fish create-story <repo> <title> [--label <label>]"
-        echo "  echo \"\$body\" | fish tools/gh-project-manager/gh-project-manager.fish create-task <repo> <title> <parent-node-id> [--label <label>]"
+        echo "  echo \"\$body\" | fish tools/project-manager/project-manager.fish create-story <repo> <title> [--label <label>]"
+        echo "  echo \"\$body\" | fish tools/project-manager/project-manager.fish create-task <repo> <title> <parent-node-id> [--label <label>]"
         echo ""
         echo "Board operations:"
-        echo "  fish tools/gh-project-manager/gh-project-manager.fish add-to-board <project-number> <node-id> [node-id ...]"
-        echo "  fish tools/gh-project-manager/gh-project-manager.fish set-field <project-id> <item-id> <field-name> <option-name>"
+        echo "  fish tools/project-manager/project-manager.fish add-to-board <project-number> <node-id> [node-id ...]"
+        echo "  fish tools/project-manager/project-manager.fish set-field <project-id> <item-id> <field-name> <option-name>"
         echo ""
         echo "Environment:"
         echo "  GH_PROJECT_OWNER    Default owner"
-        echo "  GH_CLI              GitHub CLI command (default: gh-personal-project-manager)"
+        echo "  GH_CLI              GitHub CLI command (default: github-project-manager)"
     end
 end
 # ── Argument parsing ─────────────────────────────────────────────────────────

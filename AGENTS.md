@@ -23,7 +23,7 @@ packages/           # Custom packages (pkgs.local.*) → [AGENTS.md]
 templates/          # Composable host bases (common→desktop/server→proxmox-lxc)
 users/              # User definitions (jonatan)
 functions/          # Build-time helpers (GitHub SSH key fetcher, NuGet builder)
-tools/              # Fish CLI scripts (update-packages, gh-project-manager)
+tools/              # Fish CLI scripts (update-packages, project-manager)
 scripts/            # Shell scripts (reboot-to-windows.sh, secrets-sops.sh, yubikey-usbip/*)
 hooks/              # Git hooks (commit-msg conventional commits enforcer)
 secrets/            # SOPS-encrypted secrets (NEVER read or edit)
@@ -50,7 +50,7 @@ ai/skills/          # Shared AI agent skills (SKILL.md per directory)
 - **Provision a homelab LXC** → `tofu/` — OpenTofu creates/sizes Proxmox containers; see `tofu/README.md` for bootstrap,
   destroy/recreate, and clean-checkout recovery
 - **Change formatting rules** → `treefmt.nix` — alejandra, mdformat, fish_indent, biome
-- **Manage GitHub Projects** → `tools/gh-project-manager/` — Fish CLI with --json output
+- **Manage GitHub/Forgejo Projects** → `tools/project-manager/` — backend-agnostic Fish CLI with --json output
 
 ## Flake Architecture
 

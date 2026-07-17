@@ -6,9 +6,9 @@
   github-work-mcp = callPackage ./github-mcp-server/work.nix {};
   github-mcp-server = callPackage ./github-mcp-server/gh-cli.nix {};
   gh-personal = callPackage ./gh-cli/personal.nix {};
-  gh-personal-project-manager = callPackage ./gh-cli/personal-project-manager.nix {};
   gh-work = callPackage ./gh-cli/work.nix {};
-  gh-project-manager = callPackage ./gh-project-manager {inherit gh-personal-project-manager;};
-  forgejo-project-manager = callPackage ./gh-cli/forgejo-project-manager.nix {inherit gh-project-manager;};
+  github-project-manager = callPackage ./project-manager/github.nix {};
+  project-manager = callPackage ./project-manager {inherit github-project-manager;};
+  forgejo-project-manager = callPackage ./project-manager/forgejo.nix {inherit project-manager;};
   mdformat = callPackage ./mdformat {};
 }

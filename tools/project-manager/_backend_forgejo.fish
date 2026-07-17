@@ -1,8 +1,8 @@
 # @fish-lsp-disable 4004
 #
-# _backend_forgejo.fish — Forgejo REST implementation of gh-project-manager operations
+# _backend_forgejo.fish — Forgejo REST implementation of project-manager operations
 #
-# Sourced by gh-project-manager.fish; never run directly. The _op_* dispatchers
+# Sourced by project-manager.fish; never run directly. The _op_* dispatchers
 # in the main script route here when PROJECT_MANAGER_BACKEND=forgejo.
 #
 # Ground-truth API: Forgejo 15.0.3 at https://forge.fileshare.se/api/v1

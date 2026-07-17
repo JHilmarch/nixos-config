@@ -1,19 +1,19 @@
 {
   lib,
   writeShellApplication,
-  gh-project-manager,
+  project-manager,
   serviceName,
   patSecret,
 }:
 writeShellApplication {
   name = serviceName;
-  runtimeInputs = [gh-project-manager];
+  runtimeInputs = [project-manager];
   checkPhase = "true";
   text = ''
     FORGEJO_TOKEN="$(xargs </run/secrets/${patSecret})"
     export FORGEJO_TOKEN
     export PROJECT_MANAGER_BACKEND=forgejo
-    exec gh-project-manager "$@"
+    exec project-manager "$@"
   '';
   meta = {
     description = "Forgejo project manager CLI authenticated via ${patSecret}";

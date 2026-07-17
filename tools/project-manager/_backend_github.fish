@@ -1,8 +1,8 @@
 # @fish-lsp-disable 4004
 #
-# _backend_github.fish — GitHub implementation of gh-project-manager operations
+# _backend_github.fish — GitHub implementation of project-manager operations
 #
-# Sourced by gh-project-manager.fish; never run directly. The _op_* dispatchers
+# Sourced by project-manager.fish; never run directly. The _op_* dispatchers
 # in the main script route here when PROJECT_MANAGER_BACKEND=github. Each
 # _backend_github_<op> function owns the full operation: API calls (GraphQL/REST
 # via $GH_CLI), response parsing, and JSON_MODE/human output formatting. Any

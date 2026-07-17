@@ -1,30 +1,31 @@
 ---
 name: project-manager
-description: Plan, refine, and delegate work on a GitHub Project board
+description: Plan, refine, and delegate work on a GitHub or Forgejo project board
 disable-model-invocation: true
 allowed-tools: Bash, Read, Glob, Grep, Skill
 ---
 
-## How to use the gh-project-manager CLI
+## How to use the project-manager CLI
 
-Call the packaged `gh-project-manager` command directly — it is on PATH via `pkgs.local.gh-project-manager` (installed
-on the p51 and orion hosts). The packaged wrapper bakes in its own `gh` + `jq` dependencies, so it works from any shell.
+Call the packaged `project-manager` command directly — it is on PATH via `pkgs.local.project-manager` (installed on the
+p51 and orion hosts). The packaged wrapper bakes in its own dependencies (`gh` + `jq` for the GitHub backend, `curl` +
+`jq` for Forgejo), so it works from any shell.
 
 **Documentation**
 
 ```bash
-gh-project-manager --help --json
+project-manager --help --json
 ```
 
 **Example:** _count all items in the project 2, matching the free-text-search "Ready"_
 
 ```bash
-gh-project-manager --json --owner JHilmarch count-items 2 "Ready"
+project-manager --json --owner JHilmarch count-items 2 "Ready"
 ```
 
 ## Configuration
 
-- **CLI**: `gh-personal-project-manager` (pass via `--cli gh-personal-project-manager`)
+- **CLI**: `github-project-manager` (pass via `--cli github-project-manager`)
 - **Owner**: `JHilmarch` (pass via `--owner JHilmarch`)
 - **Repository**: auto-detected via `git -C . remote get-url origin` — extract the `owner/repo` part
 - **Project**: ask the user which project number to use, or list available projects
@@ -33,10 +34,10 @@ gh-project-manager --json --owner JHilmarch count-items 2 "Ready"
 - **Field discovery**: use `list-fields` to discover field IDs and option IDs before updating
 - Run `--help` on the CLI to see all available commands
 
-To auto-detect the repo, run:
+To auto-detect the `owner/repo` (host-agnostic — works for GitHub and Forgejo, over SSH or HTTPS), run:
 
 ```bash
-git -C . remote get-url origin | sed 's|.*github.com[/:]||; s|\.git$||'
+git -C . remote get-url origin | sed -E 's|\.git$||; s|:|/|g; s|.*/([^/]+/[^/]+)$|\1|'
 ```
 
 ## Backend Selection
@@ -45,7 +46,7 @@ The CLI supports two backends via the `PROJECT_MANAGER_BACKEND` env var:
 
 | Backend   | Default | Credentials                                                                                        | Supports                                                                                                               |
 | --------- | ------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `github`  | yes     | `GH_CLI` / `--cli` (default `gh-personal-project-manager`)                                         | **All commands**: project boards, fields, items, updates, reports, stories, tasks                                      |
+| `github`  | yes     | `GH_CLI` / `--cli` (default `github-project-manager`)                                              | **All commands**: project boards, fields, items, updates, reports, stories, tasks                                      |
 | `forgejo` | no      | `FORGEJO_TOKEN` env var; optional `FORGEJO_API_BASE` (default `https://forge.fileshare.se/api/v1`) | **Issue/label/milestone only**: `list-items`, `count-items`, `get-content-id`, `report`, `create-story`, `create-task` |
 
 Set the backend explicitly when the repository lives on Forgejo:
@@ -109,9 +110,9 @@ export FORGEJO_TOKEN=<pat>
 
 ## Fallback routines
 
-For operations not supported by the gh-project-manager CLI, use the following:
+For operations not supported by the project-manager CLI, use the following:
 
-- **Project board operations** → use `gh-personal-project-manager` (classic PAT via the Fish CLI)
+- **Project board operations** → use `github-project-manager` (classic PAT via the Fish CLI)
 - **Other GitHub operations** (issues, PRs, repos, etc.) → use the `github-personal` MCP tools
   - **Fallback for unsupported queries** → use `gh-personal` CLI wrapper
   - **Never use bare `gh`** — always use `gh-personal` (personal) or `gh-work` (work) wrappers instead
