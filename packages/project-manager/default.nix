@@ -24,6 +24,10 @@ in
     runtimeInputs = [fish jq coreutils github-project-manager];
     checkPhase = "true"; # repo convention for wrappers
     text = ''
+      # Forgejo credential — silently empty if secret absent (e.g., host without forgejo-pat).
+      # The forgejo backend's check_prerequisites catches an empty token with a clear error.
+      FORGEJO_TOKEN="$(xargs </run/secrets/forgejo-pat 2>/dev/null || true)"
+      export FORGEJO_TOKEN
       # --no-config is load-bearing: a plain `fish -c` / `fish <script>` re-runs
       # NixOS's fish preinit, which rebuilds $PATH from the profile dirs and drops
       # the inherited runtimeInputs prefix (github-project-manager lives only

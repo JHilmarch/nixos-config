@@ -12,8 +12,7 @@ writeShellApplication {
   text = ''
     FORGEJO_TOKEN="$(xargs </run/secrets/${patSecret})"
     export FORGEJO_TOKEN
-    export PROJECT_MANAGER_BACKEND=forgejo
-    exec project-manager "$@"
+    exec project-manager --provider forgejo "$@"
   '';
   meta = {
     description = "Forgejo project manager CLI authenticated via ${patSecret}";
