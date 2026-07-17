@@ -47,6 +47,10 @@
         owner = username;
         mode = "0400";
       };
+      forgejo-pat = {
+        owner = username;
+        mode = "0400";
+      };
     };
 
     templates = {
