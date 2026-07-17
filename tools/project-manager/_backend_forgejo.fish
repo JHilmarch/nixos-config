@@ -510,6 +510,15 @@ end
 # Try to link child issue as a dependency of parent issue (same repo).
 # Parent is interpreted as an issue number/index in the same repo.
 # Returns "true" on success, "false" otherwise.
+#
+# Forgejo 15.0.4 quirks handled here:
+#   - The REST API POST /issues/{index}/dependencies is broken (404 for POST;
+#     GET works). The web GUI form POST is the only working path.
+#   - The web form's newDependency field expects the issue's INTERNAL database
+#     ID, not its public-facing number. We resolve the child's internal ID via
+#     a REST GET before posting the form.
+#   - Web login is done inline (best-effort, no die) so a login failure doesn't
+#     kill the caller — the task issue is already created at this point.
 function _backend_forgejo_link_dependency
     set -l repo (normalize_repo "$argv[1]")
     set -l parent_number "$argv[2]"
@@ -519,19 +528,51 @@ function _backend_forgejo_link_dependency
     set -l owner "$parts[1]"
     set -l repo_name "$parts[2]"
 
-    set -l body (echo '{}' | jq --arg owner "$owner" --arg repo "$repo_name" \
-        --argjson index "$child_number" \
-        '{owner: $owner, repo: $repo, index: $index}')
-
-    set -l linked false
-    if curl -sS -X POST -H "Authorization: token $FORGEJO_TOKEN" \
-            -H "Accept: application/json" \
-            -H "Content-Type: application/json" \
-            -d "$body" \
-            "$FORGEJO_API_BASE/repos/$owner/$repo_name/issues/$parent_number/dependencies" >/dev/null 2>&1
-        set linked true
+    # Resolve child's internal DB ID from its public issue number.
+    set -l child_json (curl -sS -H "Authorization: token $FORGEJO_TOKEN" \
+        -H "Accept: application/json" \
+        "$FORGEJO_API_BASE/repos/$owner/$repo_name/issues/$child_number" 2>/dev/null | string collect)
+    set -l child_internal (echo "$child_json" | jq -r '.id // empty' 2>/dev/null)
+    if test -z "$child_internal" -o "$child_internal" = null
+        echo false
+        return
     end
-    echo "$linked"
+
+    # Web session required — the REST dependency endpoints are broken.
+    if test -z "$FORGEJO_WEB_USER" -o -z "$FORGEJO_WEB_PASS"
+        echo false
+        return
+    end
+
+    # Best-effort web login (inline, no die — task already exists).
+    set -l web_base (_backend_forgejo_web_base)
+    set -l jar (mktemp)
+    curl -sS -c "$jar" -b "$jar" -A "Mozilla/5.0" -o /dev/null "$web_base/user/login" 2>/dev/null
+    curl -sS -c "$jar" -b "$jar" -A "Mozilla/5.0" -H "Origin: $web_base" -o /dev/null \
+        --data-urlencode "user_name=$FORGEJO_WEB_USER" \
+        --data-urlencode "password=$FORGEJO_WEB_PASS" \
+        --data-urlencode "remember=on" \
+        "$web_base/user/login" 2>/dev/null
+    if not string match -qr session <"$jar"
+        rm -f "$jar"
+        echo false
+        return
+    end
+
+    # POST /{owner}/{repo}/issues/{parent}/dependency/add with newDependency=internal_id.
+    # Success = HTTP 303 (redirect to the issue page).
+    set -l code (curl -sS -b "$jar" -A "Mozilla/5.0" \
+        -H "Origin: $web_base" \
+        -o /dev/null -w '%{http_code}' \
+        --data-urlencode "newDependency=$child_internal" \
+        "$web_base/$owner/$repo_name/issues/$parent_number/dependency/add" 2>/dev/null)
+    rm -f "$jar"
+
+    if test "$code" = 303
+        echo true
+    else
+        echo false
+    end
 end
 # ── Project-board operations (web/GUI emulation) ──────────────────────────────
 # Forgejo boards map onto the GitHub-Projects CLI vocabulary as follows:
@@ -1183,7 +1224,7 @@ function _backend_forgejo_create_task
     set -l linked (_backend_forgejo_link_dependency "$repo" "$parent_number" "$task_number")
 
     if test "$linked" != true
-        log_warn "Created task but failed to link as dependency (GitHub-style sub-issues are not native to Forgejo)"
+        log_warn "Created task but failed to link as dependency (needs FORGEJO_WEB_USER/FORGEJO_WEB_PASS for the web GUI dependency form)"
     end
 
     set -l issue_number (echo "$task_info" | jq -r '.number')
