@@ -1,6 +1,6 @@
 # packages/AGENTS.md
 
-Custom packages exposed as `pkgs.local.<name>` via overlay (orion + wsl-cab only).
+Custom packages exposed as `pkgs.local.<name>` via overlay (orion, p51, and wsl-cab only).
 
 ## Structure
 
@@ -63,4 +63,4 @@ is empty with regeneration instructions. Used by: `azure-mcp-server/`
 - **NEVER** hardcode PATs or API keys in package definitions
 - **NEVER** edit `deps.json` manually — use `tools/update-packages/scripts/generate-nuget-deps.sh`
 - **NEVER** forget to register new packages in `packages/default.nix`
-- **NEVER** assume `pkgs.local.*` is available on all hosts — only orion + wsl-cab
+- **NEVER** assume `pkgs.local.*` is available on all hosts — only orion, p51, and wsl-cab
