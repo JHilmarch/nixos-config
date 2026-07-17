@@ -302,7 +302,7 @@ in
             retry_on_errors = [402 429 500 502 503 504 529];
             max_fallback_attempts = 5;
             cooldown_seconds = 14400;
-            timeout_seconds = 30;
+            timeout_seconds = 70;
             notify_on_fallback = true;
             restore_primary_after_cooldown = false;
           };

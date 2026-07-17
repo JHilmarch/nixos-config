@@ -169,7 +169,7 @@ Config choices (in [`oh-my-openagent.nix`](./oh-my-openagent.nix)):
 | `retry_on_errors`                | `[402, 429, 500, 502, 503, 504, 529]` | 402 = credits off; 529 = Anthropic overloaded                        |
 | `max_fallback_attempts`          | `5`                                   | chains are 3–5 deep                                                  |
 | `cooldown_seconds`               | `14400` (4 h)                         | throttled model stays benched for the session (state is per-session) |
-| `timeout_seconds`                | `30`                                  | hang safety net                                                      |
+| `timeout_seconds`                | `70`                                  | hang safety net                                                      |
 | `restore_primary_after_cooldown` | `false`                               | pointless with a 4 h cooldown; new sessions re-probe primary anyway  |
 
 Fallback state is **per-session and in-memory** — a new session always re-probes the primary model once (~2s) before
