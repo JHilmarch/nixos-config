@@ -6,6 +6,7 @@
   imports = [
     "${self}/modules/defaults.nix"
     "${self}/modules/nix-cache-client.nix"
+    "${self}/modules/security-overrides/default.nix"
   ];
 
   programs = {
@@ -16,6 +17,8 @@
   security.sudo.wheelNeedsPassword = true;
 
   nixpkgs.config.allowUnfree = true;
+
+  security.overrides.enable = true;
 
   environment.systemPackages = with pkgs; [
     coreutils # A collection of basic file, shell, and text manipulation utilities. ls, cat, rm, cp...

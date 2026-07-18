@@ -16,6 +16,8 @@ modules/
 ├── nfs/
 │   ├── default.nix       # Options: nfs.{enable, host, ip, shares, port} → generates fileSystems
 │   └── fileshare.nix     # Concrete config for home NAS (fileshare.local)
+├── security-overrides/
+│   └── default.nix       # security.overrides.{enable,aggressive} — overlay pulling vim/sqlite/libmicrohttpd/libcap/fzf/fish/dash from nixpkgs-unstable to close CVEs not yet backported to nixos-26.05; `aggressive=true` also overrides giflib (5→6) and graphite2
 ├── spotify/
 │   └── firewall.nix      # services.spotifyFirewall.enable — TCP/UDP 5353, 57621
 ├── ssh-host-key-persistence/
