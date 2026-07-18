@@ -387,6 +387,10 @@ Two approaches:
 - **clone + rebuild** (requires push): SSH in, `git clone`, `nixos-rebuild switch`. Use this when the repo is on GitHub
   and the working tree is clean.
 
+Both approaches converge a **fresh** container once, from `main` or the operator's working tree — on a brand-new forge
+the gated `blessed` ref may not exist yet (the gate creates it on its first passing run). Every update after bootstrap
+instead tracks `blessed`: see [Ongoing host updates](#ongoing-host-updates-track-blessed).
+
 ### Option A: `--target-host` (recommended for unpushed work)
 
 ```fish
@@ -426,7 +430,33 @@ git clone https://github.com/<owner>/nixos-config.git && cd nixos-config
 sudo nixos-rebuild switch --flake .#nixos-<host>
 ```
 
-Reconnect on the static IP after the switch.
+Reconnect on the static IP after the switch. The bootstrap clone builds from `main` (the clone's default HEAD); once the
+host is converged, ongoing updates switch the clone to the forge remote and the `blessed` ref — see
+[Ongoing host updates](#ongoing-host-updates-track-blessed).
+
+## Ongoing host updates: track `blessed`
+
+Bootstrap is the only time the pull-based path builds from `main`. From then on, a host only ever deploys **gated**
+updates by tracking the `blessed` ref — the strict trailing pointer inside `main`'s history that the
+[gate](../hosts/runners/README-runners.md#the-gate-forgejoworkflowsgateyaml) advances to each commit that passed
+validation. The gate advances `blessed` on the forge repo, so the host's clone must point at the forge — switch a
+bootstrap-era GitHub clone once with `git remote set-url origin https://forge.fileshare.se/jonatan/nixos-config.git`.
+Because `blessed` only ever fast-forwards (the gate never forces), an update is a plain ff pull + switch:
+
+```fish
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@<static-ip>
+cd nixos-config
+git fetch && git checkout blessed && git pull --ff-only
+sudo nixos-rebuild switch --flake .#nixos-<host>
+```
+
+It is normal for `blessed` to lag `main`: a commit that did not go through the gate intentionally leaves `blessed`
+behind, and hosts stay on the last validated state until the next gated update advances it. The push-based path (Option
+A) is unchanged — it deploys whatever the operator builds, and remains the tool for unpushed or host-specific work.
+Rolling `blessed` back after a bad update is documented in
+[`README-forge.md` "Rolling back `blessed`"](../hosts/forge/README-forge.md#rolling-back-blessed); hosts recover fast
+because the previous closure is still served by the LAN cache
+([`README-cache.md` "Ongoing updates and rollback"](../hosts/cache/README-cache.md#ongoing-updates-and-rollback)).
 
 ## Destroy / recreate a container from code
 

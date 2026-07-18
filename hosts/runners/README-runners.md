@@ -85,7 +85,8 @@ against `jonatan/nixos-config` when any input rev moved.
 - **PR body:** one line per changed top-level input (`name: oldrev -> newrev`) plus a reserved "Resolves security
   issues" section left empty for the closing logic (separate task) to populate.
 - **Consumed by the gate:** each such PR is validated by [`gate.yaml`](#the-gate-forgejoworkflowsgateyaml) below, which
-  auto-merges it to `blessed` on a full pass or leaves it open with the blocking findings on a failure.
+  fast-forward-merges it to `main` and advances `blessed` on a full pass, or leaves it open with the blocking findings
+  on a failure.
 
 ## Files
 
@@ -188,8 +189,11 @@ Fail-fast; the first red step blocks the merge and comments the reason on the PR
 ### `blessed` and the default branch
 
 `main` stays the default branch (so Forgejo's close-on-merge fires). `blessed` is a strict trailing pointer inside
-`main`'s history that only ever advances to gated commits. Hosts track `blessed`, not `main` (task T5); a non-gated
-commit landing on `main` intentionally leaves `blessed` behind.
+`main`'s history that only ever advances to gated commits. Hosts track `blessed`, not `main` — the pull-based update
+flow is in [`tofu/README.md` "Ongoing host updates"](../../tofu/README.md#ongoing-host-updates-track-blessed), and
+rolling `blessed` back after a bad update is in
+[`README-forge.md` "Rolling back `blessed`"](../forge/README-forge.md#rolling-back-blessed). A non-gated commit landing
+on `main` intentionally leaves `blessed` behind.
 
 ### VEX whitelist
 

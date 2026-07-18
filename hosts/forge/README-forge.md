@@ -121,6 +121,64 @@ Every later `tofu destroy`/`apply` skips this — the persisted key is remounted
 Generate the Forgejo secret values with `nix run nixpkgs#forgejo -- generate secret SECRET_KEY` (and `INTERNAL_TOKEN`);
 the DB and restic passwords are any `openssl rand -base64 32`.
 
+## Ongoing updates and rollback
+
+Like every LXC host, a running forge deploys **gated** updates only: pull the `blessed` ref — advanced by the
+[gate](../runners/README-runners.md#the-gate-forgejoworkflowsgateyaml) to each commit that passed validation — and
+switch (fleet-wide flow in
+[`tofu/README.md` "Ongoing host updates"](../../tofu/README.md#ongoing-host-updates-track-blessed)):
+
+```fish
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.109
+cd nixos-config
+git fetch && git checkout blessed && git pull --ff-only
+sudo nixos-rebuild switch --flake .#nixos-forge
+```
+
+### Rolling back `blessed`
+
+When a gated update turns out bad in operation, roll `blessed` back so hosts converge onto the previous validated
+closure. The ref lives on this host's Forgejo (`jonatan/nixos-config`), so both mechanisms are ordinary git pushes to
+the forge remote, run from a checkout whose remote points at the forge
+(`https://forge.fileshare.se/jonatan/nixos-config.git`). Either way the rollback is fast: the closure that hosts return
+to is still in the LAN cache's store, so their `nixos-rebuild switch` pulls it from `https://cache.fileshare.se` instead
+of rebuilding from source (see
+[`README-cache.md` "Ongoing updates and rollback"](../cache/README-cache.md#ongoing-updates-and-rollback)).
+
+**`git revert` — the durable path.** Revert the bad commit on `main` (a flake-update commit is a `flake.lock` bump, so
+the revert restores the previous, already-gated input set), then advance `blessed` to the revert with a plain
+fast-forward push — the revert descends from the bad `blessed` head, so no force is needed and hosts' ordinary
+`git pull --ff-only` picks it up:
+
+```fish
+git checkout main && git pull --ff-only
+git revert <bad-commit>
+git push origin main
+git push origin main:refs/heads/blessed   # plain ff push — never --force
+```
+
+Right after a bad gated merge `blessed` equals `main`'s head, so the push blesses exactly the revert; if non-gated
+commits landed on `main` in between, they ride along — check `git log origin/blessed..main` first. The bad change is
+gone from the history every later gated update builds on.
+
+**Ref move — the fast manual path.** Point `blessed` back at its previous commit. Moving a ref backwards is a
+non-fast-forward push, so it needs a force (fetch first so `--force-with-lease` compares against a current view of the
+remote):
+
+```fish
+git fetch origin
+git push --force-with-lease origin origin/blessed~1:refs/heads/blessed
+```
+
+Two caveats make this the emergency path only:
+
+- A host that already pulled the bad commit refuses the backwards move (`git pull --ff-only` fails); converge it with
+  `git fetch origin && git reset --hard origin/blessed` before the switch.
+- The bad commit is still on `main`, so the next gated flake-update advances `blessed` right past it again. Follow up
+  with a revert (above) before the next gate pass to make the rollback durable.
+
+After either mechanism, run the ongoing-update pull + switch above on every affected host.
+
 ## Admin user (once per host lifetime)
 
 Registration is disabled, so the first (admin) account is created out of band with the Forgejo CLI, run as the `forgejo`

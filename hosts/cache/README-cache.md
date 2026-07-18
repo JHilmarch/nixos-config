@@ -149,8 +149,9 @@ obsolete file — no manual key injection at any step.
    ssh-keygen -R 192.168.2.108
    ```
 
-1. **Rebuild** from a host with the flake checked out (e.g. p51). The LAN cache is the container being rebuilt, so it is
-   down — override the substituters to skip it and pull straight from the public caches.
+1. **Rebuild** from a host with the flake checked out at the gated `blessed` ref (e.g. p51 — see
+   [Ongoing updates and rollback](#ongoing-updates-and-rollback)). The LAN cache is the container being rebuilt, so it
+   is down — override the substituters to skip it and pull straight from the public caches.
    `StrictHostKeyChecking=accept-new` auto-accepts the template's new host key without prompting:
 
    ```fish
@@ -194,6 +195,28 @@ destroy/recreate. Commit the refreshed tofu state after the apply:
 ```fish
 git add tofu/terraform.tfstate.enc
 ```
+
+## Ongoing updates and rollback
+
+The section above is the destroy/recreate path. An ordinary update of a **running** cache host follows the fleet flow —
+pull the gated `blessed` ref and switch (see
+[`tofu/README.md` "Ongoing host updates"](../../tofu/README.md#ongoing-host-updates-track-blessed) for why hosts track
+`blessed`, not `main`):
+
+```fish
+ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.108
+cd nixos-config
+git fetch && git checkout blessed && git pull --ff-only
+sudo nixos-rebuild switch --flake .#nixos-cache
+```
+
+The cache is also what makes a fleet **rollback** fast. When `blessed` is rolled back — by reverting the bad commit or
+by moving the ref back one commit, both documented in
+[`README-forge.md` "Rolling back `blessed`"](../forge/README-forge.md#rolling-back-blessed) — the closure that hosts
+converge back onto was realised by an earlier [pre-warm](#pre-warm) run and is still in this host's store, so each
+host's rollback `nixos-rebuild switch` pulls it from `https://cache.fileshare.se` instead of rebuilding from source. The
+superseded closure stays available well past any realistic rollback: the store is only trimmed by the LXC base's monthly
+`--delete-older-than 30d` GC sweep (plus the reactive `min-free` trigger under disk pressure).
 
 ## Provisioning
 
