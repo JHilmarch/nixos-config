@@ -1,0 +1,132 @@
+# The gate (T4): validate a flake-update PR and, if it passes, fast-forward it
+# onto main and advance the `blessed` ref that hosts track (T5).
+#
+# This is the "is this update safe" decision — the blocking counterpart to the
+# report-only daily-scanners. Triggered by the flake-update PRs that T3 opens
+# (head branch `flake-update/<date>` -> base `main`).
+#
+# Pipeline (fail-fast; any red step blocks the merge and comments on the PR):
+#   1. nix flake check
+#   2. build EVERY host system.build.toplevel (host list derived from the flake,
+#      not hardcoded; a single failure fails the gate)
+#   3. vulnxscan the built closures -> block on any CVE with CVSS >= 7.0 not in
+#      the curated VEX whitelist (vex/whitelist.csv, T7)
+#   4. flake checks / tests (nix flake check --keep-going as the repo test gate)
+#   5. pass  -> fast-forward-only merge to main + advance `blessed` (merge-blessed)
+#      fail  -> leave PR open, comment the blocking findings (block-pr)
+#
+# Runner: nixos-x86_64 (host-native, LAN binary cache) — same runner as T3/T6.
+#
+# Required secret (already wired for T3): FORGEJO_PR_TOKEN, a token with
+# write:repository on jonatan/nixos-config. It merges the PR and pushes
+# `blessed`. NVD_API_KEY (already injected into the runner daemon) is read by
+# vulnxscan. Both are surfaced via the runner daemon EnvironmentFile in
+# hosts/runners/forgejo-runner.nix — no workflow-level secret block needed.
+#
+# GATED_SHA is taken from the PR event payload (the real PR head), NOT from the
+# checked-out ref, so the fast-forward-only merge pins the exact commit the gate
+# built and scanned.
+
+name: gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+# Never run two gates on the same PR concurrently (a synchronize mid-merge would
+# race the blessed advance).
+concurrency:
+  group: gate-${{ forgejo.event.pull_request.number }}
+  cancel-in-progress: true
+
+# The gate scripts read runner-neutral names (WORKSPACE, SERVER_URL, RUN_ID)
+# supplied here. Forgejo and GitHub Actions expose the same runner values under
+# a shared `${{ <ctx>.* }}` context (checkout dir, instance URL, run id), so a
+# script that reads these neutral vars works unchanged on either forge.
+env:
+  FORGEJO_API: https://forge.fileshare.se/api/v1
+  REPO: jonatan/nixos-config
+  REPORTS_DIR: reports
+  CVSS_THRESHOLD: "7.0"
+  WORKSPACE: ${{ forgejo.workspace }}
+  SERVER_URL: ${{ forgejo.server_url }}
+  RUN_ID: ${{ forgejo.run_id }}
+
+jobs:
+  gate:
+    # Only gate automated flake-update PRs; human PRs are out of scope for the
+    # auto-merge-to-blessed path.
+    if: startsWith(forgejo.head_ref, 'flake-update/')
+    runs-on: nixos-x86_64
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout PR head
+        uses: https://code.forgejo.org/actions/checkout@v4
+        with:
+          # Check out the PR head commit itself (not a synthetic merge ref) so
+          # the built + scanned tree matches GATED_SHA exactly.
+          ref: ${{ forgejo.event.pull_request.head.sha }}
+
+      - name: Resolve gated SHA
+        id: gated
+        shell: bash
+        run: echo "sha=${{ forgejo.event.pull_request.head.sha }}" >> "$FORGEJO_OUTPUT"
+
+      - name: Gate — nix flake check
+        id: flake_check
+        shell: bash
+        run: bash .forgejo/scripts/gate/flake-check.sh
+
+      - name: Gate — build all host toplevels
+        id: build
+        shell: bash
+        run: bash .forgejo/scripts/gate/build-hosts.sh
+
+      - name: Gate — vulnxscan (CVSS >= threshold minus VEX)
+        id: vulnxscan
+        shell: bash
+        env:
+          VEX_WHITELIST: ${{ forgejo.workspace }}/vex/whitelist.csv
+        run: bash .forgejo/scripts/gate/vulnxscan-gate.sh
+
+      - name: Gate — tests (flake checks, keep-going)
+        id: tests
+        shell: bash
+        run: nix flake check "$WORKSPACE" --keep-going
+
+      # --- Pass path: ff-only merge + advance blessed --------------------------
+      - name: Merge and advance blessed
+        id: merge
+        shell: bash
+        env:
+          PR_NUMBER: ${{ forgejo.event.pull_request.number }}
+          GATED_SHA: ${{ steps.gated.outputs.sha }}
+        run: bash .forgejo/scripts/gate/merge-blessed.sh
+
+      # --- Fail path: leave PR open, comment the blocking findings -------------
+      # Runs whenever any earlier step failed. `steps.*.conclusion` names the
+      # stage for the PR comment.
+      - name: Block PR on gate failure
+        if: failure()
+        shell: bash
+        env:
+          PR_NUMBER: ${{ forgejo.event.pull_request.number }}
+          FAILED_STAGE: >-
+            ${{ steps.flake_check.conclusion == 'failure' && 'nix flake check'
+             || steps.build.conclusion == 'failure' && 'host toplevel build'
+             || steps.vulnxscan.conclusion == 'failure' && 'vulnxscan CVE gate'
+             || steps.tests.conclusion == 'failure' && 'tests'
+             || 'merge' }}
+        run: bash .forgejo/scripts/gate/block-pr.sh
+
+      # Archive the gate reports (closures list, per-closure vulnxscan CSVs,
+      # failing-CVE report) for audit.
+      - name: Upload gate reports
+        if: always()
+        uses: https://code.forgejo.org/actions/upload-artifact@v4
+        with:
+          name: gate-reports
+          path: reports/
+          retention-days: 30

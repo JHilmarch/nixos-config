@@ -84,6 +84,8 @@ against `jonatan/nixos-config` when any input rev moved.
   PR. It never opens empty PRs.
 - **PR body:** one line per changed top-level input (`name: oldrev -> newrev`) plus a reserved "Resolves security
   issues" section left empty for the closing logic (separate task) to populate.
+- **Consumed by the gate:** each such PR is validated by [`gate.yaml`](#the-gate-forgejoworkflowsgateyaml) below, which
+  auto-merges it to `blessed` on a full pass or leaves it open with the blocking findings on a failure.
 
 ## Files
 
@@ -93,10 +95,9 @@ against `jonatan/nixos-config` when any input rev moved.
 | `home.nix`           | Minimal Home Manager config (fish, lsd, fzf, zoxide, broot, starship).   |
 | `forgejo-runner.nix` | Runner registration, labels, host packages, daemon `EnvironmentFile`s.   |
 
-The two workflows keep only step wiring in YAML; each non-trivial step calls a script under
-`.forgejo/scripts/<workflow>/` so the shell stays readable and independently checkable. These are bash (not fish): the
-Forgejo Actions steps run them under `shell: bash`, and the runner ships bash + gawk + jq — same class as
-`scripts/*.sh`.
+The workflows keep only step wiring in YAML; each non-trivial step calls a script under `.forgejo/scripts/<workflow>/`
+so the shell stays readable and independently checkable. These are bash (not fish): the Forgejo Actions steps run them
+under `shell: bash`, and the runner ships bash + gawk + jq — same class as `scripts/*.sh`.
 
 ## Daily scanners (`.forgejo/workflows/daily-scanners.yaml`)
 
@@ -148,3 +149,70 @@ The `security` label is created idempotently by the workflow on first run if it 
 
 `reports/{ghafscan,nix_outdated,sbom}/` — packaged as the `daily-scanners-reports` job artifact, downloadable from the
 workflow run page.
+
+## The gate (`.forgejo/workflows/gate.yaml`)
+
+The **blocking** counterpart to the daily scanners. It validates the flake-update PRs the `flake-update` workflow opens
+and, on a full pass, fast-forwards them onto `main` and advances the `blessed` ref that hosts track. This is the "is
+this update safe" decision.
+
+- **Trigger:** `pull_request` (opened / synchronize / reopened) against `main`, gated to head branches matching
+  `flake-update/*` — automated bumps only, not human PRs.
+- **Runner label:** `nixos-x86_64`, same host-native runner as the other workflows.
+
+### Pipeline
+
+Fail-fast; the first red step blocks the merge and comments the reason on the PR.
+
+1. **`nix flake check`** — eval + formatting + the flake's own checks.
+1. **Build every host `system.build.toplevel`.** The host list is derived from `self.nixosConfigurations` (minus `iso`,
+   `wsl-cab`, `nixos-cache`), never hardcoded, so a newly added host is gated automatically. A single build failure
+   fails the gate. The LAN binary cache resolves most paths.
+1. **`vulnxscan`** each built closure. Blocks on any `CVE-*` with `severity` (CVSS base score) `>= 7.0` that is not
+   whitelisted by [`vex/whitelist.csv`](../../vex/whitelist.csv). Whitelisted and sub-threshold findings, and non-CVE
+   (`MAL-*` / `OSV-*`) findings, do not block.
+1. **Tests** — `nix flake check --keep-going` as the repo test gate.
+1. **Pass** → fast-forward-only merge to `main`, then advance `blessed` to the exact gated commit. **Fail** → the PR is
+   left open with the blocking findings commented on it.
+
+### How the merge + `blessed` advance works
+
+- The PR is merged with the Forgejo API `Do: "fast-forward-only"`, pinned to the gated head SHA (`head_commit_id`). The
+  commit that was built and scanned is exactly the commit that lands on `main` — no rebase/squash SHA rewrite.
+- `blessed` is then advanced with a plain (non-force) `git push` of that same gated SHA to `refs/heads/blessed`. The
+  first passing run **creates** `blessed`; every later advance is a true fast-forward. A refused (non-ff) push means
+  `blessed` was moved out of band — the gate stops loudly and never forces.
+- If `main` moved since the PR branched, the ff-only merge is rejected; the gate asks Forgejo to rebase the PR, and the
+  resulting `synchronize` event re-runs the whole gate on the new tree.
+
+### `blessed` and the default branch
+
+`main` stays the default branch (so Forgejo's close-on-merge fires). `blessed` is a strict trailing pointer inside
+`main`'s history that only ever advances to gated commits. Hosts track `blessed`, not `main` (task T5); a non-gated
+commit landing on `main` intentionally leaves `blessed` behind.
+
+### VEX whitelist
+
+[`vex/whitelist.csv`](../../vex/whitelist.csv) is the curated exception list (vulnxscan whitelist CSV format; `vuln_id`
+regex + `comment`, optional `package`). It ships empty — nothing is suppressed until an entry is added. See
+[`vex/README.md`](../../vex/README.md) for the format and the add-an-exception workflow.
+
+### Closing security issues on merge
+
+When a passing update resolves a tracked CVE, the merge closes its `security` issue via a `Closes: #<n>` line appended
+to the PR description before merge (Forgejo closes body-referenced issues on merge to the default branch — no commit
+amend, so the gated SHA is untouched). The CVE-set diff that computes which issues to close is the
+[`resolve-closes.sh`](../../.forgejo/scripts/gate/resolve-closes.sh) seam — it currently closes nothing and is filled in
+by a separate task.
+
+### Required secret
+
+`FORGEJO_PR_TOKEN` — reuses the same `write:repository` token as the `flake-update` workflow (it merges the PR and
+pushes `blessed`). `NVD_API_KEY`, already injected into the runner daemon, is read by `vulnxscan`. No new secret is
+introduced. Because both the merge and the `blessed` push go through this token, its user must retain push access if
+`main` or `blessed` is later branch-protected.
+
+### Artifact location
+
+`reports/gate/` — the derived closures list, per-closure `vulnxscan` CSVs, and the failing-CVE report, packaged as the
+`gate-reports` job artifact.
