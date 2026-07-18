@@ -74,15 +74,15 @@ jobs:
         shell: bash
         run: echo "sha=${{ forgejo.event.pull_request.head.sha }}" >> "$FORGEJO_OUTPUT"
 
-      - name: Gate — nix flake check
-        id: flake_check
-        shell: bash
-        run: bash .forgejo/scripts/gate/flake-check.sh
-
       - name: Gate — prewarm llm-agents IFD paths
         id: prewarm
         shell: bash
         run: bash .forgejo/scripts/gate/prewarm-ifd.sh
+
+      - name: Gate — nix flake check
+        id: flake_check
+        shell: bash
+        run: bash .forgejo/scripts/gate/flake-check.sh
 
       - name: Gate — build all host toplevels
         id: build

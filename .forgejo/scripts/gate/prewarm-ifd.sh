@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Gate step 1.5: realise the llm-agents packages the gated host toplevels pull,
-# so their bun2nix import-from-derivation resolves before build-hosts.sh evals.
+# Gate step 1: realise the llm-agents packages the gated host toplevels pull,
+# so their bun2nix import-from-derivation resolves before anything else evals a
+# host toplevel. Runs FIRST — before nix flake check, which itself evaluates
+# nixosConfigurations and would otherwise hit the IFD before build-hosts.sh.
 #
 # Why this exists: orion/p51 toplevels include llm-agents tooling (hunk,
 # opencode, oh-my-opencode, ...) whose derivations use bun2nix. Evaluating
