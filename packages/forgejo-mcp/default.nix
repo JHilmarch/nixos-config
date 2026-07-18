@@ -17,8 +17,8 @@ writeShellApplication {
   runtimeInputs = [findutils];
 
   text = ''
-    FORGEJO_TOKEN="$(xargs </run/secrets/forgejo-pat)"
-    export FORGEJO_TOKEN
+    FORGEJO_ACCESS_TOKEN="$(xargs </run/secrets/forgejo-pat)"
+    export FORGEJO_ACCESS_TOKEN
     exec ${lib.getExe forgejo-mcp-bin} --transport stdio --url https://forge.fileshare.se
   '';
 
