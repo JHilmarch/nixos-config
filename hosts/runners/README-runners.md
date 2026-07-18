@@ -205,9 +205,11 @@ regex + `comment`, optional `package`). It ships empty — nothing is suppressed
 
 When a passing update resolves a tracked CVE, the merge closes its `security` issue via a `Closes: #<n>` line appended
 to the PR description before merge (Forgejo closes body-referenced issues on merge to the default branch — no commit
-amend, so the gated SHA is untouched). The CVE-set diff that computes which issues to close is the
-[`resolve-closes.sh`](../../.forgejo/scripts/gate/resolve-closes.sh) seam — it currently closes nothing and is filled in
-by a separate task.
+amend, so the gated SHA is untouched). The CVE-set diff lives in
+[`resolve-closes.sh`](../../.forgejo/scripts/gate/resolve-closes.sh): open `security` issues (the CVEs tracked against
+`blessed`) minus every CVE still detected in the PR's fresh per-closure `vulnxscan` CSVs — severity and VEX whitelist
+ignored, so a suppressed-but-present CVE keeps its issue open. Best-effort: on any API or artifact error it closes
+nothing.
 
 ### Required secret
 
