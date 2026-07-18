@@ -1,0 +1,56 @@
+# Scheduled flake.lock bump — the "when to update" trigger that produces
+# candidate PRs for the gate (T4) to validate.
+#
+# Runs `nix flake update` on the host-native runner, compares flake.lock
+# to HEAD, and opens a PR with a per-input rev diff when anything moved.
+# No-op when the lock is unchanged — never opens empty PRs.
+#
+# Schedule:
+#   Mondays 04:00 UTC (`0 4 * * 1`). Also runnable manually via the
+#   Forgejo UI workflow_dispatch picker.
+#
+# Runner:
+#   runs-on: nixos-x86_64 — matches the host-native runner registered
+#   in hosts/runners/forgejo-runner.nix with label `nixos-x86_64:host`.
+#   The `:host` suffix is the runtime scheme (run directly on the host,
+#   no container); Forgejo matches on the bare label `nixos-x86_64`.
+#
+# Required secret:
+#   FORGEJO_PR_TOKEN — a bot/deploy token with `write:repository` scope
+#   on jonatan/nixos-config. Mirrors the SOPS-rendered EnvironmentFile
+#   pattern already used for `nvd-api-key` in
+#   hosts/runners/forgejo-runner.nix: declared as
+#   `sops.secrets."forgejo-pr-token"` in hosts/runners/configuration.nix,
+#   added to the runner daemon's EnvironmentFile list, and thereby
+#   inherited by every workflow step's shell as $FORGEJO_PR_TOKEN.
+#   Operator stores the value as `FORGEJO_PR_TOKEN=<token>` (one env
+#   line) in secrets/runners/secrets.yml.
+#   T3 only surfaces the section; T8 will populate resolved CVE refs.
+
+name: flake-update
+
+on:
+  schedule:
+    - cron: '0 4 * * 1' # Mondays 04:00 UTC
+  workflow_dispatch: {} # Manual trigger from the Forgejo UI
+
+jobs:
+  flake-update:
+    runs-on: nixos-x86_64
+    steps:
+      - name: Checkout
+        uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Capture pre-update flake.lock
+        run: git show HEAD:flake.lock > /tmp/flake-lock-before.json
+
+      - name: Run nix flake update
+        run: nix flake update --no-commit-lock-file
+
+      - name: Detect flake.lock change
+        id: diff
+        run: bash .forgejo/scripts/flake-update/detect-lock-change.sh
+
+      - name: Build input diff, commit, push, open PR
+        if: steps.diff.outputs.changed == 'true'
+        run: bash .forgejo/scripts/flake-update/open-pr.sh

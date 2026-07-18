@@ -34,10 +34,15 @@
   services.sshHostKeyPersistence.enable = true;
 
   sops.secrets = {
-    # operator stores the value as TOKEN=<registration-token>
+    # operator stores the value as TOKEN=<registration-password>
     "forgejo-runner-token" = {};
     # operator stores the value as NVD_API_KEY=<key>
     "nvd-api-key" = {};
+    # operator stores the value as FORGEJO_PR_TOKEN=<scoped-token>;
+    # consumed by .forgejo/workflows/flake-update.yaml to push the bump
+    # branch and open the PR. Token needs `write:repository` scope on
+    # jonatan/nixos-config.
+    "forgejo-pr-token" = {};
   };
 
   system.stateVersion = "26.05";

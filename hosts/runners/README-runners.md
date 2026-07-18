@@ -61,9 +61,34 @@ ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@192.168.2.110 'hostname
 ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@<proxmox-host> 'pct config 110 | grep -E "cores|memory|swap"'  # cores=6 memory=12288 swap=4096
 ```
 
+## Scheduled workflows
+
+The runner executes workflows from `.forgejo/workflows/` in any repo that has Actions enabled. The host's own
+[`configuration.nix`](./configuration.nix) and [`forgejo-runner.nix`](./forgejo-runner.nix) wire the secrets those
+workflows need directly into the runner daemon's environment via SOPS-rendered `EnvironmentFile`s, so workflow steps
+read them as plain env vars — no `${{ secrets.* }}` UI configuration required.
+
+### `flake-update` — weekly `nix flake update` PR
+
+[`.forgejo/workflows/flake-update.yaml`](../../.forgejo/workflows/flake-update.yaml) bumps `flake.lock` and opens a PR
+against `jonatan/nixos-config` when any input rev moved.
+
+- **Schedule:** Mondays 04:00 UTC (`cron: '0 4 * * 1'`). Manual runs via the Forgejo UI `workflow_dispatch` picker.
+- **Runner label:** `nixos-x86_64` — matches the host-native runner (the `:host` runtime suffix on the label in
+  `forgejo-runner.nix` is the execution scheme, not part of the match key).
+- **Required secret:** `FORGEJO_PR_TOKEN` — a bot/deploy token with `write:repository` scope on `jonatan/nixos-config`.
+  Declared as `sops.secrets."forgejo-pr-token"` in [`configuration.nix`](./configuration.nix) and surfaced to the
+  workflow through the daemon `EnvironmentFile` in [`forgejo-runner.nix`](./forgejo-runner.nix) (same pattern as
+  `nvd-api-key`). Operator stores the value as `FORGEJO_PR_TOKEN=<token>` in `secrets/runners/secrets.yml`.
+- **No-op on clean lock:** if `nix flake update` produces no `flake.lock` diff, the workflow exits 0 without opening a
+  PR. It never opens empty PRs.
+- **PR body:** one line per changed top-level input (`name: oldrev -> newrev`) plus a reserved "Resolves security
+  issues" section left empty for the closing logic (separate task) to populate.
+
 ## Files
 
-| File                | Purpose                                                                  |
-| ------------------- | ------------------------------------------------------------------------ |
-| `configuration.nix` | Host config: networking, capped Nix build env, SSH host key persistence. |
-| `home.nix`          | Minimal Home Manager config (fish, lsd, fzf, zoxide, broot, starship).   |
+| File                 | Purpose                                                                  |
+| -------------------- | ------------------------------------------------------------------------ |
+| `configuration.nix`  | Host config: networking, capped Nix build env, SSH host key persistence. |
+| `home.nix`           | Minimal Home Manager config (fish, lsd, fzf, zoxide, broot, starship).   |
+| `forgejo-runner.nix` | Runner registration, labels, host packages, daemon `EnvironmentFile`s.   |

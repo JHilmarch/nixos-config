@@ -10,7 +10,10 @@
 # package provides the sbomnix, vulnxscan and nix_outdated binaries;
 # ghafscan provides ghafscan. vulnxscan reads NVD_API_KEY from the
 # environment, injected into the daemon (and thereby host-executed jobs)
-# via the extra systemd EnvironmentFile below.
+# via the extra systemd EnvironmentFile below. The same mechanism
+# surfaces FORGEJO_PR_TOKEN to the scheduled flake-update workflow
+# (`.forgejo/workflows/flake-update.yaml`), which uses it to push its
+# bump branch and open the PR.
 {
   config,
   pkgs,
@@ -51,8 +54,12 @@ in {
   };
 
   # The module already sets EnvironmentFile to the tokenFile as a plain
-  # string; a list is required here so both definitions merge.
+  # string; a list is required here so both definitions merge. Both
+  # files are sourced into the daemon's env and thereby inherited by
+  # every host-executed workflow step: NVD_API_KEY for vulnxscan, and
+  # FORGEJO_PR_TOKEN for the scheduled flake-update workflow.
   systemd.services."gitea-runner-${config.networking.hostName}".serviceConfig.EnvironmentFile = [
     config.sops.secrets."nvd-api-key".path
+    config.sops.secrets."forgejo-pr-token".path
   ];
 }
