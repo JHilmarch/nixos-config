@@ -28,27 +28,20 @@ redeclare them.
 ### Provisioning
 
 The container (CT `110`) is created and sized by OpenTofu in [`../../tofu/runners.tf`](../../tofu/runners.tf): 6 cores,
-12 GB memory, 4 GB swap, NVMe `local-lvm` rootfs, and two bind mounts from the encrypted `hdd-zfs` pool — `/persist` for
-the SSH host key and `/var/lib/gitea-runner` for the act job cache (see [Storage split](#storage-split) below). See
-[`../../tofu/README.md`](../../tofu/README.md) for the full provisioning, bootstrap, and reboot-relock flow.
+12 GB memory, 4 GB swap, rootfs on the bulk `hdd-zfs` pool (200 GB, thin-provisioned), and a single `/persist` bind
+mount for the SSH host key. See [`../../tofu/README.md`](../../tofu/README.md) for the full provisioning, bootstrap, and
+reboot-relock flow.
 
-### Storage split
+### Storage layout
 
-The runner's working set is split across two pools (#206):
-
-- **NVMe `local-lvm` rootfs** holds `/nix/store` (substitution latency matters during builds) and the runner daemon
-  state.
-- **Encrypted `hdd-zfs/data/runners`** holds `/var/lib/private/gitea-runner` (the Forgejo Actions per-job workspaces +
-  act cache), bind-mounted into the container. The act cache is capacity-bound, not latency-sensitive: each gate run
-  builds 5 host toplevels in a fresh `hostexecutor` workspace, and a few runs will fill a small NVMe rootfs (the orion
-  closure alone is ~30 GiB unpacked). The ZFS mirror has orders of magnitude more headroom.
-
-The mount target is `/var/lib/private/gitea-runner` (the real directory behind systemd's `/var/lib/gitea-runner` symlink
-— the daemon sees its state at the symlink path either way). The decision, the mount-path rationale, and the operator
-steps to attach the mount (create the dataset; hand-attach to a running container, or destroy/recreate) are documented
-in [`../../tofu/README.md` "Runners act cache on the HDD pool"](../../tofu/README.md#runners-act-cache-on-the-hdd-pool).
-The owner of the `hdd-zfs/data/runners` dataset is `100000:100000` (container root) — the `gitea-actions-runner` module
-runs the daemon as root, no separate service user, so the same subuid-base chown as the `/persist` key mount applies.
+The runners rootfs (and therefore `/nix/store` + the act cache) lives on the bulk `hdd-zfs` ZFS pool — the same setup as
+[the cache host](../cache/README-cache.md), for the same reason: each gate run builds 5 host toplevels (orion alone is
+~30 GiB unpacked) and the store accumulates without bound between the weekly `nix-gc.timer`, so a 32 GiB NVMe rootfs
+filled in a single run (#206). Build time is dominated by LAN substitution (`cache.fileshare.se` at ~100 MB/s), not
+local store reads, so HDD latency is fine. The mechanism is a single `container_datastore` override in
+[`../../tofu/runners.tf`](../../tofu/runners.tf); see
+[`../../tofu/README.md` "Runners rootfs on the HDD pool"](../../tofu/README.md#runners-rootfs-on-the-hdd-pool) for the
+rationale and the destroy/recreate procedure to apply it to an existing container.
 
 ## Bootstrap
 

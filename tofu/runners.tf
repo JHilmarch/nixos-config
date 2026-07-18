@@ -2,17 +2,18 @@
 #
 # Tofu creates and sizes the container and attaches its NIC to the Proxmox
 # bridge; the container's OS and addressing come from its NixOS flake config
-# (hosts/runners/). Storage split (#206): the rootfs (/nix/store, runner
-# state) stays on the NVMe local-lvm pool for store latency, while the
-# runner's act job cache (fresh hostexecutor workspace per gate run,
-# capacity-bound, not latency-sensitive) lives on the encrypted
-# hdd-zfs/data/runners dataset via the second bind mount below. The NVMe
-# rootfs is capacity-limited; the act cache grew until ENOSPC took the gate
-# down. The first bind mount persists only the SSH host key (and the derived
-# age identity) across destroy/recreate. Cores are capped at 6, below the
-# cache host's 12, so a runaway build cannot starve the fleet. See
-# tofu/README.md "Runners act cache on the HDD pool" for the mount path
-# rationale (/var/lib/private/gitea-runner, not /var/lib/gitea-runner).
+# (hosts/runners/). The rootfs (and therefore /nix/store) lives on the bulk
+# hdd-zfs pool, not the NVMe local-lvm pool — the same layout as the cache
+# host. The store wants capacity, not latency: each gate run builds 5 host
+# toplevels (orion alone is ~30 GiB unpacked) and the store accumulates
+# without bound between weekly GC, so the small NVMe rootfs filled in a
+# single run (#206). The runner's build time is dominated by LAN
+# substitution (cache.fileshare.se at ~100 MB/s), not local store reads,
+# so spinning disk is fine — the cache host has run this layout for weeks
+# without issue. The container_datastore override below is the whole change.
+#
+# Cores are capped at 6, below the cache host's 12, so a runaway build
+# cannot starve the fleet.
 
 module "runners" {
   source = "./modules/lxc"
@@ -30,7 +31,7 @@ module "runners" {
   started      = true
 
   proxmox_node_name   = var.proxmox_node_name
-  container_datastore = var.container_datastore
+  container_datastore = var.hdd_zfs_storage_id
   network_bridge      = var.network_bridge
   template_file_id    = var.template_file_id
 
@@ -41,11 +42,6 @@ module "runners" {
     {
       volume = "/hdd-zfs/keys/runners"
       path   = "/persist"
-      owner  = "100000:100000"
-    },
-    {
-      volume = "/hdd-zfs/data/runners"
-      path   = "/var/lib/private/gitea-runner"
       owner  = "100000:100000"
     }
   ]

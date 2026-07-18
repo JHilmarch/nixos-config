@@ -141,9 +141,9 @@ variable "runners_swap" {
 }
 
 variable "runners_disk_size" {
-  description = "Root disk size (GB) for the runners container. Holds the build working set on the NVMe `local-lvm` pool."
+  description = "Root disk size (GB) for the runners container. Holds the build working set (5 host toplevels per gate run + accumulated /nix/store paths between weekly GC). Lives on the bulk `hdd-zfs` ZFS mirror pool (ZFS is thin-provisioned, so it only consumes what is used) — not the NVMe `local-lvm` pool (#206)."
   type        = number
-  default     = 32
+  default     = 200
 }
 
 # --- ZFS mirror pool + encrypted dataset (#166) ------------------------------

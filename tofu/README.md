@@ -182,7 +182,6 @@ zfs create hdd-zfs/keys/edge
 zfs create -o encryption=on -o keyformat=passphrase -o keylocation=prompt \
   -o mountpoint=/hdd-zfs/data hdd-zfs/data
 zfs create hdd-zfs/data/forge
-zfs create hdd-zfs/data/runners
 ```
 
 ### Passphrase in SOPS
@@ -223,7 +222,7 @@ SOPS-held password (one decrypt, one `ssh` per encryptionroot):
 ```fish
 set -l pass (sops -d --extract '["homelab-zfs-passphrase"]' secrets/<runner>/secrets.yml)
 echo $pass | ssh root@<proxmox-host> 'zfs load-key hdd-zfs/keys && zfs mount hdd-zfs/keys && zfs mount hdd-zfs/keys/cache && zfs mount hdd-zfs/keys/edge && zfs mount hdd-zfs/keys/forge && zfs mount hdd-zfs/keys/runners'
-echo $pass | ssh root@<proxmox-host> 'zfs load-key hdd-zfs/data && zfs mount hdd-zfs/data && zfs mount hdd-zfs/data/forge && zfs mount hdd-zfs/data/runners'
+echo $pass | ssh root@<proxmox-host> 'zfs load-key hdd-zfs/data && zfs mount hdd-zfs/data && zfs mount hdd-zfs/data/forge'
 ```
 
 Keep it to **one `zfs load-key` per `ssh` invocation**: `load-key` reads the passphrase from stdin through buffered
@@ -363,104 +362,47 @@ closure from the public caches and is slow; later runs are incremental. The SSH 
 follow the [rebuild procedure](../hosts/cache/README-cache.md#rebuilding-the-cache-host) to converge the container back
 onto its flake host config.
 
-### Runners act cache on the HDD pool
+### Runners rootfs on the HDD pool
 
-The runners container is the one host whose **rootfs stays on NVMe** but whose fastest-growing data dir
-(`/var/lib/gitea-runner` — the Forgejo Actions per-job workspaces + act cache) is bind-mounted onto the bulk `hdd-zfs`
-pool. Storage split (#206):
+The runners container's rootfs (and therefore its `/nix/store` + act cache) lives on the bulk `hdd-zfs` pool rather than
+the NVMe `local-lvm` pool — the same setup as [the cache host](#cache-rootfs-on-the-hdd-pool), for the same reason. Each
+gate run builds 5 host toplevels (orion alone is ~30 GiB unpacked) and the store accumulates without bound between the
+weekly `nix-gc.timer`, so a 32 GiB NVMe rootfs filled in a single run (#206). Build time is dominated by LAN
+substitution (`cache.fileshare.se` at ~100 MB/s), not local store reads, so spinning disk is fine — the cache host has
+run this layout for weeks without issue.
 
-- `/nix/store` (substitution latency matters during builds) → NVMe rootfs.
-- `/var/lib/gitea-runner` (each gate run leaves a fresh `hostexecutor` workspace; capacity-bound, not latency-sensitive)
-  → `hdd-zfs/data/runners` bind mount.
-
-A few gate runs against the NVMe-only rootfs filled it (the orion closure alone is ~30 GiB unpacked). The ZFS mirror has
-orders of magnitude more headroom, so the act cache can grow unbounded without bringing the runner down.
-
-The mechanism is a second entry in the runners module's `mount_points` ([`runners.tf`](runners.tf)):
+The mechanism is a single per-instance datastore override in [`runners.tf`](runners.tf) (mirror of cache.tf):
 
 ```hcl
 module "runners" {
   source = "./modules/lxc"
   # ...
-  mount_points = [
-    { volume = "/hdd-zfs/keys/runners",   path = "/persist",                      owner = "100000:100000" },
-    { volume = "/hdd-zfs/data/runners",   path = "/var/lib/private/gitea-runner", owner = "100000:100000" }
-  ]
+  # All other containers inherit the default (var.container_datastore = "local-lvm");
+  # the runners overrides to put its whole rootfs on the HDD pool (#206).
+  container_datastore = var.hdd_zfs_storage_id
 }
 ```
 
-The owner is the subuid base (`100000:100000`, container root) — not a gitea-runner-specific uid like forge's
-`100996:100995` for `forgejo`. Reason: the `gitea-actions-runner` NixOS module runs the daemon as root (no separate
-service user is created), so the act cache tree is owned by container root and the same chown as the `/persist` key
-mount applies. See [Per-container key persistence mount](#per-container-key-persistence-mount) for the subuid rationale.
+`runners_disk_size` (default `200` GB) is sized for bulk capacity; ZFS is thin-provisioned, so the volume only consumes
+what is written. To move an already-running runner onto the HDD pool requires a
+[destroy/recreate](#moving-a-containers-rootfs-between-datastores) — same as the cache host did:
 
-#### Why the mount path is `/var/lib/private/gitea-runner`, not `/var/lib/gitea-runner`
-
-The intuitive mount target — `/var/lib/gitea-runner`, the documented state dir for the `gitea-actions-runner` NixOS
-module — is a **symlink**, not a real directory. The module declares `StateDirectory=gitea-runner` on the systemd unit,
-and systemd's security namespacing (`PrivateTmp`, `ProtectSystem`, etc.) materialises the state dir at
-`/var/lib/private/gitea-runner/` with `/var/lib/gitea-runner` as a compatibility symlink to it.
-
-Proxmox's `lxc.hook.pre-start` script refuses to bind-mount over a symlink — it errors with
-`symlink encountered at: //./var/lib/gitea-runner` and exits 20, failing container start. The bind mount target must be
-a real directory, so the mount points at `/var/lib/private/gitea-runner` (the symlink target). The gitea-runner daemon
-still sees its state at `/var/lib/gitea-runner` — the symlink transparently resolves through the bind mount.
-
-This is a general gotcha for any NixOS service that uses `StateDirectory=` plus security namespacing (most of them). The
-forge `forgejo-repos` mount does not hit this because `repositoryRoot = "/var/lib/forgejo-repos"` is just a path the
-forgejo service reads from — there's no corresponding `StateDirectory=` directive, so the path is a real directory.
-
-The `hdd-zfs/data/runners` dataset is a one-time operator step (mirrors `hdd-zfs/data/forge`):
-
-```bash
-ssh root@<proxmox-host> 'zfs create hdd-zfs/data/runners'
+```fish
+scripts/tofu-sops.fish destroy -target module.runners
+scripts/tofu-sops.fish apply -target module.runners
 ```
 
-#### Attaching the mount to an already-running runner container
+The destroy wipes `/nix/store` and the existing `/var/lib/private/gitea-runner/.runner` registration state — the runner
+re-registers on first start using the `forgejo-runner-token` SOPS secret; nothing else needs manual setup. The old
+runner UUID becomes orphaned on the forge (clean up via Site Administration → Actions → Runners, remove the offline
+one). After the recreate, follow the [bootstrap procedure](../hosts/runners/README-runners.md#bootstrap) to converge the
+container back onto its flake host config.
 
-The `null_resource.bind_mounts` provisioner only fires on container (re)create — its guard keys off the first
-(`/persist`) mount already being attached, so adding the second entry does not take effect on the next `tofu apply`
-against a running container. Two paths:
-
-- **Hand-attach** (preserves the existing `/var/lib/gitea-runner/.runner` registration state): stop the runner,
-  `pct mount` its rootfs to expose it on the host, copy the current contents out to the dataset, `pct unmount`, attach
-  the mount, start. The `.runner` file holds the registration token exchange result — shadowing it with an empty dataset
-  forces re-registration.
-
-  The copy source is the symlink target `/var/lib/private/gitea-runner/.` (cp follows the symlink either way, but naming
-  the real path makes the destination layout obvious). The mount attaches at the same real path —
-  `/var/lib/gitea-runner` resolves through it via the existing symlink.
-
-  ```fish
-  ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519_tofu root@<proxmox-host> '
-    pct stop 110
-    # local-lvm is block-backed: the rootfs is NOT host-visible at /var/lib/lxc/110/rootfs/
-    # until pct mount attaches it. Running containers are auto-mounted; a stopped one is not.
-    pct mount 110
-    cp -a /var/lib/lxc/110/rootfs/var/lib/private/gitea-runner/. /hdd-zfs/data/runners/
-    chown -R 100000:100000 /hdd-zfs/data/runners
-    pct unmount 110
-    pct set 110 -mp1 /hdd-zfs/data/runners,mp=/var/lib/private/gitea-runner
-    pct start 110
-  '
-  ```
-
-  `pct unmount` before `pct set`/`pct start` is mandatory: Proxmox refuses to start a container with a manually-mounted
-  rootfs (`pct mount` exists precisely for host-side repair/access on stopped containers). The `cp -a` source path
-  (`/var/lib/lxc/<ctid>/rootfs/...`) is the host-side mount point `pct mount` exposes; on `dir`-backed containers it is
-  always present, on block-backed storage (`local-lvm`, `zfspool`) it exists only while mounted.
-
-- **Destroy/recreate** (cleaner, costs a re-registration): the same path as
-  [moving a rootfs between datastores](#moving-a-containers-rootfs-between-datastores), just scoped to the runners
-  module. The `bind_mounts` provisioner re-runs on the recreate and attaches both mounts automatically.
-
-  ```fish
-  scripts/tofu-sops.fish destroy -target module.runners
-  scripts/tofu-sops.fish apply -target module.runners
-  ```
-
-  The runner re-registers on first start using the `forgejo-runner-token` SOPS secret; nothing else needs manual setup.
-  See [`hosts/runners/README-runners.md`](../hosts/runners/README-runners.md) for the bootstrap converge step.
+The earlier Option-C attempt (bind-mount only `/var/lib/private/gitea-runner` onto `hdd-zfs/data/runners`, keep the
+store on NVMe for latency) proved insufficient — the store, not the act cache, was the dominant space consumer (~28 GiB
+of a 32 GiB rootfs). The act cache is now redundant with the whole-rootfs-on-HDD layout; the leftover
+`hdd-zfs/data/runners` dataset from that attempt can be cleaned up with `zfs destroy hdd-zfs/data/runners` on pve
+(optional — 835 MiB out of 14.4 TiB, harmless to leave).
 
 ## Nesting requirement (systemd 256+)
 
