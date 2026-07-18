@@ -7,27 +7,22 @@
 #   exit 0 always; nothing printed means nothing to close. All diagnostics go
 #   to stderr — the caller captures stdout verbatim into the PR body.
 #
-# merge-blessed.sh appends this stdout to the PR description before the
-# fast-forward merge, so Forgejo auto-closes the referenced issues when the PR
-# lands on the default branch. Under ff-only there is no merge commit to stamp,
-# and amending the bump commit would change the gated SHA — the PR-body
-# reference is the churn-free close path.
+# merge-blessed.sh appends this stdout to the PR body before the ff merge, so
+# Forgejo auto-closes the referenced issues. A pure ff has no merge commit and
+# amending the bump would change the gated SHA — the PR body is the churn-free
+# close path.
 #
 # Resolution = CVE-set diff:
 #   before   = open `security`-labelled issues, each tracking one CVE via the
 #              `<!-- cve:CVE-YYYY-NNNNN -->` body marker written by
 #              daily-scanners/reconcile-issues.sh (title regex as fallback).
-#   after    = every CVE still detected in this PR's freshly built closures:
-#              the union of vuln_id across reports/gate/vulnxscan/scan-*.csv,
-#              regardless of severity or VEX whitelist status.
+#   after    = union of vuln_id across reports/gate/vulnxscan/scan-*.csv (every
+#              CVE still present, regardless of severity or VEX whitelist).
 #   resolved = before minus after -> print `Closes: #<n>`, sorted by number.
 #
-# Why not the --scan-csv argument as the after-set: the caller passes
-# failing-cves.csv, which holds only BLOCKING rows (CVE, CVSS >= threshold,
-# not whitelisted) and is empty whenever the gate passes. Diffing against it
-# would make every open CVE look resolved and wrongly close issues for CVEs
-# that are still present but whitelisted or below the threshold. --scan-csv is
-# only a defensive fallback when the raw scan dir is missing entirely.
+# The --scan-csv arg (failing-cves.csv) is only a fallback: it lists blocking
+# rows and is empty on a pass, so diffing against it would wrongly close every
+# open issue. The after-set comes from the raw per-closure scans instead.
 #
 # Token precedence: FORGEJO_ISSUE_TOKEN (issue-scoped, used by the daily
 # scanners), else FORGEJO_PR_TOKEN (write:repository, present in the
@@ -75,22 +70,22 @@ fi
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-# --- "after" set: every CVE still detected in the new closures ----------------
+# "after" set = every CVE still in the new closures (one scan-<i>.csv per closure).
 shopt -s nullglob
 scans=("$scan_dir"/scan-*.csv)
 shopt -u nullglob
+used_fallback=0
 if [ "${#scans[@]}" -eq 0 ] && [ -n "$scan_csv" ] && [ -f "$scan_csv" ]; then
-  # Defensive fallback only: failing-cves.csv understates "after" (blocking
-  # rows only), so it is trusted solely when the raw scans are absent.
+  # Fallback: failing-cves.csv understates "after" (blocking rows only).
   scans=("$scan_csv")
+  used_fallback=1
 fi
 if [ "${#scans[@]}" -eq 0 ]; then
   warn "no vulnxscan CSVs under $scan_dir and no usable --scan-csv; after-set unknown — closing nothing."
   exit 0
 fi
 
-# A whitelisted or sub-threshold CVE is still PRESENT: keep its issue open.
-# gawk + FPAT parses quoted CSV fields; FNR==1 re-maps each file's header.
+# Every CVE-* still present, regardless of severity or whitelist (FPAT parses quoted CSV).
 if ! gawk '
   BEGIN { FPAT = "([^,]*)|(\"[^\"]*\")" }
   function unq(s){ gsub(/^"|"$/,"",s); return s }
@@ -101,6 +96,12 @@ if ! gawk '
   }
 ' "${scans[@]}" | sort -u >"$tmp/after"; then
   warn "failed to parse vulnxscan CSVs; closing nothing."
+  exit 0
+fi
+
+# An empty after-set from the understated fallback is "unknown", not "CVE-free": never mass-close.
+if [ "$used_fallback" -eq 1 ] && [ ! -s "$tmp/after" ]; then
+  warn "only the understated --scan-csv fallback was available and it lists no CVEs; after-set unreliable — closing nothing."
   exit 0
 fi
 
