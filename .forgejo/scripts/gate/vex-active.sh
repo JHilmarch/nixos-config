@@ -1,19 +1,13 @@
 #!/usr/bin/env bash
 # Gate pre-step: compute the ACTIVE (effective) VEX whitelist.
 #
-# vulnxscan's whitelist CSV has no expiry concept — it only understands the
-# columns vuln_id,package,comment. Expiry and curation policy are enforced
-# HERE instead: every entry's comment must carry an `until:YYYY-MM-DD` token
-# plus a human justification. This script copies vex/whitelist.csv to an
-# "active" whitelist containing only the rows that pass policy; the gate
-# points `vulnxscan --whitelist` at the active file, so a dropped row's CVE
-# re-surfaces and blocks again (fail-closed).
-#
-# Dropped, each with a ::warning naming the row: expired entries, entries
-# missing the until: token or a justification, malformed rows, and any
-# vuln_id that is not one literal CVE id (blanket regexes like `.*` are
-# rejected). A missing/empty raw whitelist yields a valid header-only active
-# whitelist, which suppresses nothing.
+# vulnxscan's whitelist CSV (columns vuln_id,package,comment) has no expiry, so
+# expiry and curation policy are enforced HERE: each comment must carry an
+# `until:YYYY-MM-DD` token plus a justification. This writes an "active" whitelist
+# of only the rows that pass policy; the gate points `vulnxscan --whitelist` at
+# it, so a dropped row's CVE re-surfaces and blocks (fail-closed). A missing raw
+# whitelist yields a header-only active file that suppresses nothing. Each check
+# below emits a ::warning naming the dropped row; the policy lives in vex/README.md.
 #
 # Usage: vex-active.sh [<raw_csv> [<active_csv>]]
 # Env: VEX_WHITELIST (default $WORKSPACE/vex/whitelist.csv),
@@ -33,9 +27,7 @@ if [ ! -f "$raw" ]; then
   exit 0
 fi
 
-# gawk + FPAT parses quoted CSV. Kept rows are re-emitted verbatim (quoting
-# preserved) in canonical column order; the checks use the unquoted values.
-# The first until: token in a comment is the one that counts.
+# Kept rows are re-emitted verbatim; checks use unquoted values (FPAT parses quoted CSV).
 gawk -v today="$today" -v active="$active" '
   BEGIN { FPAT = "([^,]*)|(\"[^\"]*\")"; OFS = "," }
   function unq(s) { gsub(/^"|"$/, "", s); return s }

@@ -4,9 +4,8 @@
 # This is the "is this update safe" decision — the only blocking security step
 # (the daily scanners are report-only). For each closure built in step 2 it runs
 #   vulnxscan <closure> -o <csv> --whitelist <ACTIVE VEX>
-# where the ACTIVE whitelist is computed first by vex-active.sh (T7): the raw
-# vex/whitelist.csv pruned of expired/malformed entries, fail-closed, so stale
-# suppressions lapse and their CVEs block again.
+# where vex-active.sh prunes vex/whitelist.csv of expired/malformed entries
+# first (fail-closed), so stale suppressions lapse and their CVEs block again.
 # vulnxscan annotates every finding with a `whitelist` column ("True"/"False")
 # from the active VEX file rather than dropping it, and a `severity`
 # column carrying the CVSS base score. The gate fails when ANY row has
