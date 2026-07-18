@@ -9,6 +9,8 @@
 #   flake.lock                   post-update lock, modified in the worktree
 set -euo pipefail
 
+: "${FORGEJO_PR_TOKEN:?open-pr: FORGEJO_PR_TOKEN is unset — add it to the runner SOPS EnvironmentFile}"
+
 date="$(date -u +%Y-%m-%d)"
 repo="jonatan/nixos-config"
 api="https://forge.fileshare.se/api/v1"
