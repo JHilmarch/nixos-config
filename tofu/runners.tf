@@ -2,11 +2,17 @@
 #
 # Tofu creates and sizes the container and attaches its NIC to the Proxmox
 # bridge; the container's OS and addressing come from its NixOS flake config
-# (hosts/runners/). The rootfs (the build working set) stays on the NVMe
-# local-lvm pool; the single bind mount below persists only the SSH host key
-# (and the derived age identity) across destroy/recreate — no data or NAS
-# mounts. Cores are capped at 6, below the cache host's 12, so a runaway
-# build cannot starve the fleet.
+# (hosts/runners/). Storage split (#206): the rootfs (/nix/store, runner
+# state) stays on the NVMe local-lvm pool for store latency, while the
+# runner's act job cache (fresh hostexecutor workspace per gate run,
+# capacity-bound, not latency-sensitive) lives on the encrypted
+# hdd-zfs/data/runners dataset via the second bind mount below. The NVMe
+# rootfs is capacity-limited; the act cache grew until ENOSPC took the gate
+# down. The first bind mount persists only the SSH host key (and the derived
+# age identity) across destroy/recreate. Cores are capped at 6, below the
+# cache host's 12, so a runaway build cannot starve the fleet. See
+# tofu/README.md "Runners act cache on the HDD pool" for the mount path
+# rationale (/var/lib/private/gitea-runner, not /var/lib/gitea-runner).
 
 module "runners" {
   source = "./modules/lxc"
@@ -35,6 +41,11 @@ module "runners" {
     {
       volume = "/hdd-zfs/keys/runners"
       path   = "/persist"
+      owner  = "100000:100000"
+    },
+    {
+      volume = "/hdd-zfs/data/runners"
+      path   = "/var/lib/private/gitea-runner"
       owner  = "100000:100000"
     }
   ]
