@@ -25,7 +25,9 @@
 # Env: WORKSPACE (checked-out PR worktree), REPORTS_DIR (default reports).
 set -euo pipefail
 
-flakeref="${WORKSPACE:-.}"
+# builtins.getFlake needs an absolute path; WORKSPACE can be unset, so resolve
+# the checkout dir to an absolute path (falling back to $PWD).
+flakeref="$(cd "${WORKSPACE:-.}" && pwd)"
 reports_dir="${REPORTS_DIR:-reports}"
 root_dir="$reports_dir/gate/prewarm"
 mkdir -p "$root_dir"
