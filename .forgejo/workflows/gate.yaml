@@ -79,6 +79,11 @@ jobs:
         shell: bash
         run: bash .forgejo/scripts/gate/flake-check.sh
 
+      - name: Gate — prewarm llm-agents IFD paths
+        id: prewarm
+        shell: bash
+        run: bash .forgejo/scripts/gate/prewarm-ifd.sh
+
       - name: Gate — build all host toplevels
         id: build
         shell: bash
