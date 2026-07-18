@@ -1,0 +1,135 @@
+# Daily report-only security scanners.
+#
+# Runs once a day (and on manual dispatch) against the "scanned ref" — the
+# branch that holds the closures we consider blessed/deployed. That branch does
+# not exist yet (the blessed pipeline builds it); until it does, this workflow
+# falls back to scanning `main`. The fallback is automatic: step
+# `checkout_primary` attempts the configured ref and `checkout_fallback` kicks
+# in only on failure, so the flip to `blessed` happens the moment the branch
+# appears — no workflow edit required.
+#
+# Three scanners run, all already on the runner PATH (hostPackages, see
+# hosts/runners/forgejo-runner.nix):
+#   * ghafscan    — CVE drift over the live closures (wraps vulnxscan, which
+#                   reads NVD_API_KEY from the environment; NVD_API_KEY is
+#                   injected into the runner daemon by T2's extra
+#                   EnvironmentFile).
+#   * nix_outdated— standing "runtime deps with a newer nixpkgs version"
+#                   report. Lives here in the report path, NOT in any gate.
+#   * sbomnix     — CycloneDX + SPDX SBOM snapshot per run, archived as a job
+#                   artifact under `reports/`.
+#
+# Findings open (or reconcile) `security`-labelled issues via the Forgejo API.
+# Each issue carries a stable CVE marker (CVE-ID in title AND a
+# `<!-- cve:CVE-YYYY-NNNNN -->` line in the body) so downstream automation can
+# map a CVE to its tracking issue and stamp `Closes:` on the fixing commit.
+#
+# STRICTLY REPORT-ONLY. Every scanner step is wrapped so non-zero exits never
+# fail the job and nothing here blocks a merge.
+#
+# Required secret (SOPS, added by the operator — see README-runners.md):
+#   FORGEJO_ISSUE_TOKEN — Forgejo API token with `issue:write`, `label:write`,
+#                         and `read:repository` scopes. Surfaced into the job
+#                         env via the runner daemon's EnvironmentFile, the same
+#                         mechanism used for NVD_API_KEY and forgejo-runner-token.
+
+name: daily-scanners
+
+on:
+  schedule:
+    # 05:00 UTC daily. Schedule is interpreted as UTC unless `timezone` is set.
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+    inputs:
+      scanned_ref:
+        description: Branch to scan (the blessed closures ref)
+        required: false
+        default: blessed
+        type: string
+      targets:
+        description: Comma-separated flake output attrs to scan (system toplevels)
+        required: false
+        default: nixosConfigurations.nixos-edge.config.system.build.toplevel,nixosConfigurations.nixos-forge.config.system.build.toplevel
+        type: string
+
+# The automatic token is granted write on issues as a fallback only; the
+# SOPS-injected FORGEJO_ISSUE_TOKEN takes precedence when present.
+permissions:
+  contents: read
+  issues: write
+
+env:
+  FORGEJO_API: https://forge.fileshare.se/api/v1
+  REPO: jonatan/nixos-config
+  REPORTS_DIR: reports
+  SECURITY_LABEL: security
+
+jobs:
+  scan:
+    runs-on: nixos-x86_64
+    timeout-minutes: 90
+
+    steps:
+      # --- Ref resolution: try the configured scanned ref, fall back to main --
+      # blessed does not exist yet (T4/T5 create it). Once it does, the primary
+      # checkout succeeds and the fallback is skipped automatically.
+      - name: Checkout scanned ref (primary)
+        id: checkout_primary
+        uses: https://code.forgejo.org/actions/checkout@v4
+        with:
+          ref: ${{ inputs.scanned_ref || 'blessed' }}
+        continue-on-error: true
+
+      - name: Checkout fallback (main)
+        id: checkout_fallback
+        if: steps.checkout_primary.outcome == 'failure'
+        uses: https://code.forgejo.org/actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Record resolved ref
+        id: ref
+        shell: bash
+        run: |
+          if [ "${{ steps.checkout_primary.outcome }}" = "success" ]; then
+            echo "resolved=${{ inputs.scanned_ref || 'blessed' }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "resolved=main" >> "$GITHUB_OUTPUT"
+            echo "::notice title=daily-scanners::Scanned ref '${{ inputs.scanned_ref || 'blessed' }}' not found; fell back to 'main' until the blessed branch exists."
+          fi
+
+      - name: ghafscan (CVE drift)
+        id: ghafscan
+        shell: bash
+        env:
+          TARGETS: ${{ inputs.targets || 'nixosConfigurations.nixos-edge.config.system.build.toplevel,nixosConfigurations.nixos-forge.config.system.build.toplevel' }}
+        run: bash .forgejo/scripts/daily-scanners/ghafscan.sh
+
+      - name: nix_outdated (dep freshness)
+        id: nix_outdated
+        shell: bash
+        env:
+          TARGETS: ${{ inputs.targets || 'nixosConfigurations.nixos-edge.config.system.build.toplevel,nixosConfigurations.nixos-forge.config.system.build.toplevel' }}
+        run: bash .forgejo/scripts/daily-scanners/nix-outdated.sh
+
+      - name: sbomnix (SBOM snapshot)
+        id: sbomnix
+        shell: bash
+        env:
+          TARGETS: ${{ inputs.targets || 'nixosConfigurations.nixos-edge.config.system.build.toplevel,nixosConfigurations.nixos-forge.config.system.build.toplevel' }}
+        run: bash .forgejo/scripts/daily-scanners/sbomnix.sh
+
+      - name: Reconcile security issues
+        id: reconcile
+        shell: bash
+        env:
+          RESOLVED_REF: ${{ steps.ref.outputs.resolved }}
+        run: bash .forgejo/scripts/daily-scanners/reconcile-issues.sh
+
+      # --- Archive all reports as a job artifact ------------------------------
+      - name: Upload reports artifact
+        uses: https://code.forgejo.org/actions/upload-artifact@v4
+        with:
+          name: daily-scanners-reports
+          path: reports/
+          retention-days: 30

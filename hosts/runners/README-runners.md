@@ -92,3 +92,59 @@ against `jonatan/nixos-config` when any input rev moved.
 | `configuration.nix`  | Host config: networking, capped Nix build env, SSH host key persistence. |
 | `home.nix`           | Minimal Home Manager config (fish, lsd, fzf, zoxide, broot, starship).   |
 | `forgejo-runner.nix` | Runner registration, labels, host packages, daemon `EnvironmentFile`s.   |
+
+The two workflows keep only step wiring in YAML; each non-trivial step calls a script under
+`.forgejo/scripts/<workflow>/` so the shell stays readable and independently checkable. These are bash (not fish): the
+Forgejo Actions steps run them under `shell: bash`, and the runner ships bash + gawk + jq — same class as
+`scripts/*.sh`.
+
+## Daily scanners (`.forgejo/workflows/daily-scanners.yaml`)
+
+A **report-only** Forgejo Actions workflow that runs once a day (\`schedule: 0 5
+
+- - \*\` UTC) and on manual dispatch. It surfaces "when to update" signals against the scanned closures and never blocks
+    a merge.
+
+### What it does
+
+1. **Resolves the scanned ref.** Defaults to `blessed` (the future branch holding the blessed closures); if `blessed`
+   does not exist yet, it falls back to `main`. The flip to `blessed` is automatic once the branch appears.
+1. **`ghafscan`** — CVE drift over the live closures. Wraps `vulnxscan` (which reads `NVD_API_KEY` from the environment,
+   injected below) and runs three lockfile states per target (`current` / `lock_updated` / `nix_unstable`).
+1. **`nix_outdated`** — standing "runtime deps with a newer nixpkgs version" report. Belongs here in the report path,
+   NOT in any gate.
+1. **`sbomnix`** — CycloneDX + SPDX SBOM snapshot per run, archived under `reports/`.
+1. **Reconciles `security`-labelled issues** via the Forgejo API. New CVE opens an issue; a CVE no longer detected
+   closes its issue with a note. The CVE ID is embedded in both the title and a `<!-- cve:CVE-... -->` marker in the
+   body so downstream automation can map `Closes: <CVE>` onto the right issue.
+1. **Uploads `reports/`** as a job artifact (30-day retention).
+
+Every scanner step captures non-zero exits as report-only warnings (`|| true` with explicit `::warning::` notices); a
+finding never fails the job.
+
+### Configuration
+
+| Workflow input | Default                                                                                        | Meaning                                    |
+| -------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `scanned_ref`  | `blessed` (falls back to `main`)                                                               | Branch holding the closures to scan        |
+| `targets`      | `nixosConfigurations.nixos-edge.config.system.build.toplevel,nixosConfigurations.nixos-forge…` | Comma-separated flake output attrs to scan |
+
+The default `targets` is the two internet-facing LXC hosts. Expand to the full fleet (e.g. add `…nixos-cache…`,
+`…nixos-runners…`) via the dispatch input.
+
+### Required secret
+
+`FORGEJO_ISSUE_TOKEN` — a Forgejo API token with `issue:write`, `label:write`, and `read:repository` scopes. It is
+declared as the SOPS secret `forgejo-issue-token` in [`configuration.nix`](./configuration.nix) and surfaced into every
+host-executed job shell via the runner daemon's `EnvironmentFile` in [`forgejo-runner.nix`](./forgejo-runner.nix),
+mirroring the `nvd-api-key` pattern. The operator must store the value as `FORGEJO_ISSUE_TOKEN=<token>` in the SOPS file
+(the encrypted value is **not** managed by this flake). If the secret is absent the workflow falls back to the automatic
+`GITHUB_TOKEN`, which may lack the scopes needed to create issues.
+
+The `security` label is created idempotently by the workflow on first run if it does not already exist (color
+`#d73a4a`); pre-creating it manually is also fine.
+
+### Artifact location
+
+`reports/{ghafscan,nix_outdated,sbom}/` — packaged as the `daily-scanners-reports` job artifact, downloadable from the
+workflow run page.
