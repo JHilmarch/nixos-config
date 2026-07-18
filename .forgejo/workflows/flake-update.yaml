@@ -45,7 +45,7 @@ jobs:
         run: git show HEAD:flake.lock > /tmp/flake-lock-before.json
 
       - name: Run nix flake update
-        run: nix flake update --no-commit-lock-file
+        run: nix flake update
 
       - name: Detect flake.lock change
         id: diff
