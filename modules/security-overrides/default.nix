@@ -35,7 +35,6 @@ in {
         libmicrohttpd = unstable.libmicrohttpd;
         libcap = unstable.libcap;
         dash = unstable.dash;
-        fish = unstable.fish;
       })
 
       (lib.mkIf cfg.aggressive (_final: _prev: {
